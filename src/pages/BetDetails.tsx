@@ -1,11 +1,18 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BetWithParticipants } from '../types';
+import { BetWithParticipants, BetParticipant } from '../types';
 import { betService } from '../services/betService';
 import '../styles/BetDetails.css';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import debounce from 'lodash/debounce';
+
+type BetParticipantPayload = {
+  id: string;
+  bet_id: string;
+  name: string;
+  prediction: string;
+  created_at: string;
+};
 
 export const BetDetails = () => {
   const { code } = useParams<{ code: string }>();
@@ -16,21 +23,7 @@ export const BetDetails = () => {
   const [name, setName] = useState('');
   const [prediction, setPrediction] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
-
-  // Debounced update function
-  const debouncedUpdate = useCallback(
-    debounce((newParticipant) => {
-      setBet(currentBet => {
-        if (!currentBet) return currentBet;
-        return {
-          ...currentBet,
-          participants: [...currentBet.participants, newParticipant]
-        };
-      });
-    }, 100),  // Wait 100ms between updates
-    []
-  );
+  const [_channel, setChannel] = useState<RealtimeChannel | null>(null);
 
   useEffect(() => {
     const fetchBet = async () => {
@@ -65,18 +58,18 @@ export const BetDetails = () => {
             table: 'bet_participants',
             filter: `bet_id=eq.${bet.id}`,
           },
-          (payload: any) => {
+          (payload: RealtimePostgresChangesPayload<BetParticipantPayload>) => {
             const newParticipant = payload.new;
             setBet(currentBet => {
               if (!currentBet) return currentBet;
               return {
                 ...currentBet,
-                participants: [...currentBet.participants, newParticipant]
+                participants: [...currentBet.participants, newParticipant as BetParticipant]
               };
             });
           }
         )
-        .subscribe((status) => {
+        .subscribe((status: 'SUBSCRIBED' | 'CLOSED' | 'TIMED_OUT' | 'CHANNEL_ERROR') => {
           console.log('Subscription status:', status);
         });
 

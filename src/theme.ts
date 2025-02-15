@@ -1,18 +1,2 @@
-import { extendTheme } from '@chakra-ui/react'
-
-const theme = extendTheme({
-  config: {
-    initialColorMode: 'light',
-    useSystemColorMode: false,
-  },
-  styles: {
-    global: {
-      body: {
-        bg: 'white',
-        color: 'gray.800',
-      },
-    },
-  },
-})
-
-export default theme 
+// Remove any Chakra UI imports and just export an empty object for now
+export const theme = {}; 
