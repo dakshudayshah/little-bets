@@ -1,46 +1,29 @@
-import {
-  Box,
-  Button,
-  FormControl,
-  FormLabel,
-  Input,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
-  Stack,
-  Radio,
-  RadioGroup,
-  useToast,
-} from '@chakra-ui/react';
 import { useState } from 'react';
-import { Bet } from '../types';
+import { BetWithParticipants } from '../types';
 import { betService } from '../services/betService';
 
 interface PlaceBetFormProps {
-  bet: Bet;
-  onBetPlaced: (updatedBet: Bet) => void;
+  bet: BetWithParticipants;
 }
 
-export const PlaceBetForm = ({ bet, onBetPlaced }: PlaceBetFormProps) => {
+export const PlaceBetForm = ({ bet }: PlaceBetFormProps) => {
   const [name, setName] = useState('');
   const [prediction, setPrediction] = useState<string>('');
-  const toast = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    betService.addParticipant(bet.id, name, prediction);
-    const updatedBet = betService.getBetByCode(bet.codeName);
-    if (updatedBet) {
-      onBetPlaced(updatedBet);
-      toast({
-        title: 'Bet placed!',
-        status: 'success',
-        duration: 3000,
-      });
+    setIsSubmitting(true);
+
+    try {
+      await betService.addParticipant(bet.id, name, prediction);
+      // Real-time will handle the update
       setName('');
       setPrediction('');
+    } catch (error) {
+      console.error('Error placing bet:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -48,66 +31,78 @@ export const PlaceBetForm = ({ bet, onBetPlaced }: PlaceBetFormProps) => {
     switch (bet.type) {
       case 'GENDER':
         return (
-          <RadioGroup value={prediction} onChange={setPrediction}>
-            <Stack direction="row">
-              <Radio value="BOY">Boy</Radio>
-              <Radio value="GIRL">Girl</Radio>
-            </Stack>
-          </RadioGroup>
+          <div className="radio-group">
+            <label>
+              <input
+                type="radio"
+                value="BOY"
+                checked={prediction === 'BOY'}
+                onChange={(e) => setPrediction(e.target.value)}
+                disabled={isSubmitting}
+              />
+              Boy
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="GIRL"
+                checked={prediction === 'GIRL'}
+                onChange={(e) => setPrediction(e.target.value)}
+                disabled={isSubmitting}
+              />
+              Girl
+            </label>
+          </div>
         );
       case 'SCALE':
         return (
-          <NumberInput
-            min={1}
-            max={10}
+          <input
+            type="number"
+            min="1"
+            max="10"
             value={prediction}
-            onChange={(value) => setPrediction(value)}
-          >
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput>
+            onChange={(e) => setPrediction(e.target.value)}
+            required
+            disabled={isSubmitting}
+          />
         );
       case 'DURATION':
         return (
-          <NumberInput
-            min={0}
+          <input
+            type="number"
+            min="0"
             value={prediction}
-            onChange={(value) => setPrediction(value)}
-          >
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput>
+            onChange={(e) => setPrediction(e.target.value)}
+            required
+            disabled={isSubmitting}
+          />
         );
     }
   };
 
   return (
-    <Box as="form" onSubmit={handleSubmit}>
-      <Stack spacing={4}>
-        <FormControl isRequired>
-          <FormLabel>Your Name</FormLabel>
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your name"
-          />
-        </FormControl>
+    <form onSubmit={handleSubmit} className="form">
+      <div className="form-group">
+        <label htmlFor="name">Your Name</label>
+        <input
+          id="name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Enter your name"
+          required
+          disabled={isSubmitting}
+        />
+      </div>
 
-        <FormControl isRequired>
-          <FormLabel>Your Prediction</FormLabel>
-          {renderPredictionInput()}
-        </FormControl>
+      <div className="form-group">
+        <label>Your Prediction</label>
+        {renderPredictionInput()}
+      </div>
 
-        <Button type="submit" colorScheme="blue">
-          Place Bet
-        </Button>
-      </Stack>
-    </Box>
+      <button type="submit" className="button" disabled={isSubmitting}>
+        {isSubmitting ? 'Placing Bet...' : 'Place Bet'}
+      </button>
+    </form>
   );
 }; 

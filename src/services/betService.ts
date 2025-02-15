@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Bet, BetParticipant, BetWithParticipants, CreateBetForm } from '../types';
+import { BetWithParticipants, CreateBetForm } from '../types';
 
 // Generate a random 6-character code
 const generateCodeName = (): string => {
