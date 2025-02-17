@@ -14,6 +14,60 @@ type BetParticipantPayload = {
   created_at: string;
 };
 
+const EndBetButton = ({ bet }: { bet: BetWithParticipants }) => {
+  const [isEnding, setIsEnding] = useState(false);
+  const [creatorName, setCreatorName] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const handleEndBet = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsEnding(true);
+    setError(null);
+
+    try {
+      await betService.endBet(bet.id, creatorName);
+      // Real-time will handle the update
+    } catch (err) {
+      setError('Failed to end bet. Please try again.');
+      console.error('End bet error:', err);
+    } finally {
+      setIsEnding(false);
+    }
+  };
+
+  if (bet.status === 'ENDED') {
+    return (
+      <div className="end-bet-section">
+        <p>This bet was ended by {bet.ended_by} on {new Date(bet.ended_at!).toLocaleDateString()}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="end-bet-section">
+      <h2>End this Bet</h2>
+      <form onSubmit={handleEndBet}>
+        <div className="form-group">
+          <label htmlFor="creatorName">Enter your name to verify you created this bet</label>
+          <input
+            id="creatorName"
+            type="text"
+            value={creatorName}
+            onChange={(e) => setCreatorName(e.target.value)}
+            placeholder="Enter your name"
+            required
+            disabled={isEnding}
+          />
+        </div>
+        {error && <p className="error-message">{error}</p>}
+        <button type="submit" className="button" disabled={isEnding}>
+          {isEnding ? 'Ending Bet...' : 'End Bet'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
 export const BetDetails = () => {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
@@ -240,6 +294,8 @@ export const BetDetails = () => {
             </table>
           </div>
         </div>
+
+        <EndBetButton bet={bet} />
       </div>
     </div>
   );
