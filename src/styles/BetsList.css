@@ -3,6 +3,7 @@
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
   margin-top: 2rem;
+  transition: all 0.3s ease-in-out;
 }
 
 .bet-card {
@@ -83,4 +84,38 @@
 .loading .bet-card {
   animation: pulse 1.5s infinite;
   background-color: #f7fafc;
+}
+
+.ended-bets-section {
+  margin-top: 3rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 2rem;
+}
+
+.toggle-button {
+  background-color: #f7fafc;
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  color: #4a5568;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-button:hover {
+  background-color: #edf2f7;
+}
+
+.ended-bet {
+  opacity: 0.7;
+  background-color: #f7fafc;
+}
+
+.ended-bet:hover {
+  opacity: 0.9;
+}
+
+.ended-bets-section .bets-grid {
+  margin-top: 1.5rem;
 } 

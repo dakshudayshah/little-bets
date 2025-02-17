@@ -20,12 +20,26 @@ export const betService = {
         type: formData.type,
         question: formData.question,
         description: formData.description,
+        status: 'ACTIVE',
       })
       .select()
       .single();
 
     if (error) throw error;
     return { ...bet, participants: [] };
+  },
+
+  endBet: async (betId: string, endedBy: string): Promise<void> => {
+    const { error } = await supabase
+      .from('bets')
+      .update({
+        status: 'ENDED',
+        ended_by: endedBy,
+        ended_at: new Date().toISOString()
+      })
+      .eq('id', betId);
+
+    if (error) throw error;
   },
 
   getBetByCode: async (code: string): Promise<BetWithParticipants | null> => {

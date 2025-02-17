@@ -91,4 +91,51 @@ input:disabled,
 select:disabled {
   background-color: #f7fafc;
   cursor: not-allowed;
+}
+
+.end-bet-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.end-bet-section h2 {
+  color: #e53e3e;  /* Red color for emphasis */
+  margin-bottom: 1rem;
+}
+
+.end-bet-section form {
+  max-width: 400px;
+}
+
+.end-bet-section label {
+  color: #4a5568;
+  font-size: 0.875rem;
+}
+
+.end-bet-section button {
+  background-color: #e53e3e;
+  border-color: #e53e3e;
+}
+
+.end-bet-section button:hover:not(:disabled) {
+  background-color: #c53030;
+}
+
+/* Style for ended bet message */
+.end-bet-section p {
+  color: #718096;
+  font-style: italic;
+}
+
+/* Disable form inputs when bet is ended */
+.ended-bet input,
+.ended-bet button {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Add collapsible styles */
+.collapsible {
+  /* Implementation */
 } 
