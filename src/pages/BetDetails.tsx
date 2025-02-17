@@ -77,7 +77,6 @@ export const BetDetails = () => {
   const [name, setName] = useState('');
   const [prediction, setPrediction] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [_channel, setChannel] = useState<RealtimeChannel | null>(null);
 
   useEffect(() => {
     const fetchBet = async () => {
@@ -100,10 +99,12 @@ export const BetDetails = () => {
 
     fetchBet();
 
-    // Set up real-time subscription
+    // Only set up subscription if we have both code and bet
+    let channel: RealtimeChannel | null = null;
+    
     if (code && bet) {
-      const channel = supabase
-        .channel('bet_changes')
+      channel = supabase
+        .channel(`bet_changes_${bet.id}`) // Add unique channel name
         .on(
           'postgres_changes',
           {
@@ -123,16 +124,15 @@ export const BetDetails = () => {
             });
           }
         )
-        .subscribe((status: 'SUBSCRIBED' | 'CLOSED' | 'TIMED_OUT' | 'CHANNEL_ERROR') => {
-          console.log('Subscription status:', status);
-        });
-
-      setChannel(channel);
-
-      return () => {
-        channel.unsubscribe();
-      };
+        .subscribe();
     }
+
+    // Clean up subscription
+    return () => {
+      if (channel) {
+        channel.unsubscribe();
+      }
+    };
   }, [code, navigate, bet]);
 
   const handleSubmit = async (e: React.FormEvent) => {
