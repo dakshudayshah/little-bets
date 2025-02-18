@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BetType, CreateBetForm } from '../types';
+import { BetType } from '../types';
 import { betService } from '../services/betService';
 import '../styles/CreateBet.css';
 

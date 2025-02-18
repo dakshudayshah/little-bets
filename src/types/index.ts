@@ -12,6 +12,7 @@ export interface Bet {
   status: BetStatus;
   ended_by?: string;
   ended_at?: string;
+  creator_name: string;
 }
 
 export interface BetParticipant {
@@ -31,4 +32,5 @@ export interface CreateBetForm {
   type: BetType;
   question: string;
   description?: string;
+  creatorName: string;
 } 
