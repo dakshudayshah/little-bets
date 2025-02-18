@@ -25,10 +25,20 @@ const EndBetButton = ({ bet }: { bet: BetWithParticipants }) => {
     setError(null);
 
     try {
+      console.log('Attempting to end bet:', { betId: bet.id, creatorName, creator: bet.creator_name });
+      
+      if (creatorName !== bet.creator_name) {
+        throw new Error(`Only the creator "${bet.creator_name}" can end this bet`);
+      }
+
       await betService.endBet(bet.id, creatorName);
-      // Real-time will handle the update
-    } catch (err) {
-      setError('Failed to end bet. Please try again.');
+      console.log('Bet ended successfully');
+      
+      // Force refresh the bet data since real-time might not catch status changes
+      window.location.reload();
+    } catch (err: any) {
+      const message = err.message || 'Failed to end bet. Please try again.';
+      setError(message);
       console.error('End bet error:', err);
     } finally {
       setIsEnding(false);
@@ -46,6 +56,7 @@ const EndBetButton = ({ bet }: { bet: BetWithParticipants }) => {
   return (
     <div className="end-bet-section">
       <h2>End this Bet</h2>
+      <p className="creator-info">Only the creator "{bet.creator_name}" can end this bet</p>
       <form onSubmit={handleEndBet}>
         <div className="form-group">
           <label htmlFor="creatorName">Enter your name to verify you created this bet</label>
@@ -54,7 +65,7 @@ const EndBetButton = ({ bet }: { bet: BetWithParticipants }) => {
             type="text"
             value={creatorName}
             onChange={(e) => setCreatorName(e.target.value)}
-            placeholder="Enter your name"
+            placeholder={`Enter "${bet.creator_name}"`}
             required
             disabled={isEnding}
           />
@@ -99,12 +110,14 @@ export const BetDetails = () => {
 
     fetchBet();
 
-    // Only set up subscription if we have both code and bet
-    let channel: RealtimeChannel | null = null;
+    // Set up subscriptions if we have both code and bet
+    let participantsChannel: RealtimeChannel | null = null;
+    let statusChannel: RealtimeChannel | null = null;
     
     if (code && bet) {
-      channel = supabase
-        .channel(`bet_changes_${bet.id}`) // Add unique channel name
+      // Participants subscription
+      participantsChannel = supabase
+        .channel(`bet_participants_${bet.id}`)
         .on(
           'postgres_changes',
           {
@@ -114,12 +127,36 @@ export const BetDetails = () => {
             filter: `bet_id=eq.${bet.id}`,
           },
           (payload: RealtimePostgresChangesPayload<BetParticipantPayload>) => {
-            const newParticipant = payload.new;
+            console.log('New participant:', payload.new);
             setBet(currentBet => {
               if (!currentBet) return currentBet;
               return {
                 ...currentBet,
-                participants: [...currentBet.participants, newParticipant as BetParticipant]
+                participants: [...currentBet.participants, payload.new as BetParticipant]
+              };
+            });
+          }
+        )
+        .subscribe();
+
+      // Status changes subscription
+      statusChannel = supabase
+        .channel(`bet_status_${bet.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'bets',
+            filter: `id=eq.${bet.id}`,
+          },
+          (payload) => {
+            console.log('Bet updated:', payload.new);
+            setBet(currentBet => {
+              if (!currentBet) return currentBet;
+              return {
+                ...currentBet,
+                ...payload.new,
               };
             });
           }
@@ -127,11 +164,10 @@ export const BetDetails = () => {
         .subscribe();
     }
 
-    // Clean up subscription
+    // Clean up subscriptions
     return () => {
-      if (channel) {
-        channel.unsubscribe();
-      }
+      if (participantsChannel) participantsChannel.unsubscribe();
+      if (statusChannel) statusChannel.unsubscribe();
     };
   }, [code, navigate, bet]);
 
@@ -233,6 +269,7 @@ export const BetDetails = () => {
       <div className="content">
         <h1>{bet.question}</h1>
         {bet.description && <p className="description">{bet.description}</p>}
+        <p className="bet-creator">Created by: {bet.creator_name}</p>
         
         <div className="share-section">
           <p>Share this bet with your friends using code: <strong>{bet.code_name}</strong></p>
