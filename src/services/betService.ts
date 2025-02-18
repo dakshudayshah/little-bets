@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { BetWithParticipants, CreateBetForm } from '../types';
+import { BetWithParticipants, CreateBetForm, BetParticipant } from '../types';
 
 // Generate a random 6-character code
 const generateCodeName = (): string => {
@@ -21,15 +21,20 @@ export const betService = {
         question: formData.question,
         description: formData.description,
       })
-      .select()
+      .select('*')
       .single();
 
     if (error) throw error;
-    return { ...bet, participants: [] };
+    
+    // Explicitly return the correct type
+    return {
+      ...bet,
+      participants: [] as BetParticipant[]
+    };
   },
 
   getBetByCode: async (code: string): Promise<BetWithParticipants | null> => {
-    const { data: bet, error: betError } = await supabase
+    const { data, error } = await supabase
       .from('bets')
       .select(`
         *,
@@ -38,12 +43,17 @@ export const betService = {
       .eq('code_name', code)
       .single();
 
-    if (betError) return null;
-    return bet;
+    if (error) return null;
+    
+    // Ensure participants is an array
+    return {
+      ...data,
+      participants: data.participants || []
+    };
   },
 
   getAllBets: async (): Promise<BetWithParticipants[]> => {
-    const { data: bets, error: betsError } = await supabase
+    const { data, error } = await supabase
       .from('bets')
       .select(`
         *,
@@ -51,8 +61,13 @@ export const betService = {
       `)
       .order('created_at', { ascending: false });
 
-    if (betsError) throw betsError;
-    return bets || [];
+    if (error) throw error;
+    
+    // Ensure each bet has participants array
+    return (data || []).map(bet => ({
+      ...bet,
+      participants: bet.participants || []
+    }));
   },
 
   addParticipant: async (betId: string, name: string, prediction: string): Promise<void> => {
