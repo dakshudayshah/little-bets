@@ -54,9 +54,18 @@ export const BetDetails = () => {
   useEffect(() => {
     if (!bet?.id) return;
 
-    if (!channelRef.current) {
+    let retryCount = 0;
+    const maxRetries = 3;
+
+    const setupChannel = () => {
+      if (channelRef.current) {
+        channelRef.current.unsubscribe();
+      }
+
+      console.log(`Setting up channel for bet ${bet.id}`);
+      
       channelRef.current = supabase
-        .channel(`bet-${bet.id}`)
+        .channel(`bet-${bet.id}-${Date.now()}`) // Add timestamp to make channel name unique
         .on(
           'postgres_changes',
           {
@@ -65,22 +74,38 @@ export const BetDetails = () => {
             table: 'bet_participants',
             filter: `bet_id=eq.${bet.id}`,
           },
-          async () => {
-            // Fetch fresh data instead of updating locally
-            const updatedBet = await betService.getBetByCode(bet.code_name);
-            if (updatedBet) {
-              setBet(updatedBet);
+          async (payload) => {
+            console.log('Received real-time update:', payload);
+            try {
+              const updatedBet = await betService.getBetByCode(bet.code_name);
+              if (updatedBet) {
+                console.log('Updating bet with new data:', updatedBet);
+                setBet(updatedBet);
+              }
+            } catch (err) {
+              console.error('Error fetching updated bet:', err);
+              // If fetch fails and we haven't exceeded retries, try to reconnect
+              if (retryCount < maxRetries) {
+                retryCount++;
+                setupChannel();
+              }
             }
           }
         )
         .subscribe((status) => {
           console.log(`Subscription status for bet ${bet.id}:`, status);
+          if (status === 'CHANNEL_ERROR' && retryCount < maxRetries) {
+            retryCount++;
+            setupChannel();
+          }
         });
-    }
+    };
+
+    setupChannel();
 
     return () => {
+      console.log(`Cleaning up subscription for bet ${bet.id}`);
       if (channelRef.current) {
-        console.log(`Unsubscribing from bet ${bet.id}`);
         channelRef.current.unsubscribe();
         channelRef.current = null;
       }
@@ -96,7 +121,13 @@ export const BetDetails = () => {
 
     try {
       await betService.addParticipant(bet.id, name, prediction);
-      // No need to fetch updated bet since real-time will handle it
+      
+      // Immediately fetch updated data
+      const updatedBet = await betService.getBetByCode(bet.code_name);
+      if (updatedBet) {
+        setBet(updatedBet);
+      }
+      
       setName('');
       setPrediction('');
     } catch (err) {
