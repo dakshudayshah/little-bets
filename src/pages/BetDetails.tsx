@@ -24,22 +24,26 @@ const EndBetButton = ({ bet }: { bet: BetWithParticipants }) => {
     setIsEnding(true);
     setError(null);
 
-    try {
-      console.log('Attempting to end bet:', { betId: bet.id, creatorName, creator: bet.creator_name });
-      
-      if (creatorName !== bet.creator_name) {
-        throw new Error(`Only the creator "${bet.creator_name}" can end this bet`);
-      }
+    // Preserve logs
+    console.log('%c Attempting to end bet', 'background: #222; color: #bada55', {
+      betId: bet.id,
+      creatorName,
+      creator: bet.creator_name,
+      timestamp: new Date().toISOString()
+    });
 
+    try {
       await betService.endBet(bet.id, creatorName);
-      console.log('Bet ended successfully');
-      
-      // Force refresh the bet data since real-time might not catch status changes
+      console.log('%c Bet ended successfully', 'background: #222; color: #bada55');
       window.location.reload();
     } catch (err: any) {
       const message = err.message || 'Failed to end bet. Please try again.';
+      console.error('%c End bet error', 'background: #222; color: #ff0000', {
+        error: err,
+        message,
+        timestamp: new Date().toISOString()
+      });
       setError(message);
-      console.error('End bet error:', err);
     } finally {
       setIsEnding(false);
     }
@@ -170,6 +174,17 @@ export const BetDetails = () => {
       if (statusChannel) statusChannel.unsubscribe();
     };
   }, [code, navigate, bet]);
+
+  useEffect(() => {
+    if (bet) {
+      console.log('%c Current bet data', 'background: #222; color: #00ff00', {
+        id: bet.id,
+        creator: bet.creator_name,
+        status: bet.status,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [bet]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

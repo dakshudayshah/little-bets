@@ -21,6 +21,7 @@ export const betService = {
         question: formData.question,
         description: formData.description,
         status: 'ACTIVE',
+        creator_name: formData.creatorName,
       })
       .select()
       .single();
@@ -30,16 +31,54 @@ export const betService = {
   },
 
   endBet: async (betId: string, endedBy: string): Promise<void> => {
-    const { error } = await supabase
-      .from('bets')
-      .update({
-        status: 'ENDED',
-        ended_by: endedBy,
-        ended_at: new Date().toISOString()
-      })
-      .eq('id', betId);
+    try {
+      // First, get the bet to check creator
+      const { data: bet, error: fetchError } = await supabase
+        .from('bets')
+        .select('creator_name')
+        .eq('id', betId)
+        .single();
 
-    if (error) throw error;
+      if (fetchError) {
+        console.error('Error fetching bet:', fetchError);
+        throw new Error('Failed to verify bet creator');
+      }
+
+      if (!bet) {
+        console.error('Bet not found:', betId);
+        throw new Error('Bet not found');
+      }
+
+      console.log('Fetched bet:', bet);
+      console.log('Creator check:', { endedBy, creator: bet.creator_name });
+
+      if (bet.creator_name !== endedBy) {
+        throw new Error(`Only the creator "${bet.creator_name}" can end this bet`);
+      }
+
+      const { error: updateError } = await supabase
+        .from('bets')
+        .update({
+          status: 'ENDED',
+          ended_by: endedBy,
+          ended_at: new Date().toISOString()
+        })
+        .eq('id', betId);
+
+      if (updateError) {
+        console.error('Error updating bet:', updateError);
+        throw new Error('Failed to end bet');
+      }
+    } catch (error) {
+      // Log the full error object
+      console.error('End bet error details:', {
+        error,
+        betId,
+        endedBy,
+        timestamp: new Date().toISOString()
+      });
+      throw error;
+    }
   },
 
   getBetByCode: async (code: string): Promise<BetWithParticipants | null> => {
