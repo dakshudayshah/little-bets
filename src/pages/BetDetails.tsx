@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { BetWithParticipants, BetParticipant } from '../types';
 import { betService } from '../services/betService';
@@ -23,9 +23,11 @@ export const BetDetails = () => {
   const [name, setName] = useState('');
   const [prediction, setPrediction] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [_channel, setChannel] = useState<RealtimeChannel | null>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchBet = async () => {
       if (!code) return;
       
@@ -35,21 +37,36 @@ export const BetDetails = () => {
           navigate('/not-found');
           return;
         }
-        setBet(betData);
+        if (isMounted) {
+          setBet(betData);
+        }
       } catch (err) {
-        setError('Failed to load bet details');
-        console.error('Fetch bet error:', err);
+        if (isMounted) {
+          setError('Failed to load bet details');
+          console.error('Fetch bet error:', err);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchBet();
 
-    // Set up real-time subscription
-    if (code && bet) {
-      const channel = supabase
-        .channel('bet_changes')
+    return () => {
+      isMounted = false;
+    };
+  }, [code, navigate]);
+
+  // Separate useEffect for subscription
+  useEffect(() => {
+    if (!bet?.id) return;
+
+    // Only create a new subscription if we don't have one
+    if (!channelRef.current) {
+      channelRef.current = supabase
+        .channel(`bet-${bet.id}`)
         .on(
           'postgres_changes',
           {
@@ -58,28 +75,28 @@ export const BetDetails = () => {
             table: 'bet_participants',
             filter: `bet_id=eq.${bet.id}`,
           },
-          (payload: RealtimePostgresChangesPayload<BetParticipantPayload>) => {
+          (payload: RealtimePostgresChangesPayload<BetParticipant>) => {
             const newParticipant = payload.new;
             setBet(currentBet => {
               if (!currentBet) return currentBet;
               return {
                 ...currentBet,
-                participants: [...currentBet.participants, newParticipant as BetParticipant]
+                participants: [...currentBet.participants, newParticipant]
               };
             });
           }
         )
-        .subscribe((status: 'SUBSCRIBED' | 'CLOSED' | 'TIMED_OUT' | 'CHANNEL_ERROR') => {
-          console.log('Subscription status:', status);
-        });
-
-      setChannel(channel);
-
-      return () => {
-        channel.unsubscribe();
-      };
+        .subscribe();
     }
-  }, [code, navigate, bet]);
+
+    // Cleanup subscription only when component unmounts
+    return () => {
+      if (channelRef.current) {
+        channelRef.current.unsubscribe();
+        channelRef.current = null;
+      }
+    };
+  }, [bet?.id]); // Only re-run if bet.id changes
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
