@@ -70,33 +70,32 @@ export const BetDetails = () => {
         .on(
           'postgres_changes',
           {
-            event: 'INSERT',
+            event: '*', // Listen to all events
             schema: 'public',
             table: 'bet_participants',
             filter: `bet_id=eq.${bet.id}`,
           },
-          (payload: RealtimePostgresChangesPayload<BetParticipant>) => {
-            const newParticipant = payload.new;
-            setBet(currentBet => {
-              if (!currentBet) return currentBet;
-              return {
-                ...currentBet,
-                participants: [...currentBet.participants, newParticipant]
-              };
-            });
+          async (payload: RealtimePostgresChangesPayload<BetParticipant>) => {
+            // Fetch fresh data instead of updating locally
+            const updatedBet = await betService.getBetByCode(bet.code_name);
+            if (updatedBet) {
+              setBet(updatedBet);
+            }
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log(`Subscription status for bet ${bet.id}:`, status);
+        });
     }
 
-    // Cleanup subscription only when component unmounts
     return () => {
       if (channelRef.current) {
+        console.log(`Unsubscribing from bet ${bet.id}`);
         channelRef.current.unsubscribe();
         channelRef.current = null;
       }
     };
-  }, [bet?.id]); // Only re-run if bet.id changes
+  }, [bet?.id, bet?.code_name]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
