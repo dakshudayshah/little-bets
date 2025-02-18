@@ -138,4 +138,16 @@ select:disabled {
 /* Add collapsible styles */
 .collapsible {
   /* Implementation */
+}
+
+.creator-info {
+  color: #4a5568;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.end-bet-section input::placeholder {
+  color: #a0aec0;
+  font-style: italic;
 } 

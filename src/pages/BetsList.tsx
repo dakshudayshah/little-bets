@@ -24,6 +24,7 @@ const EndedBets = ({ bets }: { bets: BetWithParticipants[] }) => {
             <Link to={`/bet/${bet.code_name}`} key={bet.id} className="bet-card ended-bet">
               <h2>{bet.question}</h2>
               <p className="bet-type">{bet.type}</p>
+              <p className="bet-creator">Created by: {bet.creator_name}</p>
               <p className="bet-participants">
                 {bet.participants.length} predictions
               </p>
@@ -84,6 +85,7 @@ export const BetsList = () => {
             <Link to={`/bet/${bet.code_name}`} key={bet.id} className="bet-card">
               <h2>{bet.question}</h2>
               <p className="bet-type">{bet.type}</p>
+              <p className="bet-creator">Created by: {bet.creator_name}</p>
               <p className="bet-participants">
                 {bet.participants.length} predictions
               </p>
