@@ -11,7 +11,7 @@ export const CreateBet = () => {
   const [formData, setFormData] = useState<CreateBetForm>({
     type: 'GENDER',
     question: '',
-    description: '',
+    description: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
