@@ -1,5 +1,4 @@
 export type BetType = 'GENDER' | 'SCALE' | 'DURATION';
-export type BetStatus = 'ACTIVE' | 'ENDED';
 
 // Database types
 export interface Bet {
@@ -9,10 +8,6 @@ export interface Bet {
   type: BetType;
   question: string;
   description?: string;
-  status: BetStatus;
-  ended_by?: string;
-  ended_at?: string;
-  creator_name: string;
 }
 
 export interface BetParticipant {
@@ -32,5 +27,4 @@ export interface CreateBetForm {
   type: BetType;
   question: string;
   description?: string;
-  creatorName: string;
-} 
+}
