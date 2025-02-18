@@ -1,18 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BetWithParticipants, BetParticipant } from '../types';
+import { BetWithParticipants } from '../types';
 import { betService } from '../services/betService';
 import '../styles/BetDetails.css';
-import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-
-type BetParticipantPayload = {
-  id: string;
-  bet_id: string;
-  name: string;
-  prediction: string;
-  created_at: string;
-};
 
 export const BetDetails = () => {
   const { code } = useParams<{ code: string }>();
@@ -59,23 +51,21 @@ export const BetDetails = () => {
     };
   }, [code, navigate]);
 
-  // Separate useEffect for subscription
   useEffect(() => {
     if (!bet?.id) return;
 
-    // Only create a new subscription if we don't have one
     if (!channelRef.current) {
       channelRef.current = supabase
         .channel(`bet-${bet.id}`)
         .on(
           'postgres_changes',
           {
-            event: '*', // Listen to all events
+            event: '*',
             schema: 'public',
             table: 'bet_participants',
             filter: `bet_id=eq.${bet.id}`,
           },
-          async (payload: RealtimePostgresChangesPayload<BetParticipant>) => {
+          async () => {
             // Fetch fresh data instead of updating locally
             const updatedBet = await betService.getBetByCode(bet.code_name);
             if (updatedBet) {
