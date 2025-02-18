@@ -14,75 +14,6 @@ type BetParticipantPayload = {
   created_at: string;
 };
 
-const EndBetButton = ({ bet }: { bet: BetWithParticipants }) => {
-  const [isEnding, setIsEnding] = useState(false);
-  const [creatorName, setCreatorName] = useState('');
-  const [error, setError] = useState<string | null>(null);
-
-  const handleEndBet = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsEnding(true);
-    setError(null);
-
-    // Preserve logs
-    console.log('%c Attempting to end bet', 'background: #222; color: #bada55', {
-      betId: bet.id,
-      creatorName,
-      creator: bet.creator_name,
-      timestamp: new Date().toISOString()
-    });
-
-    try {
-      await betService.endBet(bet.id, creatorName);
-      console.log('%c Bet ended successfully', 'background: #222; color: #bada55');
-      window.location.reload();
-    } catch (err: any) {
-      const message = err.message || 'Failed to end bet. Please try again.';
-      console.error('%c End bet error', 'background: #222; color: #ff0000', {
-        error: err,
-        message,
-        timestamp: new Date().toISOString()
-      });
-      setError(message);
-    } finally {
-      setIsEnding(false);
-    }
-  };
-
-  if (bet.status === 'ENDED') {
-    return (
-      <div className="end-bet-section">
-        <p>This bet was ended by {bet.ended_by} on {new Date(bet.ended_at!).toLocaleDateString()}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="end-bet-section">
-      <h2>End this Bet</h2>
-      <p className="creator-info">Only the creator "{bet.creator_name}" can end this bet</p>
-      <form onSubmit={handleEndBet}>
-        <div className="form-group">
-          <label htmlFor="creatorName">Enter your name to verify you created this bet</label>
-          <input
-            id="creatorName"
-            type="text"
-            value={creatorName}
-            onChange={(e) => setCreatorName(e.target.value)}
-            placeholder={`Enter "${bet.creator_name}"`}
-            required
-            disabled={isEnding}
-          />
-        </div>
-        {error && <p className="error-message">{error}</p>}
-        <button type="submit" className="button" disabled={isEnding}>
-          {isEnding ? 'Ending Bet...' : 'End Bet'}
-        </button>
-      </form>
-    </div>
-  );
-};
-
 export const BetDetails = () => {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
@@ -92,6 +23,7 @@ export const BetDetails = () => {
   const [name, setName] = useState('');
   const [prediction, setPrediction] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [_channel, setChannel] = useState<RealtimeChannel | null>(null);
 
   useEffect(() => {
     const fetchBet = async () => {
@@ -114,14 +46,10 @@ export const BetDetails = () => {
 
     fetchBet();
 
-    // Set up subscriptions if we have both code and bet
-    let participantsChannel: RealtimeChannel | null = null;
-    let statusChannel: RealtimeChannel | null = null;
-    
+    // Set up real-time subscription
     if (code && bet) {
-      // Participants subscription
-      participantsChannel = supabase
-        .channel(`bet_participants_${bet.id}`)
+      const channel = supabase
+        .channel('bet_changes')
         .on(
           'postgres_changes',
           {
@@ -131,60 +59,27 @@ export const BetDetails = () => {
             filter: `bet_id=eq.${bet.id}`,
           },
           (payload: RealtimePostgresChangesPayload<BetParticipantPayload>) => {
-            console.log('New participant:', payload.new);
+            const newParticipant = payload.new;
             setBet(currentBet => {
               if (!currentBet) return currentBet;
               return {
                 ...currentBet,
-                participants: [...currentBet.participants, payload.new as BetParticipant]
+                participants: [...currentBet.participants, newParticipant as BetParticipant]
               };
             });
           }
         )
-        .subscribe();
+        .subscribe((status: 'SUBSCRIBED' | 'CLOSED' | 'TIMED_OUT' | 'CHANNEL_ERROR') => {
+          console.log('Subscription status:', status);
+        });
 
-      // Status changes subscription
-      statusChannel = supabase
-        .channel(`bet_status_${bet.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'bets',
-            filter: `id=eq.${bet.id}`,
-          },
-          (payload) => {
-            console.log('Bet updated:', payload.new);
-            setBet(currentBet => {
-              if (!currentBet) return currentBet;
-              return {
-                ...currentBet,
-                ...payload.new,
-              };
-            });
-          }
-        )
-        .subscribe();
+      setChannel(channel);
+
+      return () => {
+        channel.unsubscribe();
+      };
     }
-
-    // Clean up subscriptions
-    return () => {
-      if (participantsChannel) participantsChannel.unsubscribe();
-      if (statusChannel) statusChannel.unsubscribe();
-    };
   }, [code, navigate, bet]);
-
-  useEffect(() => {
-    if (bet) {
-      console.log('%c Current bet data', 'background: #222; color: #00ff00', {
-        id: bet.id,
-        creator: bet.creator_name,
-        status: bet.status,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }, [bet]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -284,7 +179,6 @@ export const BetDetails = () => {
       <div className="content">
         <h1>{bet.question}</h1>
         {bet.description && <p className="description">{bet.description}</p>}
-        <p className="bet-creator">Created by: {bet.creator_name}</p>
         
         <div className="share-section">
           <p>Share this bet with your friends using code: <strong>{bet.code_name}</strong></p>
@@ -346,8 +240,6 @@ export const BetDetails = () => {
             </table>
           </div>
         </div>
-
-        <EndBetButton bet={bet} />
       </div>
     </div>
   );
