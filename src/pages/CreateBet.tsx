@@ -1,36 +1,32 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BetType } from '../types';
+import { BetType, CreateBetForm } from '../types';
 import { betService } from '../services/betService';
 import '../styles/CreateBet.css';
 
 export const CreateBet = () => {
   const navigate = useNavigate();
-  const [type, setType] = useState<BetType>('GENDER');
-  const [question, setQuestion] = useState('');
-  const [description, setDescription] = useState('');
-  const [creatorName, setCreatorName] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<CreateBetForm>({
+    type: 'GENDER',
+    question: '',
+    description: '',
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setIsLoading(true);
     setError(null);
 
     try {
-      const bet = await betService.createBet({
-        type,
-        question,
-        description,
-        creatorName,
-      });
-      navigate(`/bet/${bet.code_name}`);
+      const newBet = await betService.createBet(formData);
+      navigate(`/bet/${newBet.code_name}`);
     } catch (err) {
       setError('Failed to create bet. Please try again.');
       console.error('Create bet error:', err);
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
@@ -46,10 +42,10 @@ export const CreateBet = () => {
             <label htmlFor="type">Bet Type</label>
             <select
               id="type"
-              value={type}
-              onChange={(e) => setType(e.target.value as BetType)}
+              value={formData.type}
+              onChange={(e) => setFormData({ ...formData, type: e.target.value as BetType })}
               required
-              disabled={isSubmitting}
+              disabled={isLoading}
             >
               <option value="GENDER">Baby Gender</option>
               <option value="SCALE">Scale Rating (1-10)</option>
@@ -62,11 +58,11 @@ export const CreateBet = () => {
             <input
               id="question"
               type="text"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
+              value={formData.question}
+              onChange={(e) => setFormData({ ...formData, question: e.target.value })}
               placeholder="What's your question?"
               required
-              disabled={isSubmitting}
+              disabled={isLoading}
             />
           </div>
 
@@ -74,28 +70,15 @@ export const CreateBet = () => {
             <label htmlFor="description">Description (Optional)</label>
             <textarea
               id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Add more details about your bet..."
-              disabled={isSubmitting}
+              disabled={isLoading}
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="creatorName">Your Name</label>
-            <input
-              id="creatorName"
-              type="text"
-              value={creatorName}
-              onChange={(e) => setCreatorName(e.target.value)}
-              placeholder="Enter your name"
-              required
-              disabled={isSubmitting}
-            />
-          </div>
-
-          <button type="submit" className="button" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating...' : 'Create Bet'}
+          <button type="submit" className="button" disabled={isLoading}>
+            {isLoading ? 'Creating...' : 'Create Bet'}
           </button>
         </form>
       </div>

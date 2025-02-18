@@ -4,41 +4,6 @@ import { BetWithParticipants } from '../types';
 import { betService } from '../services/betService';
 import '../styles/BetsList.css';
 
-const EndedBets = ({ bets }: { bets: BetWithParticipants[] }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  if (bets.length === 0) return null;
-
-  return (
-    <div className="ended-bets-section">
-      <button 
-        className="toggle-button"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        {isExpanded ? 'Hide' : 'Show'} Ended Bets ({bets.length})
-      </button>
-      
-      {isExpanded && (
-        <div className="bets-grid">
-          {bets.map(bet => (
-            <Link to={`/bet/${bet.code_name}`} key={bet.id} className="bet-card ended-bet">
-              <h2>{bet.question}</h2>
-              <p className="bet-type">{bet.type}</p>
-              <p className="bet-creator">Created by: {bet.creator_name}</p>
-              <p className="bet-participants">
-                {bet.participants.length} predictions
-              </p>
-              <p className="bet-date">
-                Ended {new Date(bet.ended_at!).toLocaleDateString()}
-              </p>
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
 export const BetsList = () => {
   const [bets, setBets] = useState<BetWithParticipants[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,9 +35,6 @@ export const BetsList = () => {
     );
   }
 
-  const activeBets = bets.filter(bet => bet.status === 'ACTIVE');
-  const endedBets = bets.filter(bet => bet.status === 'ENDED');
-
   return (
     <div className="container">
       <div className="content">
@@ -81,11 +43,10 @@ export const BetsList = () => {
         {error && <p className="error-message">{error}</p>}
         
         <div className="bets-grid">
-          {activeBets.map(bet => (
+          {bets.map(bet => (
             <Link to={`/bet/${bet.code_name}`} key={bet.id} className="bet-card">
               <h2>{bet.question}</h2>
               <p className="bet-type">{bet.type}</p>
-              <p className="bet-creator">Created by: {bet.creator_name}</p>
               <p className="bet-participants">
                 {bet.participants.length} predictions
               </p>
@@ -95,14 +56,12 @@ export const BetsList = () => {
             </Link>
           ))}
 
-          {!error && activeBets.length === 0 && (
+          {!error && bets.length === 0 && (
             <p className="no-bets">
-              No active bets. <Link to="/create">Create one!</Link>
+              No bets yet. <Link to="/create">Create one!</Link>
             </p>
           )}
         </div>
-
-        <EndedBets bets={endedBets} />
       </div>
     </div>
   );
