@@ -12,7 +12,10 @@
   padding: 1.5rem;
   text-decoration: none;
   color: inherit;
-  transition: all 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .bet-card:hover {
@@ -20,18 +23,59 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.bet-card h2 {
-  font-size: 1.25rem;
+.bet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
   margin-bottom: 1rem;
-  color: #2c5282;
 }
 
 .bet-type {
-  text-transform: capitalize;
-  background-color: #e2e8f0;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  display: inline-block;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.bet-type.milestone {
+  background-color: #C6F6D5;
+  color: #22543D;
+}
+
+.bet-type.rating {
+  background-color: #BEE3F8;
+  color: #2A4365;
+}
+
+.bet-type.choice {
+  background-color: #FEEBC8;
+  color: #744210;
+}
+
+.bet-type.word {
+  background-color: #E9D8FD;
+  color: #44337A;
+}
+
+.bet-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #E2E8F0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #718096;
+}
+
+.bet-card h2 {
+  font-size: 1.25rem;
+  color: #2c5282;
+  margin: 0;
+  flex: 1;
 }
 
 .bet-participants {
@@ -95,16 +139,13 @@
 }
 
 .bet-stats {
-  color: #2c5282;
+  background-color: #F7FAFC;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
   font-size: 0.875rem;
-  margin: 0.5rem 0;
-  font-weight: 500;
-  padding: 0.25rem 0.5rem;
-  background-color: #ebf8ff;
-  border-radius: 0.25rem;
-  display: inline-block;
-  max-width: 100%;
-  word-break: break-word;
+  color: #4A5568;
+  line-height: 1.4;
 }
 
 /* Add responsive adjustments */

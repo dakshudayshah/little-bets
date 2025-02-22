@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BetWithParticipants } from '../types';
+import { BetWithParticipants, BetParticipant } from '../types';
 import { betService } from '../services/betService';
 import '../styles/BetDetails.css';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -160,47 +160,7 @@ export const BetDetails = () => {
 
   const renderPredictionInput = () => {
     switch (bet.type) {
-      case 'GENDER':
-        return (
-          <div className="radio-group">
-            <label>
-              <input
-                type="radio"
-                value="BOY"
-                checked={prediction === 'BOY'}
-                onChange={(e) => setPrediction(e.target.value)}
-                disabled={isSubmitting}
-              />
-              Boy
-            </label>
-            <label>
-              <input
-                type="radio"
-                value="GIRL"
-                checked={prediction === 'GIRL'}
-                onChange={(e) => setPrediction(e.target.value)}
-                disabled={isSubmitting}
-              />
-              Girl
-            </label>
-          </div>
-        );
-      case 'SCALE':
-        return (
-          <div className="range-input">
-            <input
-              type="range"
-              min={bet.min_value || 1}
-              max={bet.max_value || 10}
-              value={prediction}
-              onChange={(e) => setPrediction(e.target.value)}
-              required
-              disabled={isSubmitting}
-            />
-            <span className="range-value">{prediction}</span>
-          </div>
-        );
-      case 'DURATION':
+      case 'MILESTONE':
         return (
           <div className="duration-input">
             <input
@@ -215,6 +175,56 @@ export const BetDetails = () => {
             <span className="unit">{bet.unit}</span>
           </div>
         );
+
+      case 'RATING':
+        return (
+          <div className="range-input">
+            <input
+              type="range"
+              min={bet.min_value || 1}
+              max={bet.max_value || 10}
+              value={prediction}
+              onChange={(e) => setPrediction(e.target.value)}
+              required
+              disabled={isSubmitting}
+            />
+            <span className="range-value">{prediction}</span>
+          </div>
+        );
+
+      case 'CHOICE':
+        if (!bet.choice_options) return null;
+        return (
+          <div className="choice-group">
+            {Object.entries(bet.choice_options).map(([key, value]) => (
+              <label key={key}>
+                <input
+                  type="radio"
+                  value={key}
+                  checked={prediction === key}
+                  onChange={(e) => setPrediction(e.target.value)}
+                  disabled={isSubmitting}
+                />
+                {value}
+              </label>
+            ))}
+          </div>
+        );
+
+      case 'WORD':
+        return (
+          <input
+            type="text"
+            value={prediction}
+            onChange={(e) => setPrediction(e.target.value)}
+            placeholder="Enter one word"
+            maxLength={30}
+            pattern="\S+"
+            title="Please enter a single word (no spaces)"
+            required
+            disabled={isSubmitting}
+          />
+        );
     }
   };
 
@@ -222,31 +232,18 @@ export const BetDetails = () => {
     if (!bet.participants.length) return null;
 
     switch (bet.type) {
-      case 'GENDER':
-        const boyCount = bet.participants.filter(p => p.prediction === 'BOY').length;
-        const girlCount = bet.participants.filter(p => p.prediction === 'GIRL').length;
-        return (
-          <div className="bet-stats">
-            <h3>Current Results</h3>
-            <div className="gender-distribution">
-              <div className="stat-item">
-                <span>Boy</span>
-                <div className="stat-bar" style={{ width: `${(boyCount / bet.participants.length) * 100}%` }}></div>
-                <span>{boyCount}</span>
-              </div>
-              <div className="stat-item">
-                <span>Girl</span>
-                <div className="stat-bar" style={{ width: `${(girlCount / bet.participants.length) * 100}%` }}></div>
-                <span>{girlCount}</span>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'SCALE':
-      case 'DURATION':
-        const predictions = bet.participants.map(p => Number(p.prediction));
+      case 'MILESTONE':
+      case 'RATING':
+        const predictions = bet.participants
+          .map(p => Number(p.prediction))
+          .filter(n => !isNaN(n));
+        
+        if (!predictions.length) return null;
+        
         const average = predictions.reduce((a, b) => a + b, 0) / predictions.length;
+        const min = Math.min(...predictions);
+        const max = Math.max(...predictions);
+        
         return (
           <div className="bet-stats">
             <h3>Current Results</h3>
@@ -257,13 +254,72 @@ export const BetDetails = () => {
               </div>
               <div className="stat-item">
                 <span>Range</span>
-                <span>
-                  {Math.min(...predictions)} - {Math.max(...predictions)} {bet.unit || ''}
-                </span>
+                <span>{min} - {max} {bet.unit || ''}</span>
               </div>
             </div>
           </div>
         );
+
+      case 'CHOICE':
+        if (!bet.choice_options) return null;
+        
+        const counts = bet.participants.reduce((acc, p) => {
+          acc[p.prediction] = (acc[p.prediction] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+
+        return (
+          <div className="bet-stats">
+            <h3>Current Results</h3>
+            <div className="choice-distribution">
+              {Object.entries(bet.choice_options).map(([key, value]) => {
+                const count = counts[key] || 0;
+                const percentage = (count / bet.participants.length) * 100;
+                return (
+                  <div key={key} className="stat-item">
+                    <span>{value}</span>
+                    <div className="stat-bar" style={{ width: `${percentage}%` }}></div>
+                    <span>{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+
+      case 'WORD':
+        return (
+          <div className="bet-stats">
+            <h3>Word Cloud</h3>
+            <div className="word-cloud">
+              {bet.participants.map((p, i) => (
+                <span key={i} className="word-item">
+                  {p.prediction}
+                </span>
+              ))}
+            </div>
+          </div>
+        );
+    }
+  };
+
+  const formatPrediction = (participant: BetParticipant) => {
+    switch (bet.type) {
+      case 'MILESTONE':
+        return `${participant.prediction} ${bet.unit}`;
+      
+      case 'RATING':
+        return `${participant.prediction} / ${bet.max_value}`;
+      
+      case 'CHOICE':
+        if (!bet.choice_options) return participant.prediction;
+        return bet.choice_options[participant.prediction as keyof typeof bet.choice_options] || participant.prediction;
+      
+      case 'WORD':
+        return participant.prediction;
+      
+      default:
+        return participant.prediction;
     }
   };
 
@@ -327,7 +383,7 @@ export const BetDetails = () => {
                 {bet.participants.map((participant, index) => (
                   <tr key={index}>
                     <td>{participant.name}</td>
-                    <td>{participant.prediction}</td>
+                    <td>{formatPrediction(participant)}</td>
                     <td>{new Date(participant.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))}

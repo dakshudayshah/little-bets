@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BetType, CreateBetForm } from '../types';
+import { BetType, CreateBetForm, ChoiceOptions } from '../types';
 import { betService } from '../services/betService';
 import '../styles/CreateBet.css';
 
@@ -12,19 +12,24 @@ interface BetTypeInfo {
 
 const BET_TYPES: BetTypeInfo[] = [
   {
-    value: 'GENDER',
-    label: 'Gender Bet',
-    example: 'For e.g. Will Baby Sarah be a boy or a girl?'
+    value: 'MILESTONE',
+    label: 'Milestone Bet',
+    example: 'For e.g. in how many months will Baby Luke start walking?'
   },
   {
-    value: 'SCALE',
-    label: 'Scale Rating',
-    example: 'For e.g. On a scale of 1-10, how likely is Tom to get promoted this year?'
+    value: 'RATING',
+    label: 'Rating Bet',
+    example: 'For e.g. On a scale of 1-10, how likely are we to have another wedding in the group this year?'
   },
   {
-    value: 'DURATION',
-    label: 'Duration Bet',
-    example: 'For e.g. How many months until Sarah and John get engaged?'
+    value: 'CHOICE',
+    label: 'Choice Bet',
+    example: 'For e.g. What should be our next group event?'
+  },
+  {
+    value: 'WORD',
+    label: 'Word Bet',
+    example: 'For e.g. In one word, describe John\'s biggest personality quirk.'
   }
 ];
 
@@ -33,7 +38,7 @@ export const CreateBet = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<CreateBetForm>({
-    type: 'GENDER',
+    type: 'MILESTONE',
     question: '',
     description: '',
     creator_name: ''
@@ -41,6 +46,22 @@ export const CreateBet = () => {
   const [minValue, setMinValue] = useState<number>(0);
   const [maxValue, setMaxValue] = useState<number>(10);
   const [unit, setUnit] = useState<string>('months');
+  const [choiceOptions, setChoiceOptions] = useState<ChoiceOptions>({
+    a: '',
+    b: '',
+    c: '',
+    d: ''
+  });
+
+  console.log('Form state:', {
+    type: formData.type,
+    additionalFields: {
+      minValue,
+      maxValue,
+      unit,
+      choiceOptions
+    }
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,22 +69,33 @@ export const CreateBet = () => {
     setError(null);
 
     try {
-      // Include additional fields based on bet type
+      // Validate form data based on type
+      if (formData.type === 'CHOICE' && !Object.values(choiceOptions).every(v => v.trim())) {
+        throw new Error('All choice options must be filled out');
+      }
+
+      if ((formData.type === 'MILESTONE' || formData.type === 'RATING') && minValue >= maxValue) {
+        throw new Error('Maximum value must be greater than minimum value');
+      }
+
       const betData = {
         ...formData,
-        ...(formData.type === 'SCALE' || formData.type === 'DURATION' ? {
+        ...(formData.type === 'MILESTONE' || formData.type === 'RATING' ? {
           min_value: minValue,
           max_value: maxValue,
         } : {}),
-        ...(formData.type === 'DURATION' ? {
-          unit: unit,
+        ...(formData.type === 'MILESTONE' ? {
+          unit: unit.trim(),
+        } : {}),
+        ...(formData.type === 'CHOICE' ? {
+          choice_options: choiceOptions,
         } : {})
       };
 
       const newBet = await betService.createBet(betData);
       navigate(`/bet/${newBet.code_name}`);
     } catch (err) {
-      setError('Failed to create bet. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to create bet. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +103,42 @@ export const CreateBet = () => {
 
   const renderAdditionalFields = () => {
     switch (formData.type) {
-      case 'SCALE':
+      case 'MILESTONE':
+        return (
+          <>
+            <div className="form-group">
+              <label>Duration Range</label>
+              <div className="range-inputs">
+                <input
+                  type="number"
+                  value={minValue}
+                  onChange={(e) => setMinValue(Number(e.target.value))}
+                  placeholder="Min value"
+                  required
+                />
+                <input
+                  type="number"
+                  value={maxValue}
+                  onChange={(e) => setMaxValue(Number(e.target.value))}
+                  placeholder="Max value"
+                  required
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Unit</label>
+              <input
+                type="text"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                placeholder="e.g., months, years"
+                required
+              />
+            </div>
+          </>
+        );
+
+      case 'RATING':
         return (
           <div className="form-group">
             <label>Rating Scale</label>
@@ -93,42 +160,27 @@ export const CreateBet = () => {
             </div>
           </div>
         );
-      
-      case 'DURATION':
+
+      case 'CHOICE':
         return (
-          <>
-            <div className="form-group">
-              <label>Duration Range</label>
-              <div className="range-inputs">
-                <input
-                  type="number"
-                  value={minValue}
-                  onChange={(e) => setMinValue(Number(e.target.value))}
-                  placeholder="Min months"
-                  required
-                />
-                <input
-                  type="number"
-                  value={maxValue}
-                  onChange={(e) => setMaxValue(Number(e.target.value))}
-                  placeholder="Max months"
-                  required
-                />
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Unit</label>
+          <div className="form-group">
+            <label>Choice Options</label>
+            {Object.keys(choiceOptions).map((key) => (
               <input
+                key={key}
                 type="text"
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                placeholder="e.g., months, years"
+                value={choiceOptions[key as keyof ChoiceOptions]}
+                onChange={(e) => setChoiceOptions({
+                  ...choiceOptions,
+                  [key]: e.target.value
+                })}
+                placeholder={`Option ${key.toUpperCase()}`}
                 required
               />
-            </div>
-          </>
+            ))}
+          </div>
         );
-      
+
       default:
         return null;
     }
