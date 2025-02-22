@@ -97,4 +97,51 @@ select:disabled {
   color: #4a5568;
   font-style: italic;
   margin-bottom: 1rem;
+}
+
+.range-input {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.range-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  min-width: 2.5rem;
+}
+
+.duration-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.unit {
+  color: #4a5568;
+}
+
+.bet-stats {
+  margin: 2rem 0;
+  padding: 1rem;
+  background-color: #f7fafc;
+  border-radius: 0.5rem;
+}
+
+.gender-distribution, .numeric-stats {
+  margin-top: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat-bar {
+  height: 1.5rem;
+  background-color: #4299e1;
+  border-radius: 0.25rem;
+  transition: width 0.3s ease;
 } 
