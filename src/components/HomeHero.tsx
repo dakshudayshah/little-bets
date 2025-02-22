@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { NotificationsContainer } from './NotificationsContainer';
 import '../styles/HomeHero.css';
 import { useState } from 'react';
-import betIllustration from '../assets/bet-illustration.png?url';
 
 export const HomeHero = () => {
   const [imageError, setImageError] = useState(false);
@@ -16,7 +15,7 @@ export const HomeHero = () => {
         </div>
         {!imageError && (
           <img 
-            src={betIllustration}
+            src="/bet-illustration.png"
             alt="People making bets" 
             className="hero-illustration"
             onError={() => setImageError(true)}
