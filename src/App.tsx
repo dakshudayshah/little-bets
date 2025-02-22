@@ -5,7 +5,8 @@ import { BetDetails } from './pages/BetDetails';
 import { BetsList } from './pages/BetsList';
 import { Header } from './components/Header';
 
-function App() {
+const App = () => {
+  console.log('App rendering');
   return (
     <Router>
       <Header />
@@ -17,6 +18,6 @@ function App() {
       </Routes>
     </Router>
   );
-}
+};
 
 export default App; 
