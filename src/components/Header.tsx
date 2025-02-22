@@ -24,8 +24,6 @@ export const Header = () => {
         </Link>
         
         <div className="header-links">
-          <Link to="/bets" className="header-link">All Bets</Link>
-          <Link to="/create" className="header-link">Create Bet</Link>
           <a 
             href="https://buymeacoffee.com/dakshudayshah"
             target="_blank"
@@ -34,6 +32,8 @@ export const Header = () => {
           >
             <CoffeeIcon /> Support This Project
           </a>
+          <Link to="/bets" className="header-link">All Bets</Link>
+          <Link to="/create" className="cta-button">Create Bet</Link>
         </div>
       </div>
     </header>
