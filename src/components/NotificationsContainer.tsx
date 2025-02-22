@@ -30,36 +30,41 @@ const NOTIFICATION_POSITION = {
   right: '0',   // Start from right edge
 };
 
+// Add explicit type for status
+type NotificationStatus = 'entering' | 'visible' | 'exiting';
+
+interface Notification {
+  id: number;
+  text: string;
+  status: NotificationStatus;
+}
+
 export const NotificationsContainer = () => {
-  const [notifications, setNotifications] = useState<Array<{
-    id: number;
-    text: string;
-    status: 'entering' | 'visible' | 'exiting';
-  }>>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
     let currentIndex = 0;
     
     const addNotification = () => {
       setNotifications(prev => {
-        // Remove exiting notifications
+        // Type safety check
+        console.log('Current notifications:', prev.map(n => n.status));
+        
         const filtered = prev.filter(n => n.status !== 'exiting');
         
-        // Move existing notification down
-        const updated = filtered.map(n => ({
-          ...n,
-          status: n.status === 'visible' ? 'exiting' : n.status
-        }));
+        const updated = filtered.map(n => {
+          const newStatus: NotificationStatus = n.status === 'visible' ? 'exiting' : 
+            n.status === 'entering' ? 'visible' : n.status;
+          return { ...n, status: newStatus };
+        });
 
-        // Add new notification
-        return [
-          ...updated,
-          {
-            id: Date.now(),
-            text: EXAMPLE_BETS[currentIndex],
-            status: 'entering'
-          }
-        ].slice(-2); // Keep only last 2 notifications
+        const newNotification: Notification = {
+          id: Date.now(),
+          text: EXAMPLE_BETS[currentIndex],
+          status: 'entering' as const // Ensure literal type
+        };
+
+        return [...updated, newNotification].slice(-2);
       });
 
       currentIndex = (currentIndex + 1) % EXAMPLE_BETS.length;
