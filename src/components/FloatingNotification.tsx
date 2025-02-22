@@ -9,24 +9,17 @@ interface FloatingNotificationProps {
     right: string;
   };
   status: NotificationStatus;
-  index: number;
 }
 
 export const FloatingNotification = ({ 
   text, 
   position, 
-  status,
-  index 
+  status
 }: FloatingNotificationProps) => {
-  console.log('Rendering notification:', { status, index });
-  
   return (
     <div 
       className={`floating-notification ${status}`}
-      style={{
-        ...position,
-        transform: `translateY(${index * 80}px)`
-      }}
+      style={position}
     >
       <div className="notification-content">
         {text}
