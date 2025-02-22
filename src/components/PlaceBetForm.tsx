@@ -11,6 +11,14 @@ export const PlaceBetForm = ({ bet }: PlaceBetFormProps) => {
   const [prediction, setPrediction] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  console.log('Current bet configuration:', {
+    type: bet.type,
+    min_value: bet.min_value,
+    max_value: bet.max_value,
+    unit: bet.unit,
+    choice_options: bet.choice_options
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -29,50 +37,67 @@ export const PlaceBetForm = ({ bet }: PlaceBetFormProps) => {
 
   const renderPredictionInput = () => {
     switch (bet.type) {
-      case 'GENDER':
+      case 'MILESTONE':
         return (
-          <div className="radio-group">
-            <label>
-              <input
-                type="radio"
-                value="BOY"
-                checked={prediction === 'BOY'}
-                onChange={(e) => setPrediction(e.target.value)}
-                disabled={isSubmitting}
-              />
-              Boy
-            </label>
-            <label>
-              <input
-                type="radio"
-                value="GIRL"
-                checked={prediction === 'GIRL'}
-                onChange={(e) => setPrediction(e.target.value)}
-                disabled={isSubmitting}
-              />
-              Girl
-            </label>
+          <div className="duration-input">
+            <input
+              type="number"
+              min={bet.min_value || 0}
+              max={bet.max_value}
+              value={prediction}
+              onChange={(e) => setPrediction(e.target.value)}
+              required
+              disabled={isSubmitting}
+            />
+            <span className="unit">{bet.unit}</span>
           </div>
         );
-      case 'SCALE':
+
+      case 'RATING':
         return (
-          <input
-            type="number"
-            min="1"
-            max="10"
-            value={prediction}
-            onChange={(e) => setPrediction(e.target.value)}
-            required
-            disabled={isSubmitting}
-          />
+          <div className="range-input">
+            <input
+              type="range"
+              min={bet.min_value || 1}
+              max={bet.max_value || 10}
+              value={prediction}
+              onChange={(e) => setPrediction(e.target.value)}
+              required
+              disabled={isSubmitting}
+            />
+            <span className="range-value">{prediction}</span>
+          </div>
         );
-      case 'DURATION':
+
+      case 'CHOICE':
+        if (!bet.choice_options) return null;
+        return (
+          <div className="choice-group">
+            {Object.entries(bet.choice_options).map(([key, value]) => (
+              <label key={key}>
+                <input
+                  type="radio"
+                  value={key}
+                  checked={prediction === key}
+                  onChange={(e) => setPrediction(e.target.value)}
+                  disabled={isSubmitting}
+                />
+                {value}
+              </label>
+            ))}
+          </div>
+        );
+
+      case 'WORD':
         return (
           <input
-            type="number"
-            min="0"
+            type="text"
             value={prediction}
             onChange={(e) => setPrediction(e.target.value)}
+            placeholder="Enter one word"
+            maxLength={30}
+            pattern="\S+"
+            title="Please enter a single word (no spaces)"
             required
             disabled={isSubmitting}
           />

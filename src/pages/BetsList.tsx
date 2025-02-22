@@ -1,37 +1,75 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BetWithParticipants } from '../types';
+import { BetWithParticipants, BetType } from '../types';
 import { betService } from '../services/betService';
 import '../styles/BetsList.css';
 
 const formatBetTypeInfo = (bet: BetWithParticipants) => {
   switch (bet.type) {
-    case 'GENDER':
-      const boyCount = bet.participants.filter(p => p.prediction === 'BOY').length;
-      const girlCount = bet.participants.filter(p => p.prediction === 'GIRL').length;
-      return `${boyCount} Boy vs ${girlCount} Girl predictions`;
-    
-    case 'SCALE':
+    case 'MILESTONE':
       if (!bet.participants.length) return 'No predictions yet';
-      const validScalePredictions = bet.participants
+      const validMilestonePredictions = bet.participants
         .map(p => Number(p.prediction))
         .filter(n => !isNaN(n));
-      if (!validScalePredictions.length) return 'No valid predictions yet';
-      const scaleAvg = validScalePredictions.reduce((a, b) => a + b, 0) / validScalePredictions.length;
-      return `Average: ${scaleAvg.toFixed(1)} (${bet.min_value || 1}-${bet.max_value || 10})`;
+      if (!validMilestonePredictions.length) return 'No valid predictions yet';
+      const milestoneAvg = validMilestonePredictions.reduce((a, b) => a + b, 0) / validMilestonePredictions.length;
+      return `Average: ${milestoneAvg.toFixed(1)} ${bet.unit || 'units'} (${bet.min_value}-${bet.max_value} ${bet.unit})`;
     
-    case 'DURATION':
+    case 'RATING':
       if (!bet.participants.length) return 'No predictions yet';
-      const validDurationPredictions = bet.participants
+      const validRatingPredictions = bet.participants
         .map(p => Number(p.prediction))
         .filter(n => !isNaN(n));
-      if (!validDurationPredictions.length) return 'No valid predictions yet';
-      const durationAvg = validDurationPredictions.reduce((a, b) => a + b, 0) / validDurationPredictions.length;
-      return `Average: ${durationAvg.toFixed(1)} ${bet.unit || 'units'}`;
+      if (!validRatingPredictions.length) return 'No valid predictions yet';
+      const ratingAvg = validRatingPredictions.reduce((a, b) => a + b, 0) / validRatingPredictions.length;
+      return `Average rating: ${ratingAvg.toFixed(1)} out of ${bet.max_value}`;
+    
+    case 'CHOICE':
+      if (!bet.participants.length) return 'No votes yet';
+      if (!bet.choice_options) return 'Options not available';
+      
+      const counts = bet.participants.reduce((acc, p) => {
+        acc[p.prediction] = (acc[p.prediction] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      const topChoice = Object.entries(bet.choice_options)
+        .map(([key, value]) => ({ key, value, count: counts[key] || 0 }))
+        .sort((a, b) => b.count - a.count)[0];
+      
+      return `Leading: ${topChoice.value} (${topChoice.count} votes)`;
+    
+    case 'WORD':
+      const wordCount = bet.participants.length;
+      return `${wordCount} ${wordCount === 1 ? 'response' : 'responses'}`;
     
     default:
       return 'No predictions yet';
   }
+};
+
+const formatBetType = (type: BetType) => {
+  switch (type) {
+    case 'MILESTONE':
+      return 'Milestone';
+    case 'RATING':
+      return 'Rating';
+    case 'CHOICE':
+      return 'Multiple Choice';
+    case 'WORD':
+      return 'Word';
+    default:
+      return type;
+  }
+};
+
+const formatDate = (date: string) => {
+  const options: Intl.DateTimeFormatOptions = { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  };
+  return new Date(date).toLocaleDateString(undefined, options);
 };
 
 export const BetsList = () => {
@@ -75,16 +113,22 @@ export const BetsList = () => {
         <div className="bets-grid">
           {bets.map(bet => (
             <Link to={`/bet/${bet.code_name}`} key={bet.id} className="bet-card">
-              <h2>{bet.question}</h2>
-              <p className="bet-type">{bet.type}</p>
+              <div className="bet-header">
+                <h2>{bet.question}</h2>
+                <span className={`bet-type ${bet.type.toLowerCase()}`}>
+                  {formatBetType(bet.type)}
+                </span>
+              </div>
               <p className="bet-creator">Created by {bet.creator_name}</p>
               <p className="bet-stats">{formatBetTypeInfo(bet)}</p>
-              <p className="bet-participants">
-                {bet.participants.length} predictions
-              </p>
-              <p className="bet-date">
-                Created {new Date(bet.created_at).toLocaleDateString()}
-              </p>
+              <div className="bet-footer">
+                <p className="bet-participants">
+                  {bet.participants.length} predictions
+                </p>
+                <p className="bet-date">
+                  {formatDate(bet.created_at)}
+                </p>
+              </div>
             </Link>
           ))}
 

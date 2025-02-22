@@ -1,8 +1,11 @@
-export type BetType = 'GENDER' | 'SCALE' | 'DURATION';
+export type BetType = 'MILESTONE' | 'RATING' | 'CHOICE' | 'WORD';
 
-// For GENDER type bets
-export interface GenderOptions {
-  options: ['BOY', 'GIRL'];
+// For CHOICE type bets
+export interface ChoiceOptions {
+  a: string;
+  b: string;
+  c: string;
+  d: string;
 }
 
 // Database types
@@ -14,9 +17,10 @@ export interface Bet {
   question: string;
   description?: string;
   creator_name: string;
-  min_value?: number;  // For SCALE/DURATION bets
-  max_value?: number;  // For SCALE/DURATION bets
-  unit?: string;      // For DURATION bets (e.g., "months", "years")
+  choice_options?: ChoiceOptions;  // For CHOICE type
+  min_value?: number;  // For MILESTONE/RATING bets
+  max_value?: number;  // For MILESTONE/RATING bets
+  unit?: string;      // For MILESTONE bets (e.g., "months", "years")
 }
 
 export interface BetParticipant {
