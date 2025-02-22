@@ -10,6 +10,12 @@ const CoffeeIcon = () => (
 );
 
 export const Header = () => {
+  console.log('Header links:', {
+    brand: '/',
+    bets: '/bets',
+    create: '/create',
+    support: 'buymeacoffee.com'
+  });
   return (
     <header className="header">
       <div className="header-content">
@@ -18,6 +24,7 @@ export const Header = () => {
         </Link>
         
         <div className="header-links">
+          <Link to="/bets" className="header-link">All Bets</Link>
           <Link to="/create" className="header-link">Create Bet</Link>
           <a 
             href="https://buymeacoffee.com/dakshudayshah"
