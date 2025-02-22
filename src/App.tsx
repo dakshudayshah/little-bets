@@ -6,6 +6,12 @@ import { BetsList } from './pages/BetsList';
 import { Header } from './components/Header';
 
 const App = () => {
+  console.log('Available routes:', {
+    home: '/',
+    bets: '/bets',
+    create: '/create',
+    betDetails: '/bet/:code'
+  });
   console.log('App rendering');
   return (
     <Router>
