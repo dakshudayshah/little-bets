@@ -24,10 +24,15 @@ const EXAMPLE_BETS = [
   "I Told You So: Will Aunt Patricia's questionable decision backfire within 6 months?"
 ];
 
-// Single fixed position where notifications will appear
-const NOTIFICATION_POSITION = {
-  top: '80px',  // Below header
-  right: '0',   // Start from right edge
+const NOTIFICATION_SLOTS = {
+  first: {
+    top: '80px',  // Below header
+    right: '20px'
+  },
+  second: {
+    top: '160px', // Below first slot (80px + 80px)
+    right: '20px'
+  }
 };
 
 // Add explicit type for status
@@ -37,6 +42,7 @@ interface Notification {
   id: number;
   text: string;
   status: NotificationStatus;
+  slot: string;
 }
 
 export const NotificationsContainer = () => {
@@ -47,21 +53,23 @@ export const NotificationsContainer = () => {
     
     const addNotification = () => {
       setNotifications(prev => {
-        // Type safety check
-        console.log('Current notifications:', prev.map(n => n.status));
-        
+        // Keep max 2 notifications (one for each slot)
         const filtered = prev.filter(n => n.status !== 'exiting');
         
-        const updated = filtered.map(n => {
-          const newStatus: NotificationStatus = n.status === 'visible' ? 'exiting' : 
-            n.status === 'entering' ? 'visible' : n.status;
-          return { ...n, status: newStatus };
-        });
+        // Move first slot to second slot
+        const updated = filtered.map(n => ({
+          ...n,
+          status: n.status === 'visible' ? 'exiting' : 
+            n.status === 'entering' ? 'visible' : n.status,
+          slot: n.status === 'entering' ? 'second' : 'first'
+        }));
 
+        // Add new notification in first slot
         const newNotification: Notification = {
           id: Date.now(),
           text: EXAMPLE_BETS[currentIndex],
-          status: 'entering' as const // Ensure literal type
+          status: 'entering',
+          slot: 'first'
         };
 
         return [...updated, newNotification].slice(-2);
@@ -76,13 +84,12 @@ export const NotificationsContainer = () => {
 
   return (
     <div className="notifications-container">
-      {notifications.map((notification, index) => (
+      {notifications.map(notification => (
         <FloatingNotification
           key={notification.id}
           text={notification.text}
-          position={NOTIFICATION_POSITION}
+          position={NOTIFICATION_SLOTS[notification.slot]}
           status={notification.status}
-          index={index}
         />
       ))}
     </div>
