@@ -4,31 +4,25 @@ import '../styles/FloatingNotification.css';
 interface FloatingNotificationProps {
   text: string;
   position: {
-    top?: string;
-    left?: string;
-    right?: string;
-    bottom?: string;
+    top: string;
+    right: string;
   };
-  delay?: number;
+  status: 'entering' | 'visible' | 'exiting';
+  index: number;
 }
 
-export const FloatingNotification = ({ text, position, delay = 0 }: FloatingNotificationProps) => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-    }, delay);
-
-    return () => clearTimeout(timer);
-  }, [delay]);
-
+export const FloatingNotification = ({ 
+  text, 
+  position, 
+  status,
+  index 
+}: FloatingNotificationProps) => {
   return (
     <div 
-      className={`floating-notification ${isVisible ? 'visible' : ''}`}
+      className={`floating-notification ${status}`}
       style={{
         ...position,
-        animationDelay: `${delay}ms`
+        transform: `translateY(${index * 80}px)`  // Stack notifications vertically
       }}
     >
       <div className="notification-content">
