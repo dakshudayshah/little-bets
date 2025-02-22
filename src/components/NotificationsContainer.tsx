@@ -24,16 +24,18 @@ const EXAMPLE_BETS = [
   "I Told You So: Will Aunt Patricia's questionable decision backfire within 6 months?"
 ];
 
-const NOTIFICATION_SLOTS = {
+type NotificationSlot = 'first' | 'second';
+
+const NOTIFICATION_SLOTS: Record<NotificationSlot, { top: string; right: string }> = {
   first: {
-    top: '80px',  // Below header
+    top: '80px',
     right: '20px'
   },
   second: {
-    top: '160px', // Below first slot (80px + 80px)
+    top: '160px',
     right: '20px'
   }
-};
+} as const;
 
 // Add explicit type for status
 type NotificationStatus = 'entering' | 'visible' | 'exiting';
@@ -42,7 +44,7 @@ interface Notification {
   id: number;
   text: string;
   status: NotificationStatus;
-  slot: string;
+  slot: NotificationSlot;
 }
 
 export const NotificationsContainer = () => {
@@ -61,7 +63,7 @@ export const NotificationsContainer = () => {
           ...n,
           status: n.status === 'visible' ? 'exiting' : 
             n.status === 'entering' ? 'visible' : n.status,
-          slot: n.status === 'entering' ? 'second' : 'first'
+          slot: n.status === 'entering' ? ('second' as const) : ('first' as const)
         }));
 
         // Add new notification in first slot
