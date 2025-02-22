@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { FloatingNotification } from './FloatingNotification';
 
 const EXAMPLE_BETS = [
@@ -50,47 +50,49 @@ interface Notification {
 export const NotificationsContainer = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  const addNotification = useCallback(() => {
+    setNotifications(prev => {
+      const filtered = prev.filter(n => n.status !== 'exiting');
+      
+      // Explicitly type the status transitions
+      const updated = filtered.map(n => {
+        let newStatus: NotificationStatus;
+        if (n.status === 'visible') {
+          newStatus = 'exiting';
+        } else if (n.status === 'entering') {
+          newStatus = 'visible';
+        } else {
+          newStatus = n.status;
+        }
+
+        return {
+          ...n,
+          status: newStatus,
+          slot: n.status === 'entering' ? 'second' : 'first'
+        } satisfies Notification;
+      });
+
+      const newNotification: Notification = {
+        id: Date.now(),
+        text: EXAMPLE_BETS[currentIndex],
+        status: 'entering',
+        slot: 'first'
+      };
+
+      return [...updated, newNotification];
+    });
+  }, []);
+
   useEffect(() => {
     let currentIndex = 0;
     
-    const addNotification = () => {
-      setNotifications(prev => {
-        const filtered = prev.filter(n => n.status !== 'exiting');
-        
-        // Explicitly type the status transitions
-        const updated = filtered.map(n => {
-          let newStatus: NotificationStatus;
-          if (n.status === 'visible') {
-            newStatus = 'exiting';
-          } else if (n.status === 'entering') {
-            newStatus = 'visible';
-          } else {
-            newStatus = n.status;
-          }
-
-          return {
-            ...n,
-            status: newStatus,
-            slot: n.status === 'entering' ? 'second' : 'first'
-          } satisfies Notification;
-        });
-
-        const newNotification: Notification = {
-          id: Date.now(),
-          text: EXAMPLE_BETS[currentIndex],
-          status: 'entering',
-          slot: 'first'
-        };
-
-        return [...updated, newNotification];
-      });
-
-      currentIndex = (currentIndex + 1) % EXAMPLE_BETS.length;
-    };
-
+    // Immediate first notification
+    addNotification();
+    
+    // Then continue with regular interval
     const interval = setInterval(addNotification, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [addNotification]);
 
   return (
     <div className="notifications-container">

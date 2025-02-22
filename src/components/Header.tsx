@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/Header.css';
 
@@ -9,7 +10,15 @@ const CoffeeIcon = () => (
   </svg>
 );
 
+const BurgerIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+);
+
 export const Header = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   console.log('Header links:', {
     brand: '/',
     bets: '/bets',
@@ -23,7 +32,11 @@ export const Header = () => {
           Little Bets
         </Link>
         
-        <div className="header-links">
+        <button className="burger-menu" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          <BurgerIcon />
+        </button>
+
+        <div className={`header-links ${isMenuOpen ? 'open' : ''}`}>
           <a 
             href="https://buymeacoffee.com/dakshudayshah"
             target="_blank"
