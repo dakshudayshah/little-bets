@@ -1,9 +1,13 @@
 import { Link } from 'react-router-dom';
 import { NotificationsContainer } from './NotificationsContainer';
 import '../styles/HomeHero.css';
+import { useState } from 'react';
 import betIllustration from '../assets/bet-illustration.png';
 
 export const HomeHero = () => {
+  const [imageError, setImageError] = useState(false);
+  console.log('Attempting to load image from:', betIllustration);
+
   return (
     <div className="hero-container">
       <NotificationsContainer />
@@ -11,11 +15,17 @@ export const HomeHero = () => {
         <div className="hero-logo">
           <h1>Little Bets</h1>
         </div>
-        <img 
-          src={betIllustration} 
-          alt="People making bets" 
-          className="hero-illustration"
-        />
+        {!imageError ? (
+          <img 
+            src={betIllustration} 
+            alt="People making bets" 
+            className="hero-illustration"
+            onError={() => {
+              console.error('Failed to load illustration');
+              setImageError(true);
+            }}
+          />
+        ) : null}
         <p className="hero-tagline">
           Make friendly bets with your friends on life's little moments
         </p>
