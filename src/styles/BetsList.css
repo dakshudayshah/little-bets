@@ -27,9 +27,11 @@
 }
 
 .bet-type {
-  color: #4a5568;
-  font-size: 0.875rem;
-  margin-bottom: 0.5rem;
+  text-transform: capitalize;
+  background-color: #e2e8f0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  display: inline-block;
 }
 
 .bet-participants {
@@ -90,4 +92,36 @@
   font-size: 0.875rem;
   margin-bottom: 0.5rem;
   font-style: italic;
+}
+
+.bet-stats {
+  color: #2c5282;
+  font-size: 0.875rem;
+  margin: 0.5rem 0;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  background-color: #ebf8ff;
+  border-radius: 0.25rem;
+  display: inline-block;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+/* Add responsive adjustments */
+@media (max-width: 480px) {
+  .bet-card {
+    padding: 1rem;
+  }
+  
+  .bet-card h2 {
+    font-size: 1.1rem;
+  }
+  
+  .bet-type,
+  .bet-stats,
+  .bet-creator,
+  .bet-participants,
+  .bet-date {
+    font-size: 0.8rem;
+  }
 } 

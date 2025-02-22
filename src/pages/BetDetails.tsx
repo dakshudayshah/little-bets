@@ -187,26 +187,82 @@ export const BetDetails = () => {
         );
       case 'SCALE':
         return (
-          <input
-            type="number"
-            min="1"
-            max="10"
-            value={prediction}
-            onChange={(e) => setPrediction(e.target.value)}
-            required
-            disabled={isSubmitting}
-          />
+          <div className="range-input">
+            <input
+              type="range"
+              min={bet.min_value || 1}
+              max={bet.max_value || 10}
+              value={prediction}
+              onChange={(e) => setPrediction(e.target.value)}
+              required
+              disabled={isSubmitting}
+            />
+            <span className="range-value">{prediction}</span>
+          </div>
         );
       case 'DURATION':
         return (
-          <input
-            type="number"
-            min="0"
-            value={prediction}
-            onChange={(e) => setPrediction(e.target.value)}
-            required
-            disabled={isSubmitting}
-          />
+          <div className="duration-input">
+            <input
+              type="number"
+              min={bet.min_value || 0}
+              max={bet.max_value}
+              value={prediction}
+              onChange={(e) => setPrediction(e.target.value)}
+              required
+              disabled={isSubmitting}
+            />
+            <span className="unit">{bet.unit}</span>
+          </div>
+        );
+    }
+  };
+
+  const calculateStats = () => {
+    if (!bet.participants.length) return null;
+
+    switch (bet.type) {
+      case 'GENDER':
+        const boyCount = bet.participants.filter(p => p.prediction === 'BOY').length;
+        const girlCount = bet.participants.filter(p => p.prediction === 'GIRL').length;
+        return (
+          <div className="bet-stats">
+            <h3>Current Results</h3>
+            <div className="gender-distribution">
+              <div className="stat-item">
+                <span>Boy</span>
+                <div className="stat-bar" style={{ width: `${(boyCount / bet.participants.length) * 100}%` }}></div>
+                <span>{boyCount}</span>
+              </div>
+              <div className="stat-item">
+                <span>Girl</span>
+                <div className="stat-bar" style={{ width: `${(girlCount / bet.participants.length) * 100}%` }}></div>
+                <span>{girlCount}</span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'SCALE':
+      case 'DURATION':
+        const predictions = bet.participants.map(p => Number(p.prediction));
+        const average = predictions.reduce((a, b) => a + b, 0) / predictions.length;
+        return (
+          <div className="bet-stats">
+            <h3>Current Results</h3>
+            <div className="numeric-stats">
+              <div className="stat-item">
+                <span>Average</span>
+                <span>{average.toFixed(1)} {bet.unit || ''}</span>
+              </div>
+              <div className="stat-item">
+                <span>Range</span>
+                <span>
+                  {Math.min(...predictions)} - {Math.max(...predictions)} {bet.unit || ''}
+                </span>
+              </div>
+            </div>
+          </div>
         );
     }
   };
@@ -258,6 +314,7 @@ export const BetDetails = () => {
 
           <div className="current-predictions">
             <h2>Current Predictions</h2>
+            {calculateStats()}
             <table>
               <thead>
                 <tr>
