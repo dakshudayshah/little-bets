@@ -55,18 +55,26 @@ export const NotificationsContainer = () => {
     
     const addNotification = () => {
       setNotifications(prev => {
-        // Keep max 2 notifications (one for each slot)
         const filtered = prev.filter(n => n.status !== 'exiting');
         
-        // Move first slot to second slot
-        const updated = filtered.map(n => ({
-          ...n,
-          status: n.status === 'visible' ? 'exiting' : 
-            n.status === 'entering' ? 'visible' : n.status,
-          slot: n.status === 'entering' ? ('second' as const) : ('first' as const)
-        }));
+        // Explicitly type the status transitions
+        const updated = filtered.map(n => {
+          let newStatus: NotificationStatus;
+          if (n.status === 'visible') {
+            newStatus = 'exiting';
+          } else if (n.status === 'entering') {
+            newStatus = 'visible';
+          } else {
+            newStatus = n.status;
+          }
 
-        // Add new notification in first slot
+          return {
+            ...n,
+            status: newStatus,
+            slot: n.status === 'entering' ? 'second' : 'first'
+          } satisfies Notification;
+        });
+
         const newNotification: Notification = {
           id: Date.now(),
           text: EXAMPLE_BETS[currentIndex],
@@ -74,7 +82,7 @@ export const NotificationsContainer = () => {
           slot: 'first'
         };
 
-        return [...updated, newNotification].slice(-2);
+        return [...updated, newNotification];
       });
 
       currentIndex = (currentIndex + 1) % EXAMPLE_BETS.length;
