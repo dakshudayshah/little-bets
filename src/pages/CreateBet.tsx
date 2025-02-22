@@ -4,8 +4,6 @@ import { BetType, CreateBetForm } from '../types';
 import { betService } from '../services/betService';
 import '../styles/CreateBet.css';
 
-console.log('Available types:', Object.keys(require('../types')));
-
 interface BetTypeInfo {
   value: BetType;
   label: string;
@@ -44,13 +42,6 @@ export const CreateBet = () => {
   const [maxValue, setMaxValue] = useState<number>(10);
   const [unit, setUnit] = useState<string>('months');
 
-  console.log('Current form data:', formData);
-  console.log('Component state:', {
-    minValue,
-    maxValue,
-    unit
-  });
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -73,7 +64,6 @@ export const CreateBet = () => {
       navigate(`/bet/${newBet.code_name}`);
     } catch (err) {
       setError('Failed to create bet. Please try again.');
-      console.error('Create bet error:', err);
     } finally {
       setIsLoading(false);
     }
