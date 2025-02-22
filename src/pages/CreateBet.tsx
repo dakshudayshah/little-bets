@@ -11,7 +11,8 @@ export const CreateBet = () => {
   const [formData, setFormData] = useState<CreateBetForm>({
     type: 'GENDER',
     question: '',
-    description: ''
+    description: '',
+    creator_name: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,6 +39,19 @@ export const CreateBet = () => {
         {error && <p className="error-message">{error}</p>}
         
         <form onSubmit={handleSubmit} className="form">
+          <div className="form-group">
+            <label htmlFor="creator_name">Your Name</label>
+            <input
+              id="creator_name"
+              type="text"
+              value={formData.creator_name}
+              onChange={(e) => setFormData({ ...formData, creator_name: e.target.value })}
+              placeholder="Enter your name"
+              required
+              disabled={isLoading}
+            />
+          </div>
+
           <div className="form-group">
             <label htmlFor="type">Bet Type</label>
             <select
