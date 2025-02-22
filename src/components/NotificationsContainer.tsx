@@ -88,7 +88,7 @@ export const NotificationsContainer = () => {
       currentIndex = (currentIndex + 1) % EXAMPLE_BETS.length;
     };
 
-    const interval = setInterval(addNotification, 3000);
+    const interval = setInterval(addNotification, 5000);
     return () => clearInterval(interval);
   }, []);
 
