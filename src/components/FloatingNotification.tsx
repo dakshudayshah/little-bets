@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import '../styles/FloatingNotification.css';
 
 type NotificationStatus = 'entering' | 'visible' | 'exiting';
@@ -19,12 +18,14 @@ export const FloatingNotification = ({
   status,
   index 
 }: FloatingNotificationProps) => {
+  console.log('Rendering notification:', { status, index });
+  
   return (
     <div 
       className={`floating-notification ${status}`}
       style={{
         ...position,
-        transform: `translateY(${index * 80}px)`  // Stack notifications vertically
+        transform: `translateY(${index * 80}px)`
       }}
     >
       <div className="notification-content">
