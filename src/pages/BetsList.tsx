@@ -76,6 +76,9 @@ export const BetsList = () => {
   const [bets, setBets] = useState<BetWithParticipants[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState('');
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
+  const [feedbackSent, setFeedbackSent] = useState(false);
 
   useEffect(() => {
     const fetchBets = async () => {
@@ -92,6 +95,20 @@ export const BetsList = () => {
 
     fetchBets();
   }, []);
+
+  const handleFeedbackSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSendingFeedback(true);
+
+    // Using mailto link as a simple solution
+    const subject = encodeURIComponent('Little Bets - Feature Request');
+    const body = encodeURIComponent(feedback);
+    window.location.href = `mailto:daksh.uday.shah@gmail.com?subject=${subject}&body=${body}`;
+
+    setFeedback('');
+    setFeedbackSent(true);
+    setIsSendingFeedback(false);
+  };
 
   if (isLoading) {
     return (
@@ -135,6 +152,31 @@ export const BetsList = () => {
           {!error && bets.length === 0 && (
             <p className="no-bets">
               No bets yet. <Link to="/create">Create one!</Link>
+            </p>
+          )}
+        </div>
+
+        <div className="feedback-section">
+          <h2>Feature Request</h2>
+          <form onSubmit={handleFeedbackSubmit} className="feedback-form">
+            <textarea
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Want to create a specific bet or have a feature request? Let us know!"
+              required
+              disabled={isSendingFeedback}
+            />
+            <button 
+              type="submit" 
+              className="button"
+              disabled={isSendingFeedback || !feedback.trim()}
+            >
+              {isSendingFeedback ? 'Sending...' : 'Send Feedback'}
+            </button>
+          </form>
+          {feedbackSent && (
+            <p className="feedback-success">
+              Thanks for your feedback! We'll get back to you soon.
             </p>
           )}
         </div>
