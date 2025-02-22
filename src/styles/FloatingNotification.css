@@ -1,21 +1,37 @@
+.notifications-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 300px;
+  pointer-events: none;
+  z-index: 100;
+}
+
 .floating-notification {
   position: absolute;
   background: white;
   padding: 1rem 1.5rem;
   border-radius: 1rem;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  opacity: 0;
-  transform: translateY(20px) scale(0.95);
-  transition: all 0.3s ease-out;
-  max-width: 300px;
-  z-index: 2;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 100%;
+  transition: all 0.5s ease;
 }
 
+/* Initial state - off screen */
+.floating-notification.entering {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+/* Visible state - centered */
 .floating-notification.visible {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translateX(0);
+}
+
+/* Exit state - just fade out, no movement */
+.floating-notification.exiting {
+  opacity: 0;
 }
 
 .notification-content {
@@ -25,42 +41,12 @@
   font-weight: 500;
 }
 
-@keyframes floatIn {
-  0% {
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes floatAround {
-  0% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  50% {
-    transform: translate(0, -10px) rotate(1deg);
-  }
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-}
-
-.floating-notification.visible {
-  animation: 
-    floatIn 0.5s ease-out forwards,
-    floatAround 4s ease-in-out infinite;
-}
-
 @media (max-width: 768px) {
-  .floating-notification {
-    padding: 0.75rem 1rem;
-    max-width: 250px;
+  .notifications-container {
+    width: 250px;
   }
   
-  .notification-content {
-    font-size: 0.8125rem;
+  .floating-notification {
+    padding: 0.75rem 1rem;
   }
 } 

@@ -24,46 +24,62 @@ const EXAMPLE_BETS = [
   "I Told You So: Will Aunt Patricia's questionable decision backfire within 6 months?"
 ];
 
-const POSITIONS = [
-  { top: '15%', left: '5%' },
-  { top: '25%', right: '8%' },
-  { top: '45%', left: '12%' },
-  { bottom: '35%', right: '10%' },
-  { bottom: '25%', left: '8%' },
-  { bottom: '15%', right: '15%' }
-];
+// Single fixed position where notifications will appear
+const NOTIFICATION_POSITION = {
+  top: '80px',  // Below header
+  right: '0',   // Start from right edge
+};
 
 export const NotificationsContainer = () => {
-  const [activeNotifications, setActiveNotifications] = useState<number[]>([]);
+  const [notifications, setNotifications] = useState<Array<{
+    id: number;
+    text: string;
+    status: 'entering' | 'visible' | 'exiting';
+  }>>([]);
 
   useEffect(() => {
     let currentIndex = 0;
     
-    const interval = setInterval(() => {
-      setActiveNotifications(prev => {
-        const newNotifications = [...prev, currentIndex];
-        if (newNotifications.length > 4) { // Show max 4 notifications at once
-          newNotifications.shift();
-        }
-        return newNotifications;
-      });
-      
-      currentIndex = (currentIndex + 1) % EXAMPLE_BETS.length;
-    }, 2000); // Add new notification every 2 seconds
+    const addNotification = () => {
+      setNotifications(prev => {
+        // Remove exiting notifications
+        const filtered = prev.filter(n => n.status !== 'exiting');
+        
+        // Move existing notification down
+        const updated = filtered.map(n => ({
+          ...n,
+          status: n.status === 'visible' ? 'exiting' : n.status
+        }));
 
+        // Add new notification
+        return [
+          ...updated,
+          {
+            id: Date.now(),
+            text: EXAMPLE_BETS[currentIndex],
+            status: 'entering'
+          }
+        ].slice(-2); // Keep only last 2 notifications
+      });
+
+      currentIndex = (currentIndex + 1) % EXAMPLE_BETS.length;
+    };
+
+    const interval = setInterval(addNotification, 3000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <>
-      {activeNotifications.map((betIndex, i) => (
+    <div className="notifications-container">
+      {notifications.map((notification, index) => (
         <FloatingNotification
-          key={`${betIndex}-${i}`}
-          text={EXAMPLE_BETS[betIndex]}
-          position={POSITIONS[i % POSITIONS.length]}
-          delay={i * 200}
+          key={notification.id}
+          text={notification.text}
+          position={NOTIFICATION_POSITION}
+          status={notification.status}
+          index={index}
         />
       ))}
-    </>
+    </div>
   );
 }; 
