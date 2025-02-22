@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BetType, CreateBetForm, ChoiceOptions } from '../types';
+import { BetType, CreateBetForm } from '../types';
 import { betService } from '../services/betService';
 import '../styles/CreateBet.css';
+
+console.log('Available types:', Object.keys(require('../types')));
 
 interface BetTypeInfo {
   value: BetType;
@@ -38,15 +40,16 @@ export const CreateBet = () => {
     description: '',
     creator_name: ''
   });
-  const [choiceOptions, setChoiceOptions] = useState<ChoiceOptions>({
-    a: '',
-    b: '',
-    c: '',
-    d: ''
-  });
   const [minValue, setMinValue] = useState<number>(0);
   const [maxValue, setMaxValue] = useState<number>(10);
   const [unit, setUnit] = useState<string>('months');
+
+  console.log('Current form data:', formData);
+  console.log('Component state:', {
+    minValue,
+    maxValue,
+    unit
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
