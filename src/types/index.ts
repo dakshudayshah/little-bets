@@ -8,6 +8,7 @@ export interface Bet {
   type: BetType;
   question: string;
   description?: string;
+  creator_name: string;
 }
 
 export interface BetParticipant {
@@ -27,4 +28,5 @@ export interface CreateBetForm {
   type: BetType;
   question: string;
   description?: string;
+  creator_name: string;
 }

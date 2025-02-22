@@ -20,6 +20,7 @@ export const betService = {
         type: formData.type,
         question: formData.question,
         description: formData.description,
+        creator_name: formData.creator_name
       })
       .select('*')
       .single();

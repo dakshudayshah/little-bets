@@ -216,6 +216,7 @@ export const BetDetails = () => {
       <div className="content">
         <h1>{bet.question}</h1>
         {bet.description && <p className="description">{bet.description}</p>}
+        <p className="creator">Created by: {bet.creator_name}</p>
         
         <div className="share-section">
           <p>Share this bet with your friends using code: <strong>{bet.code_name}</strong></p>
