@@ -49,12 +49,12 @@ interface Notification {
 
 export const NotificationsContainer = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const addNotification = useCallback(() => {
     setNotifications(prev => {
       const filtered = prev.filter(n => n.status !== 'exiting');
       
-      // Explicitly type the status transitions
       const updated = filtered.map(n => {
         let newStatus: NotificationStatus;
         if (n.status === 'visible') {
@@ -79,13 +79,12 @@ export const NotificationsContainer = () => {
         slot: 'first'
       };
 
+      setCurrentIndex(prevIndex => (prevIndex + 1) % EXAMPLE_BETS.length);
       return [...updated, newNotification];
     });
-  }, []);
+  }, [currentIndex]);
 
   useEffect(() => {
-    let currentIndex = 0;
-    
     // Immediate first notification
     addNotification();
     
