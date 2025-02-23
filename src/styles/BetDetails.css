@@ -1,6 +1,131 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.bet-details {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 24px;
+  color: #2d3748;
+  margin: 0 0 15px 0;
+}
+
 .description {
   color: #4a5568;
-  margin-bottom: 2rem;
+  margin-bottom: 20px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.stat-item {
+  padding: 15px;
+  background: #f7fafc;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.stat-item span {
+  display: block;
+  font-size: 14px;
+  color: #718096;
+  margin-bottom: 5px;
+}
+
+.stat-item strong {
+  font-size: 16px;
+  color: #2d3748;
+}
+
+.predictions-section {
+  margin-top: 30px;
+}
+
+.prediction-form {
+  margin: 20px 0;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #4a5568;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+}
+
+.submit-button {
+  background: #3182ce;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.submit-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.predictions-list {
+  margin-top: 20px;
+}
+
+.prediction-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 15px;
+  padding: 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.prediction-item:last-child {
+  border-bottom: none;
+}
+
+.prediction-date {
+  color: #718096;
+  font-size: 14px;
+}
+
+/* Basic responsive adjustments */
+@media (max-width: 600px) {
+  .container {
+    padding: 15px;
+  }
+
+  .bet-details {
+    padding: 15px;
+  }
+
+  .prediction-item {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    padding: 15px 0;
+  }
+
+  .prediction-date {
+    font-size: 12px;
+  }
 }
 
 .share-section {
@@ -8,10 +133,6 @@
   padding: 1rem;
   border-radius: 0.5rem;
   margin: 2rem 0;
-}
-
-.predictions-section {
-  margin-top: 2rem;
 }
 
 .radio-group {
@@ -261,12 +382,6 @@ input[type="range"]::-webkit-slider-thumb {
     overflow-x: auto;
     white-space: nowrap;
   }
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem;
 }
 
 /* Mobile optimizations */
