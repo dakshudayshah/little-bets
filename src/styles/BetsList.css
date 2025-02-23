@@ -200,6 +200,7 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
+  padding: 16px;
 }
 
 .bet-link {
@@ -215,8 +216,18 @@
   cursor: pointer;
   color: #4a5568;
   border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
 }
 
 .share-button:hover {
   background: #f7fafc;
+}
+
+.share-button svg {
+  width: 20px;
+  height: 20px;
 } 

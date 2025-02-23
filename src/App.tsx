@@ -10,7 +10,7 @@ const App = () => {
     home: '/',
     bets: '/bets',
     create: '/create',
-    betDetails: '/bet/:code'
+    betDetails: '/bets/:code_name'
   });
   console.log('App rendering');
   return (
@@ -19,7 +19,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/create" element={<CreateBet />} />
-        <Route path="/bet/:code" element={<BetDetails />} />
+        <Route path="/bets/:code_name" element={<BetDetails />} />
         <Route path="/bets" element={<BetsList />} />
       </Routes>
     </Router>

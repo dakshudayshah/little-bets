@@ -55,3 +55,16 @@ rule TypeScriptOptionalCheck {
     "Add optional chaining (?.) or provide a default value using nullish coalescing (??)"
   }
 }
+
+# Add rule for URL parameter consistency
+rule URLParameterCheck {
+  when {
+    matches_any {
+      typescript_error("Property '${param}' does not exist on type '{ ${type} }'")
+      contains("useParams")
+    }
+  }
+  suggest {
+    "Check that the URL parameter name in the route path matches the parameter name in useParams. Current routes are defined in App.tsx"
+  }
+}

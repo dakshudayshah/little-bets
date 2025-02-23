@@ -16,7 +16,7 @@ interface BetCardProps {
 
 export const BetCard = ({ bet }: BetCardProps) => {
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/bets/${bet.code}`;
+    const shareUrl = `${window.location.origin}/bets/${bet.code_name}`;
     
     if (navigator.share) {
       try {
@@ -42,7 +42,7 @@ export const BetCard = ({ bet }: BetCardProps) => {
   return (
     <div className="bet-card">
       <div className="bet-content">
-        <Link to={`/bets/${bet.code}`} className="bet-link">
+        <Link to={`/bets/${bet.code_name}`} className="bet-link">
           <h3>{bet.question}</h3>
           <div className="bet-meta">
             <span>Created by {bet.creator_name}</span>
