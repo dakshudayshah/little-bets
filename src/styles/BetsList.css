@@ -1,15 +1,25 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.content {
+  text-align: center;
+}
+
 .bets-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
 .bet-card {
   background-color: white;
   border: 1px solid #e2e8f0;
   border-radius: 0.5rem;
-  padding: 1.5rem;
+  padding: 1rem;
   text-decoration: none;
   color: inherit;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -150,20 +160,50 @@
 
 /* Add responsive adjustments */
 @media (max-width: 480px) {
+  .container {
+    padding: 0.75rem;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.75rem;
+  }
+
   .bet-card {
-    padding: 1rem;
+    padding: 0.75rem;
   }
-  
-  .bet-card h2 {
-    font-size: 1.1rem;
+
+  .bet-header h2 {
+    font-size: 1rem;
   }
-  
+
+  .bet-stats {
+    padding: 0.5rem 0.75rem;
+    margin: 0.75rem 0;
+  }
+
+  .bet-footer {
+    padding-top: 0.75rem;
+  }
+
   .bet-type,
   .bet-stats,
   .bet-creator,
   .bet-participants,
   .bet-date {
     font-size: 0.8rem;
+  }
+}
+
+/* Better desktop layout */
+@media (min-width: 1024px) {
+  .container {
+    padding: 2rem;
+  }
+
+  .bets-grid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
   }
 }
 
