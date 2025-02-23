@@ -51,24 +51,26 @@ export const NotificationsContainer = () => {
         .map(n => {
           const newPos = moveToNextPosition(n.position);
           console.log('Moving notification:', { id: n.id, from: n.position, to: newPos });
-          return { ...n, position: newPos };
+          return {
+            ...n,
+            position: newPos
+          } as Notification;
         })
         .filter(n => n.position !== 'exiting');
 
-      const newNotification = {
+      const newNotification: Notification = {
         id: Date.now(),
         text: EXAMPLE_BETS[currentIndex],
-        position: 'entering',
+        position: 'entering' as const,
         opacity: 1,
         floatOffset: 0
       };
       
       console.log('New notification:', newNotification);
       
-      // Add back the currentIndex increment
       setCurrentIndex(prevIndex => (prevIndex + 1) % EXAMPLE_BETS.length);
       
-      return [...updated, newNotification];
+      return [...updated, newNotification] as Notification[];
     });
   }, [currentIndex, moveToNextPosition, EXAMPLE_BETS.length]);
 
