@@ -66,6 +66,12 @@ export const Header = () => {
             <CoffeeIcon /> Support This Project
           </a>
           <Link to="/bets" className="header-link">All Bets</Link>
+          <a 
+            href="mailto:daksh.uday.shah@gmail.com?subject=Little%20Bets%20-%20Feature%20Request"
+            className="header-link"
+          >
+            Feature Request
+          </a>
           <Link to="/create" className="cta-button">Create Bet</Link>
         </div>
       </div>
