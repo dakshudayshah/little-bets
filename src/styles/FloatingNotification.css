@@ -13,25 +13,27 @@
   padding: 1rem 1.5rem;
   border-radius: 1rem;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  width: calc(100% - 40px); /* Account for right margin */
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  width: calc(100% - 40px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top right;
 }
 
 /* Initial state - off screen */
 .floating-notification.entering {
   opacity: 0;
-  transform: translateX(100%);
+  transform: translateX(100%) scale(0.95);
 }
 
 /* Visible state */
 .floating-notification.visible {
   opacity: 1;
-  transform: translateX(0);
+  transform: translateX(0) scale(1);
 }
 
 /* Exit state */
 .floating-notification.exiting {
   opacity: 0;
+  transform: translateX(0) scale(0.95);
   transition-duration: 0.3s;
 }
 
