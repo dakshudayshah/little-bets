@@ -1,8 +1,13 @@
 import { memo } from 'react';
-import { NotificationPosition, NotificationSlotConfig } from '../types/notifications';
+import { NotificationPosition, NotificationSlotConfig, Notification } from '../types/notifications';
 import '../styles/FloatingNotification.css';
 
-interface FloatingNotificationProps extends Omit<Notification, 'opacity'> {
+// Be explicit about which props we want
+interface FloatingNotificationProps {
+  id: number;
+  text: string;
+  position: NotificationPosition;
+  floatOffset: number;
   config: NotificationSlotConfig;
 }
 
