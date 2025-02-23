@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/Header.css';
 
@@ -19,6 +19,21 @@ const BurgerIcon = () => (
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.header-links') && !target.closest('.burger-menu')) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [isMenuOpen]);
+
   console.log('Header links:', {
     brand: '/',
     bets: '/bets',
@@ -26,13 +41,18 @@ export const Header = () => {
     support: 'buymeacoffee.com'
   });
   return (
-    <header className="header">
+    <header className={`header ${isMenuOpen ? 'menu-open' : ''}`}>
       <div className="header-content">
         <Link to="/" className="header-brand">
           Little Bets
         </Link>
         
-        <button className="burger-menu" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+        <button 
+          className="burger-menu"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-expanded={isMenuOpen}
+          aria-label="Toggle menu"
+        >
           <BurgerIcon />
         </button>
 
