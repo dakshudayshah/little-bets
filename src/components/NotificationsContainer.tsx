@@ -31,11 +31,10 @@ type Timer = ReturnType<typeof setTimeout>;
 
 export const NotificationsContainer = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const isMounted = useRef(true);
   const intervalRef = useRef<Timer | null>(null);
   const timeoutRef = useRef<Timer | null>(null);
-  const indexRef = useRef(0); // Add this to track index outside closure
+  const indexRef = useRef(0);
 
   // Move this inside the effect
   const moveToNextPosition = (position: NotificationPosition): NotificationPosition => {
