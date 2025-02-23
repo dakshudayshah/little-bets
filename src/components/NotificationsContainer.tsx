@@ -52,26 +52,30 @@ export const NotificationsContainer = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const addNotification = useCallback(() => {
+    console.log('Current notifications:', notifications);
+    
     setNotifications(prev => {
-      const filtered = prev.filter(n => n.status !== 'exiting');
-      
-      const updated = filtered.map(n => {
-        let newStatus: NotificationStatus;
+      // First transition: Move visible to exiting
+      const withExiting = prev.map(n => {
+        console.log('Processing notification:', n.id, n.status, '→', 
+          n.status === 'visible' ? 'exiting' : 
+          n.status === 'entering' ? 'visible' : 
+          n.status
+        );
+        
         if (n.status === 'visible') {
-          newStatus = 'exiting';
-        } else if (n.status === 'entering') {
-          newStatus = 'visible';
-        } else {
-          newStatus = n.status;
+          return { ...n, status: 'exiting' as const };
         }
-
-        return {
-          ...n,
-          status: newStatus,
-          slot: n.status === 'entering' ? 'second' : 'first'
-        } satisfies Notification;
+        if (n.status === 'entering') {
+          return { ...n, status: 'visible' as const };
+        }
+        return n;
       });
 
+      // Remove old notifications
+      const filtered = withExiting.filter(n => n.status !== 'exiting');
+
+      // Add new notification
       const newNotification: Notification = {
         id: Date.now(),
         text: EXAMPLE_BETS[currentIndex],
@@ -79,10 +83,12 @@ export const NotificationsContainer = () => {
         slot: 'first'
       };
 
+      console.log('Adding new notification:', newNotification);
+
       setCurrentIndex(prevIndex => (prevIndex + 1) % EXAMPLE_BETS.length);
-      return [...updated, newNotification];
+      return [...filtered, newNotification];
     });
-  }, [currentIndex]);
+  }, [currentIndex, notifications]);
 
   useEffect(() => {
     // Immediate first notification
