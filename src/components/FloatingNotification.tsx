@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { NotificationPosition, NotificationSlotConfig, Notification } from '../types/notifications';
+import { NotificationPosition, NotificationSlotConfig } from '../types/notifications';
 import '../styles/FloatingNotification.css';
 
 // Be explicit about which props we want
