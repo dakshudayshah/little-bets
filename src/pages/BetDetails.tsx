@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import { BetWithParticipants } from '../types';
 import { betService } from '../services/betService';
 import '../styles/BetDetails.css';
-import { supabase } from '../lib/supabase';
 
 export const BetDetails = () => {
   const { code } = useParams<{ code: string }>();
