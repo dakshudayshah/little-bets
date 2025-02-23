@@ -5,7 +5,7 @@ import { betService } from '../services/betService';
 import '../styles/BetDetails.css';
 
 export const BetDetails = () => {
-  const { code } = useParams<{ code: string }>();
+  const { code_name } = useParams<{ code_name: string }>();
   const [bet, setBet] = useState<BetWithParticipants | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,9 +15,9 @@ export const BetDetails = () => {
 
   useEffect(() => {
     const fetchBet = async () => {
-      if (!code) return;
+      if (!code_name) return;
       try {
-        const betData = await betService.getBetByCode(code);
+        const betData = await betService.getBetByCode(code_name);
         setBet(betData);
       } catch (err) {
         setError('Failed to load bet details');
@@ -27,7 +27,7 @@ export const BetDetails = () => {
     };
 
     fetchBet();
-  }, [code]);
+  }, [code_name]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +36,7 @@ export const BetDetails = () => {
     setIsSubmitting(true);
     try {
       await betService.addParticipant(bet.id, name, prediction);
-      const updatedBet = await betService.getBetByCode(code!);
+      const updatedBet = await betService.getBetByCode(code_name!);
       setBet(updatedBet);
       setName('');
       setPrediction('');
@@ -47,7 +47,7 @@ export const BetDetails = () => {
     }
   };
 
-  const shareUrl = `${window.location.origin}/bets/${bet?.code}`;
+  const shareUrl = `${window.location.origin}/bets/${bet?.code_name}`;
 
   const copyShareLink = () => {
     navigator.clipboard.writeText(shareUrl);
