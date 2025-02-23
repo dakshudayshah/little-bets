@@ -16,9 +16,7 @@
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 20px;
-  text-decoration: none;
-  color: inherit;
+  overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
@@ -209,6 +207,19 @@
   color: inherit;
 }
 
+.bet-header h3 {
+  font-size: 18px;
+  color: #2d3748;
+  margin: 0 0 8px 0;
+}
+
+.bet-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 14px;
+  color: #718096;
+}
+
 .share-button {
   background: none;
   border: none;
@@ -221,6 +232,7 @@
   justify-content: center;
   min-width: 32px;
   height: 32px;
+  flex-shrink: 0;
 }
 
 .share-button:hover {

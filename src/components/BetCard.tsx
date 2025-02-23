@@ -26,7 +26,6 @@ export const BetCard = ({ bet }: BetCardProps) => {
           url: shareUrl
         });
       } catch (err) {
-        // Fallback to copying to clipboard
         copyToClipboard(shareUrl);
       }
     } else {
@@ -36,20 +35,26 @@ export const BetCard = ({ bet }: BetCardProps) => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    // Could add a toast notification here
   };
 
   return (
     <div className="bet-card">
       <div className="bet-content">
         <Link to={`/bets/${bet.code_name}`} className="bet-link">
-          <h3>{bet.question}</h3>
-          <div className="bet-meta">
-            <span>Created by {bet.creator_name}</span>
-            <span>{bet.participants?.length || 0} predictions</span>
+          <div className="bet-header">
+            <h3>{bet.question}</h3>
+            <div className="bet-meta">
+              <span>Created by {bet.creator_name}</span>
+              <span>{bet.participants?.length || 0} predictions</span>
+            </div>
           </div>
         </Link>
-        <button onClick={handleShare} className="share-button" aria-label="Share bet">
+        <button 
+          onClick={handleShare} 
+          className="share-button" 
+          aria-label="Share bet"
+          type="button"
+        >
           <ShareIcon />
         </button>
       </div>
