@@ -35,6 +35,7 @@ export const NotificationsContainer = () => {
   const isMounted = useRef(true);
   const intervalRef = useRef<Timer | null>(null);
   const timeoutRef = useRef<Timer | null>(null);
+  const indexRef = useRef(0); // Add this to track index outside closure
 
   // Move this inside the effect
   const moveToNextPosition = (position: NotificationPosition): NotificationPosition => {
@@ -66,23 +67,23 @@ export const NotificationsContainer = () => {
 
         const newNotification: Notification = {
           id: Date.now(),
-          text: EXAMPLE_BETS[currentIndex],
+          text: EXAMPLE_BETS[indexRef.current],
           position: 'entering' as const,
           opacity: 1,
           floatOffset: 0
         };
 
-        setCurrentIndex(prevIndex => (prevIndex + 1) % EXAMPLE_BETS.length);
+        // Update index outside of state update
+        indexRef.current = (indexRef.current + 1) % EXAMPLE_BETS.length;
+        
         return [...updated, newNotification];
       });
     };
     
-    // First notification after 2.5s
     timeoutRef.current = setTimeout(() => {
       console.log('First notification triggered at:', new Date().toISOString());
       addNotification();
       
-      // Then start the 5s interval
       intervalRef.current = setInterval(() => {
         console.log('Interval notification triggered at:', new Date().toISOString());
         addNotification();
