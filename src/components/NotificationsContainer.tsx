@@ -52,8 +52,8 @@ export const NotificationsContainer = () => {
       return [newNotification, prev[0]];
     });
 
-    // Schedule next notification after 4 seconds
-    setTimeout(addNotification, 4000);
+    // Schedule next notification after 6 seconds (increased from 4)
+    setTimeout(addNotification, 6000);
   };
 
   return (
