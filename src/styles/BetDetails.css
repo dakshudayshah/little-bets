@@ -261,4 +261,253 @@ input[type="range"]::-webkit-slider-thumb {
     overflow-x: auto;
     white-space: nowrap;
   }
-} 
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Mobile optimizations */
+@media (max-width: 480px) {
+  .container {
+    padding: 0.75rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .description {
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+
+  .share-section {
+    padding: 0.75rem;
+    margin: 1rem 0;
+  }
+
+  .predictions-section {
+    margin-top: 1rem;
+  }
+
+  /* More compact form on mobile */
+  .form-group {
+    margin-bottom: 0.75rem;
+  }
+
+  .form-group label {
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+  }
+
+  /* Optimize table for mobile */
+  .current-predictions table {
+    font-size: 0.875rem;
+  }
+
+  .current-predictions th,
+  .current-predictions td {
+    padding: 0.5rem;
+  }
+
+  .bet-stats {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .stat-item {
+    padding: 0.75rem;
+  }
+
+  /* Stack form elements */
+  .form {
+    padding: 1rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 1023px) {
+  /* Tablet styles */
+}
+
+@media (min-width: 1024px) {
+  .content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .share-section {
+    position: sticky;
+    top: 1rem;
+  }
+}
+
+/* Add subtle hover effects */
+.form input:hover, 
+.form textarea:hover {
+  border-color: #4299e1;
+}
+
+.button {
+  position: relative;
+  overflow: hidden;
+}
+
+.button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255,255,255,0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+}
+
+.button:active::after {
+  animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(20, 20);
+    opacity: 0;
+  }
+}
+
+/* Improve table responsiveness */
+.current-predictions {
+  overflow: hidden;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 640px) {
+  .current-predictions table {
+    display: block;
+    width: 100%;
+  }
+
+  .current-predictions thead {
+    display: none;
+  }
+
+  .current-predictions tr {
+    display: block;
+    padding: 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .current-predictions td {
+    display: block;
+    text-align: right;
+    padding: 0.25rem 0;
+    border: none;
+  }
+
+  .current-predictions td::before {
+    content: attr(data-label);
+    float: left;
+    font-weight: 600;
+    color: #4a5568;
+  }
+}
+
+/* Group all animations together */
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Remove duplicate styles */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+/* Performance optimizations */
+.floating-notification {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Add smooth scrolling only on non-mobile */
+@media (min-width: 768px) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Add loading skeleton styles */
+.loading-skeleton {
+  padding: 1rem;
+}
+
+.skeleton-title, .skeleton-description, .skeleton-stats {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 0.375rem;
+}
+
+.skeleton-title {
+  height: 2rem;
+  width: 70%;
+  margin-bottom: 1rem;
+}
+
+.skeleton-description {
+  height: 1rem;
+  margin-bottom: 0.5rem;
+  width: 90%;
+}
+
+.skeleton-stats {
+  height: 4rem;
+  margin-top: 1rem;
+}
+
+/* Improve form layout */
+.form {
+  background: #f8fafc;
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Better stats visualization */
+.bet-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  padding: 1.25rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 1rem;
+  background: white;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}

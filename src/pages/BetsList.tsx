@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { BetWithParticipants, BetType } from '../types';
 import { betService } from '../services/betService';
@@ -72,6 +72,29 @@ const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString(undefined, options);
 };
 
+const BetCard = memo(({ bet }: { bet: BetWithParticipants }) => {
+  return (
+    <Link to={`/bet/${bet.code_name}`} className="bet-card">
+      <div className="bet-header">
+        <h2>{bet.question}</h2>
+        <span className={`bet-type ${bet.type.toLowerCase()}`}>
+          {formatBetType(bet.type)}
+        </span>
+      </div>
+      <p className="bet-creator">Created by {bet.creator_name}</p>
+      <p className="bet-stats">{formatBetTypeInfo(bet)}</p>
+      <div className="bet-footer">
+        <p className="bet-participants">
+          {bet.participants.length} predictions
+        </p>
+        <p className="bet-date">
+          {formatDate(bet.created_at)}
+        </p>
+      </div>
+    </Link>
+  );
+});
+
 export const BetsList = () => {
   const [bets, setBets] = useState<BetWithParticipants[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -132,24 +155,7 @@ export const BetsList = () => {
         
         <div className="bets-grid">
           {bets.map(bet => (
-            <Link to={`/bet/${bet.code_name}`} key={bet.id} className="bet-card">
-              <div className="bet-header">
-                <h2>{bet.question}</h2>
-                <span className={`bet-type ${bet.type.toLowerCase()}`}>
-                  {formatBetType(bet.type)}
-                </span>
-              </div>
-              <p className="bet-creator">Created by {bet.creator_name}</p>
-              <p className="bet-stats">{formatBetTypeInfo(bet)}</p>
-              <div className="bet-footer">
-                <p className="bet-participants">
-                  {bet.participants.length} predictions
-                </p>
-                <p className="bet-date">
-                  {formatDate(bet.created_at)}
-                </p>
-              </div>
-            </Link>
+            <BetCard key={bet.id} bet={bet} />
           ))}
 
           {!error && bets.length === 0 && (

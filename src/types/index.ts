@@ -45,3 +45,11 @@ export interface CreateBetForm {
   max_value?: number;
   unit?: string;
 }
+
+declare global {
+  namespace JSX {
+    interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
+      'data-label'?: string;
+    }
+  }
+}
