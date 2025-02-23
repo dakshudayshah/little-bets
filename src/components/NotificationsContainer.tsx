@@ -80,14 +80,18 @@ export const NotificationsContainer = () => {
   useEffect(() => {
     if (!isMounted.current) return;
 
-    console.log('Initializing notifications');
+    console.log('Initializing notifications at:', new Date().toISOString());
     
     // First notification after 2.5s
     const firstTimer = setTimeout(() => {
+      console.log('First notification triggered at:', new Date().toISOString());
       addNotification();
       
       // Then start the 5s interval after the first notification
-      const interval = setInterval(addNotification, 5000);
+      const interval = setInterval(() => {
+        console.log('Interval notification triggered at:', new Date().toISOString());
+        addNotification();
+      }, 5000);
       
       // Store interval in ref so we can clear it in cleanup
       if (isMounted.current) {
@@ -99,9 +103,16 @@ export const NotificationsContainer = () => {
     timeoutRef.current = firstTimer;
 
     return () => {
-      console.log('Cleaning up notifications, mounted:', isMounted.current);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      const cleanupTime = new Date().toISOString();
+      console.log('Cleaning up notifications at:', cleanupTime, 'mounted:', isMounted.current);
+      if (timeoutRef.current) {
+        console.log('Clearing timeout at:', cleanupTime);
+        clearTimeout(timeoutRef.current);
+      }
+      if (intervalRef.current) {
+        console.log('Clearing interval at:', cleanupTime);
+        clearInterval(intervalRef.current);
+      }
       if (!isMounted.current) {
         setNotifications([]);
       }

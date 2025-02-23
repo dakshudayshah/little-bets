@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { BetWithParticipants, BetType } from '../types';
 import { betService } from '../services/betService';
@@ -79,8 +79,11 @@ export const BetsList = () => {
   const [feedback, setFeedback] = useState('');
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
+  const mountCount = useRef(0);
 
   useEffect(() => {
+    mountCount.current++;
+    console.log('Component mounted, count:', mountCount.current);
     const fetchBets = async () => {
       try {
         const betsData = await betService.getAllBets();
