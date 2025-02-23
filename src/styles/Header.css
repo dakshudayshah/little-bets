@@ -1,6 +1,10 @@
 .header {
+  background: white;
   border-bottom: 1px solid #e2e8f0;
-  padding: 15px 20px;
+  padding: 15px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .header-content {
@@ -9,6 +13,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
 }
 
 .header-brand {
@@ -18,15 +23,16 @@
   text-decoration: none;
 }
 
-.header-links {
+.header-nav {
   display: flex;
   gap: 20px;
   align-items: center;
 }
 
-.header-links a {
+.header-nav a {
   color: #4a5568;
   text-decoration: none;
+  font-size: 16px;
 }
 
 .cta-button {
@@ -36,13 +42,33 @@
   border-radius: 6px;
 }
 
-@media (max-width: 600px) {
-  .header-content {
-    flex-direction: column;
-    gap: 15px;
+.burger-menu {
+  display: none;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .burger-menu {
+    display: block;
   }
-  
-  .header-links {
-    gap: 15px;
+
+  .header-nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 15px;
+    flex-direction: column;
+    align-items: flex-start;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  .header-nav.open {
+    display: flex;
   }
 } 
