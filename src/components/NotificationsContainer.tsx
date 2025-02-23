@@ -30,6 +30,8 @@ export const NotificationsContainer = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const isMounted = useRef(true);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Memoize position transition logic
   const moveToNextPosition = useCallback((position: NotificationPosition): NotificationPosition => {
@@ -79,13 +81,27 @@ export const NotificationsContainer = () => {
     if (!isMounted.current) return;
 
     console.log('Initializing notifications');
-    const timer = setTimeout(addNotification, 2500);
-    const interval = setInterval(addNotification, 12000);
+    
+    // First notification after 2.5s
+    const firstTimer = setTimeout(() => {
+      addNotification();
+      
+      // Then start the 5s interval after the first notification
+      const interval = setInterval(addNotification, 5000);
+      
+      // Store interval in ref so we can clear it in cleanup
+      if (isMounted.current) {
+        intervalRef.current = interval;
+      }
+    }, 2500);
+
+    // Store first timer in ref
+    timeoutRef.current = firstTimer;
 
     return () => {
       console.log('Cleaning up notifications, mounted:', isMounted.current);
-      clearTimeout(timer);
-      clearInterval(interval);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
       if (!isMounted.current) {
         setNotifications([]);
       }
