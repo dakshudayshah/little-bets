@@ -36,8 +36,7 @@ export const NotificationsContainer = () => {
     switch (position) {
       case 'entering': return 'first';
       case 'first': return 'second';
-      case 'second': return 'third';
-      case 'third': return 'exiting';
+      case 'second': return 'exiting';
       default: return 'exiting';
     }
   }, []);
@@ -80,8 +79,8 @@ export const NotificationsContainer = () => {
     if (!isMounted.current) return;
 
     console.log('Initializing notifications');
-    const timer = setTimeout(addNotification, 1000);
-    const interval = setInterval(addNotification, 7000);
+    const timer = setTimeout(addNotification, 2500);
+    const interval = setInterval(addNotification, 12000);
 
     return () => {
       console.log('Cleaning up notifications, mounted:', isMounted.current);

@@ -1,4 +1,4 @@
-export type NotificationPosition = 'entering' | 'first' | 'second' | 'third' | 'exiting';
+export type NotificationPosition = 'entering' | 'first' | 'second' | 'exiting';
 
 export interface Notification {
   id: number;
@@ -35,14 +35,8 @@ export const NOTIFICATION_SLOTS: Record<NotificationPosition, NotificationSlotCo
     opacity: 0.8,
     scale: 0.98
   },
-  third: {
-    top: '240px',
-    right: '20px',
-    opacity: 0.4,
-    scale: 0.96
-  },
   exiting: {
-    top: '320px',
+    top: '240px',
     right: '20px',
     opacity: 0,
     scale: 0.94
