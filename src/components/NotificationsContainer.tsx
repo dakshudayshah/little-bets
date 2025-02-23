@@ -31,10 +31,8 @@ export const NotificationsContainer = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const isMounted = useRef(true);
   
-  // Prevent unnecessary cleanups
-  const isCleaningUp = useRef(false);
-
   // Memoize position transition logic
   const moveToNextPosition = useCallback((position: NotificationPosition): NotificationPosition => {
     switch (position) {
@@ -46,22 +44,24 @@ export const NotificationsContainer = () => {
     }
   }, []);
 
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
   const addNotification = useCallback(() => {
-    console.log('Adding notification, current state:', { notifications, currentIndex });
+    if (!isMounted.current) return;
     
     setNotifications(prev => {
-      // Keep existing notifications
       const existing = [...prev];
-      console.log('Existing notifications:', existing);
+      console.log('Processing notifications:', existing.length);
 
       const updated = existing
         .map(n => {
           const newPos = moveToNextPosition(n.position);
-          console.log(`Moving notification ${n.id} from ${n.position} to ${newPos}`);
-          return {
-            ...n,
-            position: newPos
-          } as Notification;
+          return { ...n, position: newPos };
         })
         .filter(n => n.position !== 'exiting');
 
@@ -74,24 +74,24 @@ export const NotificationsContainer = () => {
       };
 
       setCurrentIndex(prevIndex => (prevIndex + 1) % EXAMPLE_BETS.length);
-      
       return [...updated, newNotification];
     });
-  }, [currentIndex, moveToNextPosition]);
+  }, [currentIndex, moveToNextPosition, EXAMPLE_BETS.length]);
 
   useEffect(() => {
-    if (isCleaningUp.current) return;
+    if (!isMounted.current) return;
 
-    console.log('Setting up notification timers');
-    timeoutRef.current = setTimeout(addNotification, 1000);
-    intervalRef.current = setInterval(addNotification, 7000);
-    
+    console.log('Initializing notifications');
+    const timer = setTimeout(addNotification, 1000);
+    const interval = setInterval(addNotification, 7000);
+
     return () => {
-      isCleaningUp.current = true;
-      console.log('Final cleanup of notification timers');
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      setNotifications([]);
+      console.log('Cleaning up notifications, mounted:', isMounted.current);
+      clearTimeout(timer);
+      clearInterval(interval);
+      if (!isMounted.current) {
+        setNotifications([]);
+      }
     };
   }, [addNotification]);
 
