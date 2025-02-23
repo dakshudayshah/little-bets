@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { FloatingNotification } from './FloatingNotification';
 import { Notification, NotificationPosition, NOTIFICATION_SLOTS } from '../types/notifications';
 import '../styles/FloatingNotification.css';
@@ -26,12 +26,15 @@ const EXAMPLE_BETS = [
   "I Told You So: Will Aunt Patricia's questionable decision backfire within 6 months?"
 ];
 
+// Add type for browser timers
+type Timer = ReturnType<typeof setTimeout>;
+
 export const NotificationsContainer = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const isMounted = useRef(true);
-  const intervalRef = useRef<number | null>(null);
-  const timeoutRef = useRef<number | null>(null);
+  const intervalRef = useRef<Timer | null>(null);
+  const timeoutRef = useRef<Timer | null>(null);
 
   // Move this inside the effect
   const moveToNextPosition = (position: NotificationPosition): NotificationPosition => {
