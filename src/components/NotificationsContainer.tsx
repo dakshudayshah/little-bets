@@ -91,13 +91,13 @@ export const NotificationsContainer = () => {
   }, [currentIndex, notifications]);
 
   useEffect(() => {
-    // Start first notification after a short delay
+    // Start first notification after 2 seconds
     const initialTimer = setTimeout(() => {
       addNotification();
-    }, 1000);
+    }, 2000);
     
-    // Then continue with 5-second interval
-    const interval = setInterval(addNotification, 5000);
+    // Then continue with 8-second interval for readability
+    const interval = setInterval(addNotification, 8000);
     
     return () => {
       clearTimeout(initialTimer);
