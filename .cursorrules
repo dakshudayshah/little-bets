@@ -68,3 +68,16 @@ rule URLParameterCheck {
     "Check that the URL parameter name in the route path matches the parameter name in useParams. Current routes are defined in App.tsx"
   }
 }
+
+# Check for proper data mapping in lists
+rule ReactListMapping {
+  when {
+    matches_any {
+      contains("map(") 
+      contains("key=")
+    }
+  }
+  suggest {
+    "Ensure proper key prop is used and all required props are passed to child components. Check the component's interface for required props."
+  }
+}
