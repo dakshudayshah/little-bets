@@ -47,6 +47,11 @@
 
 .burger-menu {
   display: none;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  z-index: 101;
 }
 
 .header-links.open {
@@ -82,27 +87,34 @@
 }
 
 @media (max-width: 768px) {
-  .header-links {
-    display: none;
-  }
-  
-  .header-links.open {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: white;
-    padding: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border-radius: 0.5rem;
-  }
-
   .burger-menu {
     display: block;
-    background: none;
-    border: none;
-    padding: 0.5rem;
-    cursor: pointer;
+  }
+
+  .header-links {
+    display: none;
+    position: fixed;
+    top: 60px;
+    right: 1rem;
+    background: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    flex-direction: column;
+    gap: 1rem;
+    z-index: 100;
+  }
+
+  .header-links.open {
+    display: flex;
+  }
+
+  /* Add backdrop when menu is open */
+  .header.menu-open::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 99;
   }
 } 

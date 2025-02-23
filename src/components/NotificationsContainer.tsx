@@ -44,43 +44,49 @@ export const NotificationsContainer = () => {
   }, []);
 
   const addNotification = useCallback(() => {
+    console.log('Adding notification, current state:', { notifications, currentIndex });
+    
     setNotifications(prev => {
-      // Limit max notifications
-      if (prev.length >= 3) {
-        console.warn('Max notifications reached');
-        return prev;
-      }
-
       const updated = prev
-        .map(n => ({
-          ...n,
-          position: moveToNextPosition(n.position),
-          floatOffset: Math.random() * 0.5
-        }))
+        .map(n => {
+          const newPos = moveToNextPosition(n.position);
+          console.log('Moving notification:', { id: n.id, from: n.position, to: newPos });
+          return { ...n, position: newPos };
+        })
         .filter(n => n.position !== 'exiting');
 
-      const newNotification: Notification = {
+      const newNotification = {
         id: Date.now(),
         text: EXAMPLE_BETS[currentIndex],
         position: 'entering',
         opacity: 1,
         floatOffset: 0
       };
-
+      
+      console.log('New notification:', newNotification);
+      
+      // Add back the currentIndex increment
       setCurrentIndex(prevIndex => (prevIndex + 1) % EXAMPLE_BETS.length);
+      
       return [...updated, newNotification];
     });
-  }, [currentIndex, moveToNextPosition]);
+  }, [currentIndex, moveToNextPosition, EXAMPLE_BETS.length]);
 
-  // Start notifications with cleanup
+  // Start with shorter initial delay
   useEffect(() => {
-    timeoutRef.current = setTimeout(addNotification, 3000);
-    intervalRef.current = setInterval(addNotification, 10000);
+    console.log('Setting up notification timers');
+    
+    // Start first notification sooner
+    timeoutRef.current = setTimeout(addNotification, 1000);
+    
+    // Keep interval shorter for testing
+    intervalRef.current = setInterval(addNotification, 7000);
     
     return () => {
+      console.log('Cleaning up notification timers');
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (intervalRef.current) clearInterval(intervalRef.current);
-      setNotifications([]); // Clear notifications on unmount
+      setNotifications([]);
     };
   }, [addNotification]);
 
