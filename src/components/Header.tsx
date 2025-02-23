@@ -11,10 +11,14 @@ const BurgerIcon = () => (
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+
   return (
     <header className="header">
       <div className="header-content">
-        <Link to="/" className="header-brand">
+        <Link to="/" className="header-brand" onClick={closeMenu}>
           Little Bets
         </Link>
         
@@ -31,16 +35,18 @@ export const Header = () => {
             href="https://buymeacoffee.com/dakshudayshah"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={closeMenu}
           >
             Support This Project
           </a>
-          <Link to="/bets">All Bets</Link>
+          <Link to="/bets" onClick={closeMenu}>All Bets</Link>
           <a 
             href="mailto:daksh.uday.shah@gmail.com?subject=Little%20Bets%20-%20Feature%20Request"
+            onClick={closeMenu}
           >
             Feature Request
           </a>
-          <Link to="/create" className="cta-button">Create Bet</Link>
+          <Link to="/create" className="cta-button" onClick={closeMenu}>Create Bet</Link>
         </nav>
       </div>
     </header>
