@@ -1,8 +1,8 @@
 import type { AriaAttributes, DOMAttributes } from 'react';
 
-// Safer type checking
-type ReactTypeCheck = AriaAttributes;
-type DOMTypeCheck = DOMAttributes<unknown>;
+// Remove these test types
+// type ReactTypeCheck = AriaAttributes;
+// type DOMTypeCheck = DOMAttributes<unknown>;
 
 export type BetType = 'MILESTONE' | 'RATING' | 'CHOICE' | 'WORD';
 
