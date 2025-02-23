@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { FloatingNotification } from './FloatingNotification';
-import { Notification, NotificationPosition } from '../types/notifications';
+import { Notification } from '../types/notifications';
 import '../styles/FloatingNotification.css';
 
 const EXAMPLE_BETS = [
@@ -20,66 +20,51 @@ const EXAMPLE_BETS = [
 
 export const NotificationsContainer = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const isMounted = useRef(true);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const indexRef = useRef(0);
 
   useEffect(() => {
-    const addNotification = () => {
-      const bet = EXAMPLE_BETS[indexRef.current % EXAMPLE_BETS.length];
-      const newNotification: Notification = {
-        id: Date.now(),
-        title: bet.title,
-        text: bet.question,
-        position: 'entering',
-        opacity: 1,
-        floatOffset: 0
-      };
+    // Initial delay of 2 seconds
+    const initialTimeout = setTimeout(() => {
+      addNotification();
+    }, 2000);
 
-      setNotifications(prev => {
-        const updated = prev.map(n => ({
-          ...n,
-          position: getNextPosition(n.position)
-        }));
-        return [...updated, newNotification].slice(-3);
-      });
-
-      indexRef.current += 1;
-      scheduleNextNotification();
-    };
-
-    const scheduleNextNotification = () => {
-      timeoutRef.current = setTimeout(addNotification, 3000);
-    };
-
-    scheduleNextNotification();
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      isMounted.current = false;
-    };
+    return () => clearTimeout(initialTimeout);
   }, []);
 
+  const addNotification = () => {
+    const bet = EXAMPLE_BETS[indexRef.current % EXAMPLE_BETS.length];
+    indexRef.current += 1;
+
+    const newNotification: Notification = {
+      id: Date.now(),
+      title: bet.title,
+      text: bet.question,
+      isNew: true
+    };
+
+    setNotifications(prev => {
+      if (prev.length === 0) return [newNotification];
+      
+      if (prev.length === 1) {
+        return [newNotification, { ...prev[0], isNew: false }];
+      }
+      
+      return [newNotification, prev[0]];
+    });
+
+    // Schedule next notification after 4 seconds
+    setTimeout(addNotification, 4000);
+  };
+
   return (
-    <div 
-      className="notifications-container"
-      role="log"
-      aria-live="polite"
-    >
-      {notifications.map(notification => (
+    <div className="notifications-container">
+      {notifications.map((notification, index) => (
         <FloatingNotification
           key={notification.id}
           {...notification}
+          slot={index === 0 ? 'first' : 'second'}
         />
       ))}
     </div>
   );
-};
-
-const getNextPosition = (current: NotificationPosition): NotificationPosition => {
-  switch (current) {
-    case 'entering': return 'first';
-    case 'first': return 'second';
-    case 'second': return 'exiting';
-    default: return 'exiting';
-  }
 }; 
