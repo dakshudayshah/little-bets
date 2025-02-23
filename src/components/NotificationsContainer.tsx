@@ -29,8 +29,6 @@ const EXAMPLE_BETS = [
 export const NotificationsContainer = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
-  const intervalRef = useRef<ReturnType<typeof setInterval>>();
   const isMounted = useRef(true);
   
   // Memoize position transition logic
