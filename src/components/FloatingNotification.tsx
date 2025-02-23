@@ -1,38 +1,32 @@
 import { memo } from 'react';
-import { NotificationPosition, NotificationSlotConfig } from '../types/notifications';
+import { NotificationPosition } from '../types/notifications';
 import '../styles/FloatingNotification.css';
 
 // Be explicit about which props we want
 interface FloatingNotificationProps {
   id: number;
+  title: string;
   text: string;
   position: NotificationPosition;
+  opacity: number;
   floatOffset: number;
-  config: NotificationSlotConfig;
 }
 
 export const FloatingNotification = memo(({ 
+  title,
   text, 
-  position,
-  config 
+  position
 }: FloatingNotificationProps) => {
   return (
     <div 
       className={`floating-notification notification-${position}`}
-      style={{
-        top: config.top,
-        right: config.right,
-        opacity: config.opacity,
-        transform: `scale(${config.scale})`
-      }}
       role="alert"
       aria-live="polite"
     >
       <div className="notification-inner">
         <div className="notification-body">
-          <div className="notification-content">
-            {text}
-          </div>
+          <div className="notification-title">{title}</div>
+          <div className="notification-text">{text}</div>
         </div>
       </div>
     </div>
