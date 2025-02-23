@@ -30,8 +30,8 @@ export const NotificationsContainer = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const isMounted = useRef(true);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<number | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
   // Move this inside the effect
   const moveToNextPosition = (position: NotificationPosition): NotificationPosition => {
