@@ -31,6 +31,9 @@ export const NotificationsContainer = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  
+  // Prevent unnecessary cleanups
+  const isCleaningUp = useRef(false);
 
   // Memoize position transition logic
   const moveToNextPosition = useCallback((position: NotificationPosition): NotificationPosition => {
@@ -47,10 +50,11 @@ export const NotificationsContainer = () => {
     console.log('Adding notification, current state:', { notifications, currentIndex });
     
     setNotifications(prev => {
-      // Log existing notifications
-      console.log('Current notifications:', prev.map(n => ({ id: n.id, position: n.position })));
+      // Keep existing notifications
+      const existing = [...prev];
+      console.log('Existing notifications:', existing);
 
-      const updated = prev
+      const updated = existing
         .map(n => {
           const newPos = moveToNextPosition(n.position);
           console.log(`Moving notification ${n.id} from ${n.position} to ${newPos}`);
@@ -59,14 +63,7 @@ export const NotificationsContainer = () => {
             position: newPos
           } as Notification;
         })
-        // Only filter after transitions
-        .filter(n => {
-          const keep = n.position !== 'exiting';
-          if (!keep) {
-            console.log(`Removing notification ${n.id} (exiting)`);
-          }
-          return keep;
-        });
+        .filter(n => n.position !== 'exiting');
 
       const newNotification: Notification = {
         id: Date.now(),
@@ -75,28 +72,23 @@ export const NotificationsContainer = () => {
         opacity: 1,
         floatOffset: 0
       };
-      
-      console.log('Adding new notification:', newNotification);
-      console.log('Updated notifications will be:', [...updated, newNotification].map(n => ({ id: n.id, position: n.position })));
-      
+
       setCurrentIndex(prevIndex => (prevIndex + 1) % EXAMPLE_BETS.length);
       
-      return [...updated, newNotification] as Notification[];
+      return [...updated, newNotification];
     });
-  }, [currentIndex, moveToNextPosition, EXAMPLE_BETS.length]);
+  }, [currentIndex, moveToNextPosition]);
 
-  // Start with shorter initial delay
   useEffect(() => {
+    if (isCleaningUp.current) return;
+
     console.log('Setting up notification timers');
-    
-    // Start first notification sooner
     timeoutRef.current = setTimeout(addNotification, 1000);
-    
-    // Keep interval shorter for testing
     intervalRef.current = setInterval(addNotification, 7000);
     
     return () => {
-      console.log('Cleaning up notification timers');
+      isCleaningUp.current = true;
+      console.log('Final cleanup of notification timers');
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (intervalRef.current) clearInterval(intervalRef.current);
       setNotifications([]);
