@@ -47,6 +47,13 @@ export const BetDetails = () => {
     }
   };
 
+  const shareUrl = `${window.location.origin}/bets/${bet?.code}`;
+
+  const copyShareLink = () => {
+    navigator.clipboard.writeText(shareUrl);
+    // Could add a toast notification here
+  };
+
   if (isLoading) return <div className="container">Loading...</div>;
   if (error) return <div className="container error">{error}</div>;
   if (!bet) return <div className="container">Bet not found</div>;
@@ -57,6 +64,16 @@ export const BetDetails = () => {
         <h1>{bet.question}</h1>
         {bet.description && <p className="description">{bet.description}</p>}
         
+        <div className="share-section">
+          <div className="share-link">
+            <span>Share Link:</span>
+            <code>{shareUrl}</code>
+            <button onClick={copyShareLink} className="copy-button">
+              Copy
+            </button>
+          </div>
+        </div>
+
         <div className="stats">
           <div className="stat-item">
             <span>Created by</span>

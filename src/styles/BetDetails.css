@@ -129,10 +129,39 @@ h1 {
 }
 
 .share-section {
-  background-color: #f7fafc;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin: 2rem 0;
+  margin: 20px 0;
+  padding: 16px;
+  background: #f7fafc;
+  border-radius: 8px;
+}
+
+.share-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.share-link code {
+  flex: 1;
+  padding: 8px;
+  background: white;
+  border-radius: 4px;
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.copy-button {
+  background: #3182ce;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.copy-button:hover {
+  background: #2c5282;
 }
 
 .radio-group {
