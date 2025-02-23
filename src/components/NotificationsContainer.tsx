@@ -32,92 +32,69 @@ export const NotificationsContainer = () => {
   const isMounted = useRef(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Memoize position transition logic
-  const moveToNextPosition = useCallback((position: NotificationPosition): NotificationPosition => {
+
+  // Move this inside the effect
+  const moveToNextPosition = (position: NotificationPosition): NotificationPosition => {
     switch (position) {
       case 'entering': return 'first';
       case 'first': return 'second';
       case 'second': return 'exiting';
       default: return 'exiting';
     }
-  }, []);
+  };
 
   useEffect(() => {
     isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  const addNotification = useCallback(() => {
-    if (!isMounted.current) return;
-    
-    setNotifications(prev => {
-      const existing = [...prev];
-      console.log('Processing notifications:', existing.length);
-
-      const updated = existing
-        .map(n => {
-          const newPos = moveToNextPosition(n.position);
-          return { ...n, position: newPos };
-        })
-        .filter(n => n.position !== 'exiting');
-
-      const newNotification: Notification = {
-        id: Date.now(),
-        text: EXAMPLE_BETS[currentIndex],
-        position: 'entering' as const,
-        opacity: 1,
-        floatOffset: 0
-      };
-
-      setCurrentIndex(prevIndex => (prevIndex + 1) % EXAMPLE_BETS.length);
-      return [...updated, newNotification];
-    });
-  }, [currentIndex, moveToNextPosition, EXAMPLE_BETS.length]);
-
-  useEffect(() => {
-    if (!isMounted.current) return;
-
     console.log('Initializing notifications at:', new Date().toISOString());
+
+    const addNotification = () => {
+      if (!isMounted.current) return;
+      
+      setNotifications(prev => {
+        const existing = [...prev];
+        console.log('Processing notifications:', existing.length);
+
+        const updated = existing
+          .map(n => ({
+            ...n,
+            position: moveToNextPosition(n.position)
+          }))
+          .filter(n => n.position !== 'exiting');
+
+        const newNotification: Notification = {
+          id: Date.now(),
+          text: EXAMPLE_BETS[currentIndex],
+          position: 'entering' as const,
+          opacity: 1,
+          floatOffset: 0
+        };
+
+        setCurrentIndex(prevIndex => (prevIndex + 1) % EXAMPLE_BETS.length);
+        return [...updated, newNotification];
+      });
+    };
     
     // First notification after 2.5s
-    const firstTimer = setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       console.log('First notification triggered at:', new Date().toISOString());
       addNotification();
       
-      // Then start the 5s interval after the first notification
-      const interval = setInterval(() => {
+      // Then start the 5s interval
+      intervalRef.current = setInterval(() => {
         console.log('Interval notification triggered at:', new Date().toISOString());
         addNotification();
       }, 5000);
-      
-      // Store interval in ref so we can clear it in cleanup
-      if (isMounted.current) {
-        intervalRef.current = interval;
-      }
     }, 2500);
 
-    // Store first timer in ref
-    timeoutRef.current = firstTimer;
-
     return () => {
+      isMounted.current = false;
       const cleanupTime = new Date().toISOString();
-      console.log('Cleaning up notifications at:', cleanupTime, 'mounted:', isMounted.current);
-      if (timeoutRef.current) {
-        console.log('Clearing timeout at:', cleanupTime);
-        clearTimeout(timeoutRef.current);
-      }
-      if (intervalRef.current) {
-        console.log('Clearing interval at:', cleanupTime);
-        clearInterval(intervalRef.current);
-      }
-      if (!isMounted.current) {
-        setNotifications([]);
-      }
+      console.log('Cleaning up notifications at:', cleanupTime);
+      
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [addNotification]);
+  }, []); // No dependencies needed now
 
   return (
     <div 
