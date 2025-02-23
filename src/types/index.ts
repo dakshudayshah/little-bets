@@ -10,19 +10,30 @@ export type BetType = 'MILESTONE' | 'RATING' | 'CHOICE' | 'WORD';
 export interface ChoiceOptions {
   a: string;
   b: string;
-  c: string;
-  d: string;
+  c?: string;
+  d?: string;
 }
 
 // Database types
 export interface Bet {
   id: string;
   code: string;
+  code_name: string;
   question: string;
-  type: string;
+  type: BetType;
   creator_name: string;
   description?: string;
   created_at: string;
+  min_value?: number;
+  max_value?: number;
+  unit?: string;
+  choice_options?: ChoiceOptions;
+  participants?: Array<{
+    id: string;
+    name: string;
+    prediction: string;
+    created_at: string;
+  }>;
 }
 
 export interface BetParticipant {
@@ -35,12 +46,12 @@ export interface BetParticipant {
 
 // Application types
 export interface BetWithParticipants extends Bet {
-  participants: {
+  participants: Array<{
     id: string;
     name: string;
     prediction: string;
     created_at: string;
-  }[];
+  }>;
 }
 
 export interface CreateBetForm {
@@ -51,6 +62,7 @@ export interface CreateBetForm {
   min_value?: number;
   max_value?: number;
   unit?: string;
+  choice_options?: ChoiceOptions;
 }
 
 declare global {
