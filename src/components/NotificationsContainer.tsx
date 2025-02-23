@@ -1,5 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { FloatingNotification } from './FloatingNotification';
+import { Notification, NotificationPosition, NOTIFICATION_SLOTS } from '../types/notifications';
+import '../styles/FloatingNotification.css';
 
 const EXAMPLE_BETS = [
   "Relationship Roulette: How long until Ashley drunkenly texts her ex again? (Over/Under: 2 weeks)",
@@ -24,95 +26,76 @@ const EXAMPLE_BETS = [
   "I Told You So: Will Aunt Patricia's questionable decision backfire within 6 months?"
 ];
 
-type NotificationSlot = 'first' | 'second';
-
-const NOTIFICATION_SLOTS: Record<NotificationSlot, { top: string; right: string }> = {
-  first: {
-    top: '80px',
-    right: '20px'
-  },
-  second: {
-    top: '160px',
-    right: '20px'
-  }
-} as const;
-
-// Add explicit type for status
-type NotificationStatus = 'entering' | 'visible' | 'exiting';
-
-interface Notification {
-  id: number;
-  text: string;
-  status: NotificationStatus;
-  slot: NotificationSlot;
-}
-
 export const NotificationsContainer = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const intervalRef = useRef<ReturnType<typeof setInterval>>();
+
+  // Memoize position transition logic
+  const moveToNextPosition = useCallback((position: NotificationPosition): NotificationPosition => {
+    switch (position) {
+      case 'entering': return 'first';
+      case 'first': return 'second';
+      case 'second': return 'third';
+      case 'third': return 'exiting';
+      default: return 'exiting';
+    }
+  }, []);
 
   const addNotification = useCallback(() => {
-    console.log('Current notifications:', notifications);
-    
     setNotifications(prev => {
-      // First transition: Move visible to exiting
-      const withExiting = prev.map(n => {
-        console.log('Processing notification:', n.id, n.status, '→', 
-          n.status === 'visible' ? 'exiting' : 
-          n.status === 'entering' ? 'visible' : 
-          n.status
-        );
-        
-        if (n.status === 'visible') {
-          return { ...n, status: 'exiting' as const };
-        }
-        if (n.status === 'entering') {
-          return { ...n, status: 'visible' as const };
-        }
-        return n;
-      });
+      // Limit max notifications
+      if (prev.length >= 3) {
+        console.warn('Max notifications reached');
+        return prev;
+      }
 
-      // Remove old notifications
-      const filtered = withExiting.filter(n => n.status !== 'exiting');
+      const updated = prev
+        .map(n => ({
+          ...n,
+          position: moveToNextPosition(n.position),
+          floatOffset: Math.random() * 0.5
+        }))
+        .filter(n => n.position !== 'exiting');
 
-      // Add new notification
       const newNotification: Notification = {
         id: Date.now(),
         text: EXAMPLE_BETS[currentIndex],
-        status: 'entering',
-        slot: 'first'
+        position: 'entering',
+        opacity: 1,
+        floatOffset: 0
       };
 
-      console.log('Adding new notification:', newNotification);
-
       setCurrentIndex(prevIndex => (prevIndex + 1) % EXAMPLE_BETS.length);
-      return [...filtered, newNotification];
+      return [...updated, newNotification];
     });
-  }, [currentIndex, notifications]);
+  }, [currentIndex, moveToNextPosition]);
 
+  // Start notifications with cleanup
   useEffect(() => {
-    // Start first notification after 2 seconds
-    const initialTimer = setTimeout(() => {
-      addNotification();
-    }, 2000);
-    
-    // Then continue with 8-second interval for readability
-    const interval = setInterval(addNotification, 8000);
+    timeoutRef.current = setTimeout(addNotification, 3000);
+    intervalRef.current = setInterval(addNotification, 10000);
     
     return () => {
-      clearTimeout(initialTimer);
-      clearInterval(interval);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      setNotifications([]); // Clear notifications on unmount
     };
   }, [addNotification]);
 
   return (
-    <div className="notifications-container">
+    <div 
+      className="notifications-container"
+      role="log"
+      aria-live="polite"
+      aria-atomic="false"
+    >
       {notifications.map(notification => (
         <FloatingNotification
           key={notification.id}
-          text={notification.text}
-          position={NOTIFICATION_SLOTS[notification.slot]}
-          status={notification.status}
+          {...notification}
+          config={NOTIFICATION_SLOTS[notification.position]}
         />
       ))}
     </div>
