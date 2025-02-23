@@ -47,16 +47,26 @@ export const NotificationsContainer = () => {
     console.log('Adding notification, current state:', { notifications, currentIndex });
     
     setNotifications(prev => {
+      // Log existing notifications
+      console.log('Current notifications:', prev.map(n => ({ id: n.id, position: n.position })));
+
       const updated = prev
         .map(n => {
           const newPos = moveToNextPosition(n.position);
-          console.log('Moving notification:', { id: n.id, from: n.position, to: newPos });
+          console.log(`Moving notification ${n.id} from ${n.position} to ${newPos}`);
           return {
             ...n,
             position: newPos
           } as Notification;
         })
-        .filter(n => n.position !== 'exiting');
+        // Only filter after transitions
+        .filter(n => {
+          const keep = n.position !== 'exiting';
+          if (!keep) {
+            console.log(`Removing notification ${n.id} (exiting)`);
+          }
+          return keep;
+        });
 
       const newNotification: Notification = {
         id: Date.now(),
@@ -66,7 +76,8 @@ export const NotificationsContainer = () => {
         floatOffset: 0
       };
       
-      console.log('New notification:', newNotification);
+      console.log('Adding new notification:', newNotification);
+      console.log('Updated notifications will be:', [...updated, newNotification].map(n => ({ id: n.id, position: n.position })));
       
       setCurrentIndex(prevIndex => (prevIndex + 1) % EXAMPLE_BETS.length);
       
