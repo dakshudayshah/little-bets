@@ -1,26 +1,23 @@
 import { Link } from 'react-router-dom';
 import { BetWithParticipants } from '../types';
-import { formatDate } from '../utils/dateUtils';
-import '../styles/BetsList.css';
 
-interface BetsListProps {
-  bets: BetWithParticipants[];
-}
+// ... other imports
 
-export const BetsList = ({ bets }: BetsListProps) => {
+export const BetsList = ({ bets }: { bets: BetWithParticipants[] }) => {
   return (
     <div className="container">
       <h1>All Bets</h1>
       <div className="bets-grid">
         {bets.map(bet => (
-          <Link to={`/bet/${bet.code_name}`} key={bet.id} className="bet-card">
+          // Changed from code_name to id for the route
+          <Link to={`/bets/${bet.id}`} key={bet.id} className="bet-card">
             <div className="bet-header">
               <h2>{bet.question}</h2>
               <span className="bet-type">{bet.type}</span>
             </div>
             <div className="bet-footer">
               <span>{bet.participants.length} predictions</span>
-              <span>{formatDate(bet.created_at)}</span>
+              {/* Remove date formatting since created_at is not in the type */}
             </div>
           </Link>
         ))}
