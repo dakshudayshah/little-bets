@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Bet } from '../types';
+import { Bet, Participant } from '../types';
 import { ShareButtons } from './ShareButtons';
 import '../styles/BetCard.css';
 
@@ -21,7 +21,7 @@ export const BetCard = ({ bet }: BetCardProps) => {
         </div>
         <div className="stat">
           <span>Predictions</span>
-          <strong>{bet.participants?.length || 0}</strong>
+          <strong>{bet.participants.length}</strong>
         </div>
         <div className="stat">
           <span>Type</span>
@@ -31,9 +31,9 @@ export const BetCard = ({ bet }: BetCardProps) => {
 
       <ShareButtons betId={bet.id} title={bet.question} />
 
-      {bet.participants && bet.participants.length > 0 && (
+      {bet.participants.length > 0 && (
         <div className="predictions-list">
-          {bet.participants.map((participant, index) => (
+          {bet.participants.map((participant: Participant, index: number) => (
             <div key={index} className="prediction-item">
               <div className="prediction-name">{participant.name}</div>
               <div className="prediction-value">{participant.prediction}</div>
