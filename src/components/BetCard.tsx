@@ -1,4 +1,10 @@
+import { Bet } from '../types';
 import { ShareButton } from './ShareButton';
+import { formatDate } from '../utils/dateUtils';
+
+interface BetCardProps {
+  bet: Bet;
+}
 
 export const BetCard = ({ bet }: BetCardProps) => {
   return (
