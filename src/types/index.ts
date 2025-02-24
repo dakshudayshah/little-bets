@@ -15,18 +15,18 @@ export interface ChoiceOptions {
 }
 
 // Database types
+export interface Participant {
+  name: string;
+  prediction: string;
+  created_at: string;
+}
+
 export interface Bet {
   id: string;
-  code_name: string;
-  created_at: string;
-  type: BetType;
   question: string;
-  description?: string;
   creator_name: string;
-  choice_options?: ChoiceOptions;  // For CHOICE type
-  min_value?: number;  // For MILESTONE/RATING bets
-  max_value?: number;  // For MILESTONE/RATING bets
-  unit?: string;      // For MILESTONE bets (e.g., "months", "years")
+  type: string;
+  participants: Participant[];
 }
 
 export interface BetParticipant {
