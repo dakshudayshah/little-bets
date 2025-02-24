@@ -5,7 +5,7 @@ import { betService } from '../services/betService';
 import '../styles/BetDetails.css';
 
 export const BetDetails = () => {
-  const { code_name } = useParams<{ code_name: string }>();
+  const { code } = useParams<{ code: string }>();
   const [bet, setBet] = useState<BetWithParticipants | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,9 +15,9 @@ export const BetDetails = () => {
 
   useEffect(() => {
     const fetchBet = async () => {
-      if (!code_name) return;
+      if (!code) return;
       try {
-        const betData = await betService.getBetByCode(code_name);
+        const betData = await betService.getBetByCode(code);
         setBet(betData);
       } catch (err) {
         setError('Failed to load bet details');
@@ -27,7 +27,7 @@ export const BetDetails = () => {
     };
 
     fetchBet();
-  }, [code_name]);
+  }, [code]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +36,7 @@ export const BetDetails = () => {
     setIsSubmitting(true);
     try {
       await betService.addParticipant(bet.id, name, prediction);
-      const updatedBet = await betService.getBetByCode(code_name!);
+      const updatedBet = await betService.getBetByCode(code!);
       setBet(updatedBet);
       setName('');
       setPrediction('');
@@ -45,13 +45,6 @@ export const BetDetails = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const shareUrl = `${window.location.origin}/bets/${bet?.code_name}`;
-
-  const copyShareLink = () => {
-    navigator.clipboard.writeText(shareUrl);
-    // Could add a toast notification here
   };
 
   if (isLoading) return <div className="container">Loading...</div>;
@@ -64,16 +57,6 @@ export const BetDetails = () => {
         <h1>{bet.question}</h1>
         {bet.description && <p className="description">{bet.description}</p>}
         
-        <div className="share-section">
-          <div className="share-link">
-            <span>Share Link:</span>
-            <code>{shareUrl}</code>
-            <button onClick={copyShareLink} className="copy-button">
-              Copy
-            </button>
-          </div>
-        </div>
-
         <div className="stats">
           <div className="stat-item">
             <span>Created by</span>

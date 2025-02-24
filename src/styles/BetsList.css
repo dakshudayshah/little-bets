@@ -16,7 +16,9 @@
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  overflow: hidden;
+  padding: 20px;
+  text-decoration: none;
+  color: inherit;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
@@ -191,55 +193,4 @@
   .feedback-form textarea {
     min-height: 80px;
   }
-}
-
-.bet-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 16px;
-}
-
-.bet-link {
-  flex: 1;
-  text-decoration: none;
-  color: inherit;
-}
-
-.bet-header h3 {
-  font-size: 18px;
-  color: #2d3748;
-  margin: 0 0 8px 0;
-}
-
-.bet-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 14px;
-  color: #718096;
-}
-
-.share-button {
-  background: none;
-  border: none;
-  padding: 8px;
-  cursor: pointer;
-  color: #4a5568;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-}
-
-.share-button:hover {
-  background: #f7fafc;
-}
-
-.share-button svg {
-  width: 20px;
-  height: 20px;
 } 
