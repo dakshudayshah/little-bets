@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { BetWithParticipants } from '../types';
 import { betService } from '../services/betService';
 import '../styles/BetDetails.css';
+import { ShareButtons } from '../components/ShareButtons';
 
 export const BetDetails = () => {
   const { code } = useParams<{ code: string }>();
@@ -71,6 +72,8 @@ export const BetDetails = () => {
             <strong>{bet.type}</strong>
           </div>
         </div>
+
+        <ShareButtons betId={bet.id} title={bet.question} />
 
         <div className="predictions-section">
           <h2>Make Your Prediction</h2>
