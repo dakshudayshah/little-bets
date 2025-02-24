@@ -14,36 +14,32 @@ export interface ChoiceOptions {
   d: string;
 }
 
-// Base interfaces
-export interface Participant {
+// Database types
+export interface Bet {
+  id: string;
+  code_name: string;
+  created_at: string;
+  type: BetType;
+  question: string;
+  description?: string;
+  creator_name: string;
+  choice_options?: ChoiceOptions;  // For CHOICE type
+  min_value?: number;  // For MILESTONE/RATING bets
+  max_value?: number;  // For MILESTONE/RATING bets
+  unit?: string;      // For MILESTONE bets (e.g., "months", "years")
+}
+
+export interface BetParticipant {
+  id: string;
+  bet_id: string;
   name: string;
   prediction: string;
   created_at: string;
 }
 
-export interface BetParticipant extends Participant {
-  id: string;
-  bet_id: string;
-}
-
-export interface Bet {
-  id: string;
-  question: string;
-  creator_name: string;
-  type: BetType;
-  code_name: string;
-  created_at: string;
-  description?: string;
-  min_value?: number;
-  max_value?: number;
-  unit?: string;
-  choice_options?: ChoiceOptions;
-  participants: Participant[];
-}
-
 // Application types
 export interface BetWithParticipants extends Bet {
-  participants: BetParticipant[]; // Override participants with more specific type
+  participants: BetParticipant[];
 }
 
 export interface CreateBetForm {

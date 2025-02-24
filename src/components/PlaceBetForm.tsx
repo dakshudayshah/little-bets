@@ -1,15 +1,14 @@
-import { useState, FormEvent } from 'react';
+import { useState } from 'react';
 import { BetWithParticipants } from '../types';
 import { betService } from '../services/betService';
 
 interface PlaceBetFormProps {
   bet: BetWithParticipants;
-  onSubmit: (name: string, prediction: string) => Promise<void>;
 }
 
-export const PlaceBetForm = ({ bet, onSubmit }: PlaceBetFormProps) => {
+export const PlaceBetForm = ({ bet }: PlaceBetFormProps) => {
   const [name, setName] = useState('');
-  const [prediction, setPrediction] = useState('');
+  const [prediction, setPrediction] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   console.log('Current bet configuration:', {
@@ -20,18 +19,13 @@ export const PlaceBetForm = ({ bet, onSubmit }: PlaceBetFormProps) => {
     choice_options: bet.choice_options
   });
 
-  // Type guard for choice options
-  const hasChoiceOptions = (bet: BetWithParticipants): bet is BetWithParticipants & { choice_options: NonNullable<typeof bet.choice_options> } => {
-    return bet.choice_options !== undefined;
-  };
-
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !prediction) return;
-
     setIsSubmitting(true);
+
     try {
-      await onSubmit(name, prediction);
+      await betService.addParticipant(bet.id, name, prediction);
+      // Real-time will handle the update
       setName('');
       setPrediction('');
     } catch (error) {
@@ -45,50 +39,67 @@ export const PlaceBetForm = ({ bet, onSubmit }: PlaceBetFormProps) => {
     switch (bet.type) {
       case 'MILESTONE':
         return (
-          <input
-            type="number"
-            min={bet.min_value}
-            max={bet.max_value}
-            value={prediction}
-            onChange={(e) => setPrediction(e.target.value)}
-            placeholder={`Enter value ${bet.unit ? `in ${bet.unit}` : ''}`}
-            required
-          />
+          <div className="duration-input">
+            <input
+              type="number"
+              min={bet.min_value || 0}
+              max={bet.max_value}
+              value={prediction}
+              onChange={(e) => setPrediction(e.target.value)}
+              required
+              disabled={isSubmitting}
+            />
+            <span className="unit">{bet.unit}</span>
+          </div>
         );
+
       case 'RATING':
         return (
-          <input
-            type="number"
-            min={bet.min_value}
-            max={bet.max_value}
-            value={prediction}
-            onChange={(e) => setPrediction(e.target.value)}
-            required
-          />
+          <div className="range-input">
+            <input
+              type="range"
+              min={bet.min_value || 1}
+              max={bet.max_value || 10}
+              value={prediction}
+              onChange={(e) => setPrediction(e.target.value)}
+              required
+              disabled={isSubmitting}
+            />
+            <span className="range-value">{prediction}</span>
+          </div>
         );
+
       case 'CHOICE':
-        return hasChoiceOptions(bet) ? (
-          <select
-            value={prediction}
-            onChange={(e) => setPrediction(e.target.value)}
-            required
-          >
-            <option value="">Select an option</option>
+        if (!bet.choice_options) return null;
+        return (
+          <div className="choice-group">
             {Object.entries(bet.choice_options).map(([key, value]) => (
-              <option key={key} value={value}>
+              <label key={key}>
+                <input
+                  type="radio"
+                  value={key}
+                  checked={prediction === key}
+                  onChange={(e) => setPrediction(e.target.value)}
+                  disabled={isSubmitting}
+                />
                 {value}
-              </option>
+              </label>
             ))}
-          </select>
-        ) : null;
-      default:
+          </div>
+        );
+
+      case 'WORD':
         return (
           <input
             type="text"
             value={prediction}
             onChange={(e) => setPrediction(e.target.value)}
-            placeholder="Enter your prediction"
+            placeholder="Enter one word"
+            maxLength={30}
+            pattern="\S+"
+            title="Please enter a single word (no spaces)"
             required
+            disabled={isSubmitting}
           />
         );
     }
