@@ -14,11 +14,16 @@ export interface ChoiceOptions {
   d: string;
 }
 
-// Database types
+// Base interfaces
 export interface Participant {
   name: string;
   prediction: string;
   created_at: string;
+}
+
+export interface BetParticipant extends Participant {
+  id: string;
+  bet_id: string;
 }
 
 export interface Bet {
@@ -26,20 +31,14 @@ export interface Bet {
   question: string;
   creator_name: string;
   type: string;
+  code_name: string;  // Adding this back since it's used in routes
+  created_at: string; // Adding this back since it's used for display
   participants: Participant[];
-}
-
-export interface BetParticipant {
-  id: string;
-  bet_id: string;
-  name: string;
-  prediction: string;
-  created_at: string;
 }
 
 // Application types
 export interface BetWithParticipants extends Bet {
-  participants: BetParticipant[];
+  participants: BetParticipant[]; // Override participants with more specific type
 }
 
 export interface CreateBetForm {
