@@ -30,9 +30,14 @@ export interface Bet {
   id: string;
   question: string;
   creator_name: string;
-  type: string;
-  code_name: string;  // Adding this back since it's used in routes
-  created_at: string; // Adding this back since it's used for display
+  type: BetType;
+  code_name: string;
+  created_at: string;
+  description?: string;
+  min_value?: number;
+  max_value?: number;
+  unit?: string;
+  choice_options?: ChoiceOptions;
   participants: Participant[];
 }
 
