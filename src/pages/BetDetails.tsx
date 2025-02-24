@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import { BetWithParticipants } from '../types';
 import { betService } from '../services/betService';
 import '../styles/BetDetails.css';
-import { ShareButton } from '../components/ShareButton';
 
 export const BetDetails = () => {
   const { code } = useParams<{ code: string }>();
@@ -55,10 +54,7 @@ export const BetDetails = () => {
   return (
     <div className="container">
       <div className="bet-details">
-        <div className="bet-header">
-          <h1>{bet.question}</h1>
-          <ShareButton betCode={bet.code} />
-        </div>
+        <h1>{bet.question}</h1>
         {bet.description && <p className="description">{bet.description}</p>}
         
         <div className="stats">
