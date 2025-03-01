@@ -1,64 +1,16 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { FloatingNotification } from './FloatingNotification';
-import { Notification } from '../types/notifications';
 import '../styles/FloatingNotification.css';
 
 const EXAMPLE_BETS = [
-  {
-    title: "Relationship Roulette",
-    question: "How long until Ashley drunkenly texts her ex again? (Over/Under: 2 weeks)"
-  },
-  {
-    title: "Social Media Stalker",
-    question: "Will Priya's next Instagram post be a thirst trap or a humble brag?"
-  },
-  {
-    title: "Diet Disaster",
-    question: "How many days will Uncle Joe last on his new fad diet before caving to pizza? (Days: 3, 5, 7)"
-  },
-  {
-    title: "Job Jump Scare",
-    question: "Will Kevin quit his job in a dramatic fashion (think shouting, quitting via email, or ghosting) or just quietly slip out?"
-  },
-  {
-    title: "Dating App Debacle",
-    question: "How many dates will Neha go on from dating apps before declaring \"dating is dead\"? (Dates: 5, 10, 15)"
-  },
-  {
-    title: "Home Renovation Horror",
-    question: "Will Aunt Susan's DIY home project end in a Pinterest-worthy success or a call to a professional (and a hefty bill)?"
-  },
+  // Yes/No bets
   {
     title: "Fashion Faux Pas",
-    question: "Will Rajeev wear socks with sandals in public this year, and will we witness it? (Yes/No)"
-  },
-  {
-    title: "Cooking Catastrophe",
-    question: "Will David's attempt at a \"simple\" new recipe result in edible food or a kitchen fire drill?"
-  },
-  {
-    title: "Travel Trouble",
-    question: "On Meena's next vacation, what's more likely: lost luggage or a public argument with her travel buddy?"
-  },
-  {
-    title: "Tech Tantrum",
-    question: "How long until Grandpa Bob throws his phone across the room in frustration with technology? (Hours/Days)"
+    question: "Will Rajeev wear socks with sandals in public this year? (Yes/No)"
   },
   {
     title: "Gift Giving Gaffe",
-    question: "Will Emily re-gift something she received last year, and will the original giver notice? (Yes/No)"
-  },
-  {
-    title: "Parking Predicament",
-    question: "How many attempts will it take Chris to parallel park in a moderately tight spot? (Attempts: 3, 5, 7+)"
-  },
-  {
-    title: "Karaoke Calamity",
-    question: "Will Anika attempt a song she absolutely cannot sing at the next karaoke night, and will it be cringe or comedy gold?"
-  },
-  {
-    title: "Plant Parenthood",
-    question: "How long until Michael's new houseplant dies a slow, agonizing death? (Weeks: 2, 4, 6)"
+    question: "Will Emily re-gift something she received last year? (Yes/No)"
   },
   {
     title: "Fitness Fail",
@@ -66,71 +18,125 @@ const EXAMPLE_BETS = [
   },
   {
     title: "Bookworm Betrayal",
-    question: "Will Uncle Tom actually finish reading that \"life-changing\" book he started, or will it become another coffee table ornament?"
-  },
-  {
-    title: "Punctuality Predicament",
-    question: "How late will Jessica be to the next family gathering? (Minutes: 15, 30, 45+)"
-  },
-  {
-    title: "Road Trip Ruckus",
-    question: "On the next road trip, who is more likely to get hangry and cause a roadside meltdown: Sarah (driver) or Vikram (passenger)?"
-  },
-  {
-    title: "Movie Marathon Meltdown",
-    question: "During the next movie marathon, who will fall asleep first: Aunt Carol or Cousin Ravi?"
+    question: "Will Uncle Tom actually finish reading that \"life-changing\" book he started? (Yes/No)"
   },
   {
     title: "\"I Told You So\" Moment",
     question: "Will Aunt Patricia's questionable life decision backfire spectacularly within the next 6 months? (Yes/No)"
+  },
+  {
+    title: "Cooking Catastrophe",
+    question: "Will David's attempt at a \"simple\" new recipe result in edible food? (Yes/No)"
+  },
+  {
+    title: "Home Renovation Horror",
+    question: "Will Aunt Susan's DIY home project end in a Pinterest-worthy success? (Yes/No)"
+  },
+  
+  // Number bets (days/months/years)
+  {
+    title: "Relationship Roulette",
+    question: "How many days until Ashley drunkenly texts her ex again? (Days)"
+  },
+  {
+    title: "Diet Disaster",
+    question: "How many days will Uncle Joe last on his new fad diet before caving to pizza? (Days)"
+  },
+  {
+    title: "Dating App Debacle",
+    question: "How many dates will Neha go on from dating apps before declaring \"dating is dead\"? (Dates)"
+  },
+  {
+    title: "Tech Tantrum",
+    question: "How many hours until Grandpa Bob throws his phone across the room in frustration? (Hours)"
+  },
+  {
+    title: "Parking Predicament",
+    question: "How many attempts will it take Chris to parallel park in a moderately tight spot? (Attempts)"
+  },
+  {
+    title: "Plant Parenthood",
+    question: "How many weeks until Michael's new houseplant dies a slow, agonizing death? (Weeks)"
+  },
+  {
+    title: "Punctuality Predicament",
+    question: "How many minutes late will Jessica be to the next family gathering? (Minutes)"
+  },
+  
+  // Custom options bets
+  {
+    title: "Social Media Stalker",
+    question: "Will Priya's next Instagram post be a thirst trap or a humble brag?"
+  },
+  {
+    title: "Job Jump Scare",
+    question: "Will Kevin quit his job in a dramatic fashion or just quietly slip out?"
+  },
+  {
+    title: "Travel Trouble",
+    question: "On Meena's next vacation, what's more likely: lost luggage or a public argument with her travel buddy?"
+  },
+  {
+    title: "Karaoke Calamity",
+    question: "Will Anika's karaoke performance be cringe or comedy gold?"
+  },
+  {
+    title: "Road Trip Ruckus",
+    question: "Who is more likely to get hangry and cause a roadside meltdown: Sarah or Vikram?"
+  },
+  {
+    title: "Movie Marathon Meltdown",
+    question: "Who will fall asleep first during the next movie marathon: Aunt Carol or Cousin Ravi?"
   }
 ];
 
 export const NotificationsContainer = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const indexRef = useRef(0);
+  const [notifications, setNotifications] = useState<Array<{ id: number; bet: typeof EXAMPLE_BETS[0] }>>([]);
+  const [lastNotificationTime, setLastNotificationTime] = useState(Date.now());
 
   useEffect(() => {
-    // Initial delay of 2 seconds
-    const initialTimeout = setTimeout(() => {
-      addNotification();
-    }, 2000);
+    // Show initial notification after 3 seconds
+    const initialTimer = setTimeout(() => {
+      addRandomNotification();
+    }, 3000);
 
-    return () => clearTimeout(initialTimeout);
+    return () => clearTimeout(initialTimer);
   }, []);
 
-  const addNotification = () => {
-    const bet = EXAMPLE_BETS[indexRef.current % EXAMPLE_BETS.length];
-    indexRef.current += 1;
+  useEffect(() => {
+    // Schedule next notification between 20-40 seconds after the last one
+    const nextNotificationDelay = Math.floor(Math.random() * 20000) + 20000;
+    
+    const timer = setTimeout(() => {
+      addRandomNotification();
+      setLastNotificationTime(Date.now());
+    }, nextNotificationDelay);
 
-    const newNotification: Notification = {
+    return () => clearTimeout(timer);
+  }, [lastNotificationTime]);
+
+  const addRandomNotification = () => {
+    const randomBet = EXAMPLE_BETS[Math.floor(Math.random() * EXAMPLE_BETS.length)];
+    const newNotification = {
       id: Date.now(),
-      title: bet.title,
-      text: bet.question,
-      isNew: true
+      bet: randomBet
     };
 
-    setNotifications(prev => {
-      if (prev.length === 0) return [newNotification];
-      
-      if (prev.length === 1) {
-        return [newNotification, { ...prev[0], isNew: false }];
-      }
-      
-      return [newNotification, prev[0]];
-    });
+    setNotifications(prev => [...prev, newNotification]);
 
-    // Schedule next notification after 6 seconds (increased from 4)
-    setTimeout(addNotification, 6000);
+    // Remove notification after 5 seconds
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== newNotification.id));
+    }, 5000);
   };
 
   return (
     <div className="notifications-container">
-      {notifications.map((notification, index) => (
-        <FloatingNotification
+      {notifications.map(notification => (
+        <FloatingNotification 
           key={notification.id}
-          {...notification}
-          slot={index === 0 ? 'first' : 'second'}
+          title={notification.bet.title}
+          message={notification.bet.question}
         />
       ))}
     </div>
