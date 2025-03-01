@@ -1,0 +1,130 @@
+.bet-detail-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.loading, .error-container {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #666;
+}
+
+.bet-header {
+  margin-bottom: 30px;
+}
+
+.bet-header h1 {
+  margin-bottom: 10px;
+  font-size: 24px;
+  color: #333;
+}
+
+.bet-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.bet-type {
+  background-color: #e2e8f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.bet-creator, .bet-date {
+  color: #666;
+}
+
+.bet-description {
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.bet-description h2 {
+  font-size: 18px;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.bet-description p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.bet-interaction {
+  margin-bottom: 30px;
+}
+
+.bet-interaction h2 {
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+
+.bet-options {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.option-button {
+  padding: 10px 20px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.option-button:hover {
+  background-color: #f0f0f0;
+  border-color: #ccc;
+}
+
+.number-input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 150px;
+}
+
+.submit-prediction {
+  padding: 10px 20px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.submit-prediction:hover {
+  background-color: #3a7bc8;
+}
+
+.bet-actions {
+  margin-top: 30px;
+}
+
+.back-button {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  color: #333;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.back-button:hover {
+  background-color: #e0e0e0;
+} 

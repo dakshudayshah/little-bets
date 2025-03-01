@@ -1,28 +1,66 @@
 import { useState, FormEvent } from 'react';
-
-type BetType = 'milestone' | 'rating' | 'choice' | 'word';
+import { useNavigate } from 'react-router-dom';
+import { createBet, BetType } from '../lib/supabase';
+import '../styles/CreateBetForm.css';
 
 const HELPER_TEXT: Record<BetType, string> = {
-  milestone: "Enter a date range (in months) when you think this will happen. For example: 0-12 means it could happen anytime in the next year.",
-  rating: "Enter a rating range. For example: 1-10 for a typical rating scale.",
-  choice: "Enter the possible choices separated by commas. For example: Yes, No, Maybe",
-  word: "Enter the possible words or phrases separated by commas. For example: Pizza, Sushi, Burger"
+  yesno: "A simple yes or no prediction.",
+  number: "Predict a whole number (days, months, years, etc.). Example: How many days until...?",
+  custom: "Create a bet with two custom options. Example: Will it be X or Y?"
 };
 
 export const CreateBetForm = () => {
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [betType, setBetType] = useState<BetType | ''>('');
   const [question, setQuestion] = useState('');
   const [description, setDescription] = useState('');
+  const [customOption1, setCustomOption1] = useState('');
+  const [customOption2, setCustomOption2] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // ... submit logic
+    setError('');
+    setIsSubmitting(true);
+    
+    try {
+      // Form validation
+      if (!betType) {
+        throw new Error('Please select a bet type');
+      }
+      
+      if (betType === 'custom' && (!customOption1.trim() || !customOption2.trim())) {
+        throw new Error('Both custom options are required');
+      }
+      
+      // Create bet data object
+      const betData = {
+        name,
+        betType,
+        question,
+        description: description.trim() || undefined,
+        ...(betType === 'custom' ? { customOption1, customOption2 } : {})
+      };
+      
+      // Submit to Supabase
+      const newBet = await createBet(betData);
+      
+      // Redirect to the new bet page
+      navigate(`/bet/${newBet.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="container">
+    <div className="create-bet-container">
       <h1>Create a New Bet</h1>
+      
+      {error && <div className="error-message">{error}</div>}
+      
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="name">Your Name</label>
@@ -47,11 +85,13 @@ export const CreateBetForm = () => {
             className="form-input"
           >
             <option value="">Select a type...</option>
-            <option value="milestone">Milestone Bet</option>
-            <option value="rating">Rating Bet</option>
-            <option value="choice">Choice Bet</option>
-            <option value="word">Word Bet</option>
+            <option value="yesno">Yes/No</option>
+            <option value="number">Number (days/months/years)</option>
+            <option value="custom">Custom Options</option>
           </select>
+          {betType && (
+            <div className="helper-text">{HELPER_TEXT[betType]}</div>
+          )}
         </div>
 
         <div className="form-group">
@@ -67,19 +107,53 @@ export const CreateBetForm = () => {
           />
         </div>
 
+        {betType === 'custom' && (
+          <div className="custom-options">
+            <div className="form-group">
+              <label htmlFor="customOption1">Option 1</label>
+              <input
+                id="customOption1"
+                type="text"
+                value={customOption1}
+                onChange={(e) => setCustomOption1(e.target.value)}
+                placeholder="First option"
+                required
+                className="form-input"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="customOption2">Option 2</label>
+              <input
+                id="customOption2"
+                type="text"
+                value={customOption2}
+                onChange={(e) => setCustomOption2(e.target.value)}
+                placeholder="Second option"
+                required
+                className="form-input"
+              />
+            </div>
+          </div>
+        )}
+
         <div className="form-group">
           <label htmlFor="description">Description (Optional)</label>
           <textarea
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder={betType ? HELPER_TEXT[betType] : "Add more details about your bet..."}
+            placeholder="Add more details about your bet..."
             className="form-input"
           />
         </div>
 
-        <button type="submit" className="submit-button">
-          Create Bet
+        <button 
+          type="submit" 
+          className="submit-button"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Creating...' : 'Create Bet'}
         </button>
       </form>
     </div>
