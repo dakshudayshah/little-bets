@@ -38,20 +38,32 @@ export const CreateBetForm = () => {
         throw new Error('Both custom options are required');
       }
       
-      // Create bet data object
+      // Create bet data object with exact column names from the database
       const betData = {
         creator_name: creatorName,
-        betType,
+        bettype: betType,
         question,
         description: description.trim() || undefined,
-        ...(betType === 'number' ? { unit } : {}),
-        ...(betType === 'custom' ? { customOption1, customOption2 } : {})
+        ...(betType === 'number' ? { 
+          unit,
+          min_value: 0,  // Default values for min/max
+          max_value: 100
+        } : {}),
+        ...(betType === 'custom' ? { 
+          customoption1: customOption1,  // Note: lowercase in database
+          customoption2: customOption2   // Note: lowercase in database
+        } : {})
       };
+      
+      console.log('Submitting bet data:', betData);
       
       // Submit to Supabase
       const { error: supabaseError } = await supabase.from('bets').insert(betData);
       
-      if (supabaseError) throw new Error(supabaseError.message);
+      if (supabaseError) {
+        console.error('Supabase error:', supabaseError);
+        throw new Error(supabaseError.message);
+      }
       
       // Reset form
       setCreatorName('');
@@ -64,6 +76,7 @@ export const CreateBetForm = () => {
       setSuccess(true);
       
     } catch (err) {
+      console.error('Form submission error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsSubmitting(false);

@@ -63,17 +63,17 @@ export const BetDetail = () => {
     
     try {
       // Validate prediction based on bet type
-      if (bet.betType === 'yesno' && prediction !== 'yes' && prediction !== 'no') {
+      if (bet.bettype === 'yesno' && prediction !== 'yes' && prediction !== 'no') {
         throw new Error('Prediction must be "yes" or "no"');
       }
       
-      if (bet.betType === 'number' && !/^\d+$/.test(prediction)) {
+      if (bet.bettype === 'number' && !/^\d+$/.test(prediction)) {
         throw new Error('Prediction must be a number');
       }
       
-      if (bet.betType === 'custom' && 
-          prediction !== bet.customOption1 && 
-          prediction !== bet.customOption2) {
+      if (bet.bettype === 'custom' && 
+          prediction !== bet.customoption1 && 
+          prediction !== bet.customoption2) {
         throw new Error('Prediction must be one of the options');
       }
       
@@ -115,7 +115,7 @@ export const BetDetail = () => {
   const renderPredictionInput = () => {
     if (!bet) return null;
 
-    switch (bet.betType) {
+    switch (bet.bettype) {
       case 'yesno':
         return (
           <div className="prediction-options">
@@ -160,30 +160,30 @@ export const BetDetail = () => {
       case 'custom':
         return (
           <div className="prediction-options">
-            {bet.customOption1 && (
+            {bet.customoption1 && (
               <label className="radio-label">
                 <input
                   type="radio"
                   name="prediction"
-                  value={bet.customOption1}
-                  checked={prediction === bet.customOption1}
-                  onChange={() => setPrediction(bet.customOption1 || '')}
+                  value={bet.customoption1}
+                  checked={prediction === bet.customoption1}
+                  onChange={() => setPrediction(bet.customoption1 || '')}
                   required
                 />
-                {bet.customOption1}
+                {bet.customoption1}
               </label>
             )}
-            {bet.customOption2 && (
+            {bet.customoption2 && (
               <label className="radio-label">
                 <input
                   type="radio"
                   name="prediction"
-                  value={bet.customOption2}
-                  checked={prediction === bet.customOption2}
-                  onChange={() => setPrediction(bet.customOption2 || '')}
+                  value={bet.customoption2}
+                  checked={prediction === bet.customoption2}
+                  onChange={() => setPrediction(bet.customoption2 || '')}
                   required
                 />
-                {bet.customOption2}
+                {bet.customoption2}
               </label>
             )}
           </div>
@@ -220,7 +220,7 @@ export const BetDetail = () => {
       <div className="bet-header">
         <h1>{bet.question}</h1>
         <div className="bet-meta">
-          <span className="bet-type">{bet.betType.toUpperCase()}</span>
+          <span className="bet-type">{bet.bettype.toUpperCase()}</span>
           <span className="bet-creator">Created by {bet.creator_name}</span>
           <span className="bet-date">
             {new Date(bet.created_at).toLocaleDateString()}
