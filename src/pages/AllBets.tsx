@@ -33,14 +33,14 @@ export const AllBets = () => {
 
   // Helper function to display bet options based on type
   const getBetOptions = (bet: Bet) => {
-    switch (bet.betType) {
+    switch (bet.bettype) {
       case 'yesno':
         return 'Yes / No';
       case 'number':
         return `Number (${bet.unit || 'units'})`;
       case 'custom':
-        return bet.customOption1 && bet.customOption2 
-          ? `${bet.customOption1} / ${bet.customOption2}`
+        return bet.customoption1 && bet.customoption2 
+          ? `${bet.customoption1} / ${bet.customoption2}`
           : 'Custom options';
       default:
         return '';
@@ -70,7 +70,7 @@ export const AllBets = () => {
             <Link to={`/bet/${bet.id}`} key={bet.id} className="bet-card">
               <h2>{bet.question}</h2>
               <div className="bet-meta">
-                <span className="bet-type">{bet.betType.toUpperCase()}</span>
+                <span className="bet-type">{bet.bettype.toUpperCase()}</span>
                 <span className="bet-options">{getBetOptions(bet)}</span>
               </div>
               {bet.description && <p className="bet-description">{bet.description}</p>}

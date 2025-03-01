@@ -12,14 +12,19 @@ export type BetType = 'yesno' | 'number' | 'custom';
 
 export interface Bet {
   id: string;
+  code_name?: string;
   created_at: string;
-  creator_name: string;
-  betType: BetType;
+  type?: string;  // Old type column
+  bettype: BetType;  // New type column
   question: string;
   description?: string;
+  creator_name: string;
+  min_value?: number;
+  max_value?: number;
   unit?: string;
-  customOption1?: string;
-  customOption2?: string;
+  choice_options?: any;  // JSONB type
+  customoption1?: string;  // Note: lowercase in database
+  customoption2?: string;  // Note: lowercase in database
 }
 
 export interface BetParticipant {
