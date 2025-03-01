@@ -13,20 +13,21 @@ export type BetType = 'yesno' | 'number' | 'custom';
 export interface Bet {
   id: string;
   created_at: string;
-  name: string;
+  creator_name: string;
   betType: BetType;
   question: string;
   description?: string;
+  unit?: string;
   customOption1?: string;
   customOption2?: string;
 }
 
-export interface Prediction {
+export interface BetParticipant {
   id: string;
   created_at: string;
   bet_id: string;
-  user_name: string;
-  prediction_value: string; // Could be "yes", "no", a number, or one of the custom options
+  name: string;
+  prediction: string;
 }
 
 // Helper functions for database operations
@@ -63,9 +64,9 @@ export const getBetById = async (id: string) => {
   return data;
 };
 
-export const createPrediction = async (predictionData: Omit<Prediction, 'id' | 'created_at'>) => {
+export const createPrediction = async (predictionData: Omit<BetParticipant, 'id' | 'created_at'>) => {
   const { data, error } = await supabase
-    .from('predictions')
+    .from('bet_participants')
     .insert(predictionData)
     .select()
     .single();
@@ -76,7 +77,7 @@ export const createPrediction = async (predictionData: Omit<Prediction, 'id' | '
 
 export const getPredictionsByBetId = async (betId: string) => {
   const { data, error } = await supabase
-    .from('predictions')
+    .from('bet_participants')
     .select('*')
     .eq('bet_id', betId)
     .order('created_at', { ascending: false });

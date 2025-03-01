@@ -1,111 +1,190 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { supabase, Bet, BetParticipant } from '../lib/supabase';
 import '../styles/BetDetail.css';
-
-// Define the bet type interface to match our new structure
-interface Bet {
-  id: string;
-  created_at: string;
-  name: string;
-  betType: 'yesno' | 'number' | 'custom';
-  question: string;
-  description?: string;
-  customOption1?: string;
-  customOption2?: string;
-}
 
 export const BetDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [bet, setBet] = useState<Bet | null>(null);
+  const [participants, setParticipants] = useState<BetParticipant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [name, setName] = useState('');
+  const [prediction, setPrediction] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   useEffect(() => {
-    const fetchBet = async () => {
+    const fetchBetAndParticipants = async () => {
+      if (!id) return;
+      
       try {
-        // Replace with actual API call
-        // const { data, error } = await supabase.from('bets').select('*').eq('id', id).single();
+        setLoading(true);
         
-        // Mock data for now
-        const mockBets: Record<string, Bet> = {
-          '1': {
-            id: '1',
-            created_at: new Date().toISOString(),
-            name: 'John',
-            betType: 'yesno',
-            question: 'Will it rain tomorrow?',
-            description: 'Based on the weather forecast'
-          },
-          '2': {
-            id: '2',
-            created_at: new Date().toISOString(),
-            name: 'Sarah',
-            betType: 'number',
-            question: 'How many days until the project deadline?',
-            description: 'The team is working hard'
-          },
-          '3': {
-            id: '3',
-            created_at: new Date().toISOString(),
-            name: 'Mike',
-            betType: 'custom',
-            question: 'Who will win the game?',
-            customOption1: 'Team A',
-            customOption2: 'Team B',
-            description: 'The big rivalry match'
-          }
-        };
+        // Fetch bet details
+        const { data: betData, error: betError } = await supabase
+          .from('bets')
+          .select('*')
+          .eq('id', id)
+          .single();
         
-        const foundBet = id ? mockBets[id] : null;
+        if (betError) throw betError;
         
-        if (foundBet) {
-          setBet(foundBet);
-        } else {
-          setError('Bet not found');
-        }
-      } catch (error) {
-        console.error('Error fetching bet:', error);
+        // Fetch participants
+        const { data: participantsData, error: participantsError } = await supabase
+          .from('bet_participants')
+          .select('*')
+          .eq('bet_id', id)
+          .order('created_at', { ascending: false });
+        
+        if (participantsError) throw participantsError;
+        
+        setBet(betData);
+        setParticipants(participantsData || []);
+      } catch (err) {
+        console.error('Error fetching bet details:', err);
         setError('Failed to load bet details');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBet();
+    fetchBetAndParticipants();
   }, [id]);
 
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitError('');
+    setSubmitSuccess(false);
+    setIsSubmitting(true);
+    
+    if (!bet || !id) return;
+    
+    try {
+      // Validate prediction based on bet type
+      if (bet.betType === 'yesno' && prediction !== 'yes' && prediction !== 'no') {
+        throw new Error('Prediction must be "yes" or "no"');
+      }
+      
+      if (bet.betType === 'number' && !/^\d+$/.test(prediction)) {
+        throw new Error('Prediction must be a number');
+      }
+      
+      if (bet.betType === 'custom' && 
+          prediction !== bet.customOption1 && 
+          prediction !== bet.customOption2) {
+        throw new Error('Prediction must be one of the options');
+      }
+      
+      // Submit prediction
+      const { error: submitError } = await supabase
+        .from('bet_participants')
+        .insert({
+          bet_id: id,
+          name,
+          prediction
+        });
+      
+      if (submitError) throw submitError;
+      
+      // Reset form and show success
+      setName('');
+      setPrediction('');
+      setSubmitSuccess(true);
+      
+      // Refresh participants list
+      const { data: refreshedData } = await supabase
+        .from('bet_participants')
+        .select('*')
+        .eq('bet_id', id)
+        .order('created_at', { ascending: false });
+      
+      if (refreshedData) {
+        setParticipants(refreshedData);
+      }
+      
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to submit prediction');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Helper function to render bet options based on type
-  const renderBetOptions = () => {
+  const renderPredictionInput = () => {
     if (!bet) return null;
 
     switch (bet.betType) {
       case 'yesno':
         return (
-          <div className="bet-options">
-            <button className="option-button">Yes</button>
-            <button className="option-button">No</button>
+          <div className="prediction-options">
+            <label className="radio-label">
+              <input
+                type="radio"
+                name="prediction"
+                value="yes"
+                checked={prediction === 'yes'}
+                onChange={() => setPrediction('yes')}
+                required
+              />
+              Yes
+            </label>
+            <label className="radio-label">
+              <input
+                type="radio"
+                name="prediction"
+                value="no"
+                checked={prediction === 'no'}
+                onChange={() => setPrediction('no')}
+                required
+              />
+              No
+            </label>
           </div>
         );
       case 'number':
         return (
-          <div className="bet-options">
+          <div className="prediction-input">
             <input 
               type="number" 
               min="0" 
-              placeholder="Enter your prediction" 
+              value={prediction}
+              onChange={(e) => setPrediction(e.target.value)}
+              placeholder={`Enter number of ${bet.unit || 'units'}`}
+              required
               className="number-input"
             />
-            <button className="submit-prediction">Submit</button>
           </div>
         );
       case 'custom':
         return (
-          <div className="bet-options">
+          <div className="prediction-options">
             {bet.customOption1 && (
-              <button className="option-button">{bet.customOption1}</button>
+              <label className="radio-label">
+                <input
+                  type="radio"
+                  name="prediction"
+                  value={bet.customOption1}
+                  checked={prediction === bet.customOption1}
+                  onChange={() => setPrediction(bet.customOption1 || '')}
+                  required
+                />
+                {bet.customOption1}
+              </label>
             )}
             {bet.customOption2 && (
-              <button className="option-button">{bet.customOption2}</button>
+              <label className="radio-label">
+                <input
+                  type="radio"
+                  name="prediction"
+                  value={bet.customOption2}
+                  checked={prediction === bet.customOption2}
+                  onChange={() => setPrediction(bet.customOption2 || '')}
+                  required
+                />
+                {bet.customOption2}
+              </label>
             )}
           </div>
         );
@@ -142,7 +221,7 @@ export const BetDetail = () => {
         <h1>{bet.question}</h1>
         <div className="bet-meta">
           <span className="bet-type">{bet.betType.toUpperCase()}</span>
-          <span className="bet-creator">Created by {bet.name}</span>
+          <span className="bet-creator">Created by {bet.creator_name}</span>
           <span className="bet-date">
             {new Date(bet.created_at).toLocaleDateString()}
           </span>
@@ -158,7 +237,59 @@ export const BetDetail = () => {
 
       <div className="bet-interaction">
         <h2>Make Your Prediction</h2>
-        {renderBetOptions()}
+        
+        {submitError && <div className="error-message">{submitError}</div>}
+        {submitSuccess && <div className="success-message">Your prediction has been submitted!</div>}
+        
+        <form onSubmit={handleSubmit} className="prediction-form">
+          <div className="form-group">
+            <label htmlFor="name">Your Name</label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter your name"
+              required
+              className="form-input"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Your Prediction</label>
+            {renderPredictionInput()}
+          </div>
+          
+          <button 
+            type="submit" 
+            className="submit-button"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit Prediction'}
+          </button>
+        </form>
+      </div>
+
+      <div className="participants-section">
+        <h2>Predictions ({participants.length})</h2>
+        
+        {participants.length === 0 ? (
+          <p className="no-participants">No predictions yet. Be the first!</p>
+        ) : (
+          <div className="participants-list">
+            {participants.map(participant => (
+              <div key={participant.id} className="participant-card">
+                <div className="participant-name">{participant.name}</div>
+                <div className="participant-prediction">
+                  Prediction: <strong>{participant.prediction}</strong>
+                </div>
+                <div className="participant-date">
+                  {new Date(participant.created_at).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="bet-actions">

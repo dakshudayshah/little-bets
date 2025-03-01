@@ -1,7 +1,8 @@
 import { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createBet, BetType } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import '../styles/CreateBetForm.css';
+
+type BetType = 'yesno' | 'number' | 'custom';
 
 const HELPER_TEXT: Record<BetType, string> = {
   yesno: "A simple yes or no prediction.",
@@ -10,19 +11,21 @@ const HELPER_TEXT: Record<BetType, string> = {
 };
 
 export const CreateBetForm = () => {
-  const navigate = useNavigate();
-  const [name, setName] = useState('');
+  const [creatorName, setCreatorName] = useState('');
   const [betType, setBetType] = useState<BetType | ''>('');
   const [question, setQuestion] = useState('');
   const [description, setDescription] = useState('');
   const [customOption1, setCustomOption1] = useState('');
   const [customOption2, setCustomOption2] = useState('');
+  const [unit, setUnit] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess(false);
     setIsSubmitting(true);
     
     try {
@@ -37,20 +40,32 @@ export const CreateBetForm = () => {
       
       // Create bet data object
       const betData = {
-        name,
+        creator_name: creatorName,
         betType,
         question,
         description: description.trim() || undefined,
+        ...(betType === 'number' ? { unit } : {}),
         ...(betType === 'custom' ? { customOption1, customOption2 } : {})
       };
       
       // Submit to Supabase
-      const newBet = await createBet(betData);
+      const { error: supabaseError } = await supabase.from('bets').insert(betData);
       
-      // Redirect to the new bet page
-      navigate(`/bet/${newBet.id}`);
+      if (supabaseError) throw new Error(supabaseError.message);
+      
+      // Reset form
+      setCreatorName('');
+      setBetType('');
+      setQuestion('');
+      setDescription('');
+      setCustomOption1('');
+      setCustomOption2('');
+      setUnit('');
+      setSuccess(true);
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -60,15 +75,16 @@ export const CreateBetForm = () => {
       <h1>Create a New Bet</h1>
       
       {error && <div className="error-message">{error}</div>}
+      {success && <div className="success-message">Bet created successfully!</div>}
       
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="name">Your Name</label>
+          <label htmlFor="creatorName">Your Name</label>
           <input
-            id="name"
+            id="creatorName"
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={creatorName}
+            onChange={(e) => setCreatorName(e.target.value)}
             placeholder="Enter your name"
             required
             className="form-input"
@@ -106,6 +122,21 @@ export const CreateBetForm = () => {
             className="form-input"
           />
         </div>
+
+        {betType === 'number' && (
+          <div className="form-group">
+            <label htmlFor="unit">Unit (days, months, etc.)</label>
+            <input
+              id="unit"
+              type="text"
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+              placeholder="e.g., days, months, years"
+              required
+              className="form-input"
+            />
+          </div>
+        )}
 
         {betType === 'custom' && (
           <div className="custom-options">
