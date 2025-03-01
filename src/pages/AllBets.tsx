@@ -1,63 +1,28 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase, Bet } from '../lib/supabase';
 import '../styles/AllBets.css';
-
-// Define the bet type interface to match our new structure
-interface Bet {
-  id: string;
-  created_at: string;
-  name: string;
-  betType: 'yesno' | 'number' | 'custom';
-  question: string;
-  description?: string;
-  customOption1?: string;
-  customOption2?: string;
-}
 
 export const AllBets = () => {
   const [bets, setBets] = useState<Bet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Fetch bets from API or database
     const fetchBets = async () => {
       try {
-        // Replace with actual API call
-        // const { data, error } = await supabase.from('bets').select('*');
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('bets')
+          .select('*')
+          .order('created_at', { ascending: false });
         
-        // Mock data for now
-        const mockBets: Bet[] = [
-          {
-            id: '1',
-            created_at: new Date().toISOString(),
-            name: 'John',
-            betType: 'yesno',
-            question: 'Will it rain tomorrow?',
-            description: 'Based on the weather forecast'
-          },
-          {
-            id: '2',
-            created_at: new Date().toISOString(),
-            name: 'Sarah',
-            betType: 'number',
-            question: 'How many days until the project deadline?',
-            description: 'The team is working hard'
-          },
-          {
-            id: '3',
-            created_at: new Date().toISOString(),
-            name: 'Mike',
-            betType: 'custom',
-            question: 'Who will win the game?',
-            customOption1: 'Team A',
-            customOption2: 'Team B',
-            description: 'The big rivalry match'
-          }
-        ];
+        if (error) throw error;
         
-        setBets(mockBets);
-      } catch (error) {
-        console.error('Error fetching bets:', error);
+        setBets(data || []);
+      } catch (err) {
+        console.error('Error fetching bets:', err);
+        setError('Failed to load bets');
       } finally {
         setLoading(false);
       }
@@ -72,7 +37,7 @@ export const AllBets = () => {
       case 'yesno':
         return 'Yes / No';
       case 'number':
-        return 'Number prediction';
+        return `Number (${bet.unit || 'units'})`;
       case 'custom':
         return bet.customOption1 && bet.customOption2 
           ? `${bet.customOption1} / ${bet.customOption2}`
@@ -84,6 +49,10 @@ export const AllBets = () => {
 
   if (loading) {
     return <div className="loading">Loading bets...</div>;
+  }
+
+  if (error) {
+    return <div className="error-message">{error}</div>;
   }
 
   return (
@@ -105,7 +74,7 @@ export const AllBets = () => {
                 <span className="bet-options">{getBetOptions(bet)}</span>
               </div>
               {bet.description && <p className="bet-description">{bet.description}</p>}
-              <div className="bet-creator">Created by {bet.name}</div>
+              <div className="bet-creator">Created by {bet.creator_name}</div>
             </Link>
           ))}
         </div>
