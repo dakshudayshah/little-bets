@@ -1,32 +1,37 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Get environment variables
+// Environment variables for Supabase connection
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// Validate environment variables
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables');
+}
 
 // Create Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Define types for our database schema
+// Bet types
 export type BetType = 'yesno' | 'number' | 'custom';
 
+// Bet interface
 export interface Bet {
   id: string;
-  code_name?: string;
   created_at: string;
-  type?: string;  // Old type column
-  bettype: BetType;  // New type column
+  code_name: string;
+  creator_name: string;
+  bettype: BetType;
   question: string;
   description?: string;
-  creator_name: string;
+  unit?: string;
   min_value?: number;
   max_value?: number;
-  unit?: string;
-  choice_options?: any;  // JSONB type
-  customoption1?: string;  // Note: lowercase in database
-  customoption2?: string;  // Note: lowercase in database
+  customoption1?: string;
+  customoption2?: string;
 }
 
+// Bet participant interface
 export interface BetParticipant {
   id: string;
   created_at: string;
@@ -37,56 +42,91 @@ export interface BetParticipant {
 
 // Helper functions for database operations
 
-export const createBet = async (betData: Omit<Bet, 'id' | 'created_at'>) => {
-  const { data, error } = await supabase
-    .from('bets')
-    .insert(betData)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
+/**
+ * Fetches all bets from the database
+ */
+export const fetchAllBets = async (): Promise<{ data: Bet[] | null; error: Error | null }> => {
+  try {
+    const { data, error } = await supabase
+      .from('bets')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    return { data, error };
+  } catch (error) {
+    console.error('Error fetching bets:', error);
+    return { data: null, error: error as Error };
+  }
 };
 
-export const getBets = async () => {
-  const { data, error } = await supabase
-    .from('bets')
-    .select('*')
-    .order('created_at', { ascending: false });
-  
-  if (error) throw error;
-  return data;
+/**
+ * Fetches a single bet by code_name
+ */
+export const fetchBetByCodeName = async (codeName: string): Promise<{ data: Bet | null; error: Error | null }> => {
+  try {
+    const { data, error } = await supabase
+      .from('bets')
+      .select('*')
+      .eq('code_name', codeName)
+      .single();
+    
+    return { data, error };
+  } catch (error) {
+    console.error('Error fetching bet:', error);
+    return { data: null, error: error as Error };
+  }
 };
 
-export const getBetById = async (id: string) => {
-  const { data, error } = await supabase
-    .from('bets')
-    .select('*')
-    .eq('id', id)
-    .single();
-  
-  if (error) throw error;
-  return data;
+/**
+ * Fetches participants for a bet
+ */
+export const fetchBetParticipants = async (betId: string): Promise<{ data: BetParticipant[] | null; error: Error | null }> => {
+  try {
+    const { data, error } = await supabase
+      .from('bet_participants')
+      .select('*')
+      .eq('bet_id', betId)
+      .order('created_at', { ascending: false });
+    
+    return { data, error };
+  } catch (error) {
+    console.error('Error fetching participants:', error);
+    return { data: null, error: error as Error };
+  }
 };
 
-export const createPrediction = async (predictionData: Omit<BetParticipant, 'id' | 'created_at'>) => {
-  const { data, error } = await supabase
-    .from('bet_participants')
-    .insert(predictionData)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
+/**
+ * Creates a new bet
+ */
+export const createBet = async (betData: Omit<Bet, 'id' | 'created_at' | 'code_name'>): Promise<{ data: Bet | null; error: Error | null }> => {
+  try {
+    const { data, error } = await supabase
+      .from('bets')
+      .insert(betData)
+      .select()
+      .single();
+    
+    return { data, error };
+  } catch (error) {
+    console.error('Error creating bet:', error);
+    return { data: null, error: error as Error };
+  }
 };
 
-export const getPredictionsByBetId = async (betId: string) => {
-  const { data, error } = await supabase
-    .from('bet_participants')
-    .select('*')
-    .eq('bet_id', betId)
-    .order('created_at', { ascending: false });
-  
-  if (error) throw error;
-  return data;
+/**
+ * Adds a participant to a bet
+ */
+export const addBetParticipant = async (participantData: Omit<BetParticipant, 'id' | 'created_at'>): Promise<{ data: BetParticipant | null; error: Error | null }> => {
+  try {
+    const { data, error } = await supabase
+      .from('bet_participants')
+      .insert(participantData)
+      .select()
+      .single();
+    
+    return { data, error };
+  } catch (error) {
+    console.error('Error adding participant:', error);
+    return { data: null, error: error as Error };
+  }
 }; 

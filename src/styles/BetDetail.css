@@ -1,211 +1,220 @@
+/* BetDetail Styles */
+
 .bet-detail-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
 }
 
-.loading, .error-container {
-  text-align: center;
-  padding: 40px;
-  font-size: 18px;
-  color: #666;
+.bet-detail-container h1 {
+  margin-bottom: 1.5rem;
+  color: var(--text-color);
+  font-size: 1.75rem;
+  line-height: 1.3;
 }
 
-.bet-header {
-  margin-bottom: 30px;
-}
-
-.bet-header h1 {
-  margin-bottom: 10px;
-  font-size: 24px;
-  color: #333;
-}
-
-.bet-meta {
+/* Bet Info */
+.bet-info {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 20px;
-  font-size: 14px;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
 }
 
-.bet-type {
-  background-color: #e2e8f0;
-  padding: 4px 8px;
-  border-radius: 4px;
+.info-item {
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+}
+
+.label {
+  font-size: 0.875rem;
+  color: var(--light-text);
+  margin-bottom: 0.25rem;
+}
+
+.value {
   font-weight: 500;
+  color: var(--text-color);
 }
 
-.bet-creator, .bet-date {
-  color: #666;
-}
-
+/* Bet Description */
 .bet-description {
-  background-color: #f9f9f9;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 30px;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
+  color: var(--text-color);
 }
 
-.bet-description h2 {
-  font-size: 18px;
-  margin-top: 0;
-  margin-bottom: 10px;
+/* Make Prediction Form */
+.make-prediction {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
 }
 
-.bet-description p {
-  margin: 0;
-  line-height: 1.5;
-}
-
-.bet-interaction {
-  margin-bottom: 30px;
-}
-
-.bet-interaction h2 {
-  font-size: 18px;
-  margin-bottom: 15px;
-}
-
-.prediction-form {
-  background-color: #f9f9f9;
-  padding: 20px;
-  border-radius: 8px;
+.make-prediction h2 {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  color: var(--text-color);
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
   font-weight: 500;
+  color: var(--text-color);
 }
 
 .form-input {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
 }
 
-.prediction-options {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.radio-label {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-}
-
-.radio-label input {
-  margin-right: 8px;
-}
-
-.number-input {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
-  width: 150px;
+.form-input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
 }
 
 .submit-button {
-  padding: 10px 20px;
-  background-color: #4a90e2;
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 4px;
-  font-size: 16px;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.2s ease;
 }
 
-.submit-button:hover {
-  background-color: #3a7bc8;
+.submit-button:hover:not(:disabled) {
+  background-color: var(--primary-hover);
 }
 
 .submit-button:disabled {
-  background-color: #a0c0e8;
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
 .error-message {
-  background-color: #ffebee;
-  color: #c62828;
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border-radius: var(--border-radius);
 }
 
 .success-message {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: #dcfce7;
+  color: #166534;
+  border-radius: var(--border-radius);
 }
 
-.participants-section {
-  margin-bottom: 30px;
+/* Current Predictions */
+.current-predictions {
+  padding: 1.5rem;
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
 }
 
-.participants-section h2 {
-  font-size: 18px;
-  margin-bottom: 15px;
+.current-predictions h2 {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  color: var(--text-color);
 }
 
-.no-participants {
-  color: #666;
+.no-predictions {
+  color: var(--light-text);
   font-style: italic;
 }
 
-.participants-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 15px;
+.predictions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.participant-card {
-  background-color: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 15px;
+.prediction-item {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.prediction-item:last-child {
+  border-bottom: none;
 }
 
 .participant-name {
   font-weight: 500;
-  margin-bottom: 5px;
+  min-width: 120px;
 }
 
 .participant-prediction {
-  margin-bottom: 5px;
+  flex: 1;
+  font-weight: 600;
+  color: var(--primary-color);
 }
 
-.participant-date {
-  font-size: 12px;
-  color: #666;
+.prediction-date {
+  color: var(--light-text);
+  font-size: 0.875rem;
 }
 
-.bet-actions {
-  margin-top: 30px;
+/* Loading and Error States */
+.loading, .error {
+  text-align: center;
+  padding: 2rem;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
 }
 
-.back-button {
-  display: inline-block;
-  padding: 10px 20px;
-  background-color: #f0f0f0;
-  color: #333;
-  text-decoration: none;
-  border-radius: 4px;
-  transition: background-color 0.3s;
+.error {
+  color: #b91c1c;
 }
 
-.back-button:hover {
-  background-color: #e0e0e0;
+/* Responsive Design */
+@media (max-width: 640px) {
+  .bet-info {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .prediction-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .participant-name, .participant-prediction {
+    min-width: 100%;
+  }
 } 
