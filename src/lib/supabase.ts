@@ -13,11 +13,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Bet types with display names
-export type BetType = 'yesno' | 'number' | 'custom';
+export type BetType = 'yesno' | 'custom';
 
 export const BET_TYPE_NAMES: Record<BetType, string> = {
   yesno: 'Yes or No',
-  number: 'Number Range',
   custom: 'Multiple Choice'
 };
 
@@ -30,9 +29,6 @@ export interface Bet {
   bettype: BetType;
   question: string;
   description?: string;
-  unit?: string;
-  min_value?: number;
-  max_value?: number;
   customoption1?: string;
   customoption2?: string;
 }

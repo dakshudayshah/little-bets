@@ -6,7 +6,7 @@ import { formatDate } from '../utils/helpers';
 import '../styles/BetDetail.css';
 
 export const BetDetail = () => {
-  const { id } = useParams();
+  const { id: codeName } = useParams();
   const navigate = useNavigate();
   const [bet, setBet] = useState<Bet | null>(null);
   const [participants, setParticipants] = useState<BetParticipant[]>([]);
@@ -15,21 +15,21 @@ export const BetDetail = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!id) return;
+      if (!codeName) return;
       
       try {
         setLoading(true);
         setError('');
         
-        const [betResult, participantsResult] = await Promise.all([
-          fetchBetByCodeName(id),
-          fetchBetParticipants(id)
-        ]);
-
+        const betResult = await fetchBetByCodeName(codeName);
         if (betResult.error) throw betResult.error;
-        if (participantsResult.error) throw participantsResult.error;
+        if (!betResult.data) throw new Error('Bet not found');
         
         setBet(betResult.data);
+        
+        const participantsResult = await fetchBetParticipants(betResult.data.id);
+        if (participantsResult.error) throw participantsResult.error;
+        
         setParticipants(participantsResult.data || []);
         
       } catch (err) {
@@ -41,7 +41,7 @@ export const BetDetail = () => {
     };
 
     fetchData();
-  }, [id]);
+  }, [codeName]);
 
   if (loading) {
     return (
@@ -67,8 +67,6 @@ export const BetDetail = () => {
     switch (bet.bettype) {
       case 'yesno':
         return 'Yes or No';
-      case 'number':
-        return `${bet.min_value || 0} to ${bet.max_value || 100} ${bet.unit || ''}`;
       case 'custom':
         return bet.customoption1 && bet.customoption2 
           ? `${bet.customoption1} or ${bet.customoption2}`
@@ -110,8 +108,7 @@ export const BetDetail = () => {
       <div className="predictions-section">
         <h2>Make Your Prediction</h2>
         <PredictionForm bet={bet} onSuccess={() => {
-          // Refresh participants list after successful prediction
-          fetchBetParticipants(id!).then(result => {
+          fetchBetParticipants(bet.id).then(result => {
             if (!result.error) {
               setParticipants(result.data || []);
             }
