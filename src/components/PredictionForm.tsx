@@ -16,8 +16,8 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
       case 'yesno':
         return prediction === 'yes' || prediction === 'no';
       case 'custom':
-        return prediction.toLowerCase() === bet.customoption1?.toLowerCase() || 
-               prediction.toLowerCase() === bet.customoption2?.toLowerCase();
+        return prediction.toLowerCase() === (bet.customoption1?.toLowerCase() || '') || 
+               prediction.toLowerCase() === (bet.customoption2?.toLowerCase() || '');
       default:
         return false;
     }
@@ -33,7 +33,7 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
     
     try {
       const name = (formData.get('name') as string)?.trim();
-      const prediction = (formData.get('prediction') as string)?.trim().toLowerCase();
+      const prediction = (formData.get('prediction') as string)?.trim();
 
       if (!name) {
         throw new Error('Please enter your name');
@@ -87,8 +87,12 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
             disabled={loading}
           >
             <option value="">Select your prediction</option>
-            <option value={bet.customoption1}>{bet.customoption1}</option>
-            <option value={bet.customoption2}>{bet.customoption2}</option>
+            {bet.customoption1 && (
+              <option value={bet.customoption1}>{bet.customoption1}</option>
+            )}
+            {bet.customoption2 && (
+              <option value={bet.customoption2}>{bet.customoption2}</option>
+            )}
           </select>
         );
       

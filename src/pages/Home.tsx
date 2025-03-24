@@ -26,19 +26,6 @@ export const Home = () => {
     loadBets();
   }, []);
 
-  const getBetOptions = (bet: Bet) => {
-    switch (bet.bettype) {
-      case 'yesno':
-        return 'Yes or No';
-      case 'custom':
-        return bet.customoption1 && bet.customoption2 
-          ? `${bet.customoption1} or ${bet.customoption2}`
-          : 'Multiple options';
-      default:
-        return '';
-    }
-  };
-
   if (loading) {
     return (
       <div className="loading-state">
