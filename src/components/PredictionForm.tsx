@@ -101,7 +101,6 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
       {error && <div className="error-message">{error}</div>}
       
       <div className="form-group">
-        <label htmlFor="name">Your Name *</label>
         <input
           type="text"
           id="name"
@@ -114,7 +113,6 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
       </div>
 
       <div className="form-group">
-        <label htmlFor="prediction">Your Prediction *</label>
         {renderPredictionInput()}
       </div>
 
