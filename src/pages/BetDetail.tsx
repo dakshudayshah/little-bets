@@ -4,6 +4,8 @@ import { Bet, BetParticipant, fetchBetByCodeName, fetchBetParticipants, BET_TYPE
 import { PredictionForm } from '../components/PredictionForm';
 import { formatDate } from '../utils/helpers';
 import '../styles/BetDetail.css';
+import { supabase } from '../lib/supabase';
+import { Share2 } from 'lucide-react';
 
 export const BetDetail = () => {
   const { id: codeName } = useParams();
@@ -43,6 +45,37 @@ export const BetDetail = () => {
     fetchData();
   }, [codeName]);
 
+  useEffect(() => {
+    if (!bet) return;
+    
+    const subscription = supabase
+      .from(`bet_participants:bet_id=eq.${bet.id}`)
+      .on('INSERT', (payload) => {
+        setParticipants(current => [payload.new, ...current]);
+      })
+      .subscribe();
+    
+    return () => {
+      supabase.removeSubscription(subscription);
+    };
+  }, [bet]);
+
+  const shareBet = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: bet.question,
+          text: `Check out this bet: ${bet.question}`,
+          url: window.location.href
+        });
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+    }
+  };
+
   if (loading) {
     return (
       <div className="loading-state">
@@ -79,10 +112,12 @@ export const BetDetail = () => {
   return (
     <div className="bet-detail-container">
       <div className="bet-header">
-        <button onClick={() => navigate('/')} className="back-button">
-          ← Back
-        </button>
-        <h1>{bet.question}</h1>
+        <div className="header-content">
+          <h1>{bet.question}</h1>
+          <button onClick={shareBet} className="share-button" aria-label="Share bet">
+            <Share2 size={20} />
+          </button>
+        </div>
       </div>
 
       <div className="bet-info">
@@ -98,11 +133,6 @@ export const BetDetail = () => {
             <p>{bet.description}</p>
           </div>
         )}
-
-        <div className="bet-options">
-          <h2>Options</h2>
-          <p>{getBetOptions()}</p>
-        </div>
       </div>
 
       <div className="predictions-section">

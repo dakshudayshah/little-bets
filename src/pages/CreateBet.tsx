@@ -12,9 +12,6 @@ export const CreateBet = () => {
   return (
     <div className="create-bet-container">
       <div className="create-bet-header">
-        <button onClick={() => navigate('/')} className="back-button">
-          ← Back
-        </button>
         <h1>Create a New Bet</h1>
       </div>
 

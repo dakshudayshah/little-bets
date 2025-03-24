@@ -16,7 +16,8 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
       case 'yesno':
         return prediction === 'yes' || prediction === 'no';
       case 'custom':
-        return prediction === bet.customoption1 || prediction === bet.customoption2;
+        return prediction.toLowerCase() === bet.customoption1?.toLowerCase() || 
+               prediction.toLowerCase() === bet.customoption2?.toLowerCase();
       default:
         return false;
     }
