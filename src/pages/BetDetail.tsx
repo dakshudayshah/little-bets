@@ -106,7 +106,7 @@ export const BetDetail = () => {
       </div>
 
       <div className="predictions-section">
-        <h2>Make Your Prediction</h2>
+        <h2>Predictions ({participants.length})</h2>
         <PredictionForm bet={bet} onSuccess={() => {
           fetchBetParticipants(bet.id).then(result => {
             if (!result.error) {
@@ -114,10 +114,7 @@ export const BetDetail = () => {
             }
           });
         }} />
-      </div>
-
-      <div className="participants-section">
-        <h2>Predictions ({participants.length})</h2>
+        
         {participants.length > 0 ? (
           <div className="predictions-list">
             {participants.map((participant) => (
@@ -131,7 +128,7 @@ export const BetDetail = () => {
             ))}
           </div>
         ) : (
-          <p className="no-predictions">No predictions yet. Be the first to make a prediction!</p>
+          <p className="no-predictions">No predictions yet. Be the first!</p>
         )}
       </div>
     </div>

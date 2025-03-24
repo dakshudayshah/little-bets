@@ -1,21 +1,21 @@
 /* BetDetail Styles */
 
 .bet-detail-container {
-  max-width: 800px;
+  max-width: var(--max-width);
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: var(--spacing-md);
 }
 
 .bet-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-lg);
 }
 
 .bet-header h1 {
-  font-size: 1.5rem;
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--text-color);
-  margin: 1rem 0;
-  line-height: 1.4;
+  margin: 0;
+  line-height: 1.3;
 }
 
 .back-button {
@@ -38,18 +38,18 @@
 
 .bet-info {
   background-color: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-sm);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
 }
 
 .bet-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  font-size: 0.875rem;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-sm);
 }
 
 .bet-creator {
@@ -65,19 +65,13 @@
   color: var(--light-text);
 }
 
-.bet-description,
-.bet-options {
-  margin-bottom: 1.5rem;
+.bet-description {
+  margin-top: var(--spacing-lg);
 }
 
-.bet-description h2,
-.bet-options h2,
-.predictions-section h2,
-.participants-section h2 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  color: var(--text-color);
+.bet-description h2 {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--spacing-sm);
 }
 
 .bet-description p,
@@ -88,10 +82,15 @@
 
 .predictions-section {
   background-color: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-sm);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.predictions-section h2 {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--spacing-lg);
 }
 
 .participants-section {
