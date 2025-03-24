@@ -24,9 +24,6 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
       const creatorName = (formData.get('creator_name') as string)?.trim();
       const question = (formData.get('question') as string)?.trim();
       const description = (formData.get('description') as string)?.trim();
-      const unit = (formData.get('unit') as string)?.trim();
-      const minValue = formData.get('min_value') ? Number(formData.get('min_value')) : undefined;
-      const maxValue = formData.get('max_value') ? Number(formData.get('max_value')) : undefined;
       const customOption1 = (formData.get('customoption1') as string)?.trim();
       const customOption2 = (formData.get('customoption2') as string)?.trim();
 
@@ -36,17 +33,6 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
       }
       if (!question) {
         throw new Error('Please enter a question');
-      }
-      if (betType === 'number') {
-        if (minValue === undefined) {
-          throw new Error('Please enter a minimum value');
-        }
-        if (maxValue === undefined) {
-          throw new Error('Please enter a maximum value');
-        }
-        if (maxValue <= minValue) {
-          throw new Error('Maximum value must be greater than minimum value');
-        }
       }
       if (betType === 'custom') {
         if (!customOption1) {
@@ -62,9 +48,6 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
         question,
         description: description || undefined,
         bettype: betType,
-        unit: unit || undefined,
-        min_value: minValue,
-        max_value: maxValue,
         customoption1: customOption1,
         customoption2: customOption2,
       };
@@ -102,6 +85,20 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
       </div>
 
       <div className="form-group">
+        <label htmlFor="bettype">Bet Type *</label>
+        <select
+          id="bettype"
+          value={betType}
+          onChange={(e) => setBetType(e.target.value as BetType)}
+          required
+          disabled={loading}
+        >
+          <option value="yesno">Yes or No</option>
+          <option value="custom">Multiple Choice</option>
+        </select>
+      </div>
+
+      <div className="form-group">
         <label htmlFor="question">Question *</label>
         <input
           type="text"
@@ -125,63 +122,6 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
           disabled={loading}
         />
       </div>
-
-      <div className="form-group">
-        <label htmlFor="bettype">Bet Type *</label>
-        <select
-          id="bettype"
-          value={betType}
-          onChange={(e) => setBetType(e.target.value as BetType)}
-          required
-          disabled={loading}
-        >
-          {Object.entries(BET_TYPE_NAMES).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {betType === 'number' && (
-        <div className="number-inputs">
-          <div className="form-group">
-            <label htmlFor="min_value">Minimum Value *</label>
-            <input
-              type="number"
-              id="min_value"
-              name="min_value"
-              required
-              placeholder="0"
-              disabled={loading}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="max_value">Maximum Value *</label>
-            <input
-              type="number"
-              id="max_value"
-              name="max_value"
-              required
-              placeholder="100"
-              disabled={loading}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="unit">Unit</label>
-            <input
-              type="text"
-              id="unit"
-              name="unit"
-              maxLength={20}
-              placeholder="e.g., points, dollars"
-              disabled={loading}
-            />
-          </div>
-        </div>
-      )}
 
       {betType === 'custom' && (
         <div className="custom-inputs">

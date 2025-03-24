@@ -3,11 +3,15 @@ DROP TABLE IF EXISTS bet_participants;
 DROP TABLE IF EXISTS bets;
 DROP TYPE IF EXISTS bet_type;
 
--- Create bet type enum
-CREATE TYPE bet_type AS ENUM ('yesno', 'number', 'custom');
+-- Create bet type enum if it doesn't exist
+DO $$ BEGIN
+    CREATE TYPE bet_type AS ENUM ('yesno', 'custom');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- Create bets table
-CREATE TABLE bets (
+-- Create bets table if it doesn't exist
+CREATE TABLE IF NOT EXISTS bets (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
     code_name TEXT UNIQUE NOT NULL,
@@ -15,24 +19,17 @@ CREATE TABLE bets (
     bettype bet_type NOT NULL,
     question TEXT NOT NULL,
     description TEXT,
-    unit TEXT,
-    min_value NUMERIC,
-    max_value NUMERIC,
     customoption1 TEXT,
     customoption2 TEXT,
     -- Add constraints
-    CONSTRAINT valid_number_bet CHECK (
-        (bettype = 'number' AND min_value IS NOT NULL AND max_value IS NOT NULL AND max_value > min_value) OR
-        bettype != 'number'
-    ),
     CONSTRAINT valid_custom_bet CHECK (
         (bettype = 'custom' AND customoption1 IS NOT NULL AND customoption2 IS NOT NULL) OR
         bettype != 'custom'
     )
 );
 
--- Create bet_participants table
-CREATE TABLE bet_participants (
+-- Create bet_participants table if it doesn't exist
+CREATE TABLE IF NOT EXISTS bet_participants (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
     bet_id UUID NOT NULL REFERENCES bets(id) ON DELETE CASCADE,
@@ -40,15 +37,20 @@ CREATE TABLE bet_participants (
     prediction TEXT NOT NULL
 );
 
--- Create indexes for better performance
-CREATE INDEX idx_bets_code_name ON bets(code_name);
-CREATE INDEX idx_bet_participants_bet_id ON bet_participants(bet_id);
+-- Create indexes if they don't exist
+CREATE INDEX IF NOT EXISTS idx_bets_code_name ON bets(code_name);
+CREATE INDEX IF NOT EXISTS idx_bet_participants_bet_id ON bet_participants(bet_id);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE bets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bet_participants ENABLE ROW LEVEL SECURITY;
 
--- Create policies for public access
+-- Create or replace policies
+DROP POLICY IF EXISTS "Allow public read access" ON bets;
+DROP POLICY IF EXISTS "Allow public insert access" ON bets;
+DROP POLICY IF EXISTS "Allow public read access" ON bet_participants;
+DROP POLICY IF EXISTS "Allow public insert access" ON bet_participants;
+
 CREATE POLICY "Allow public read access" ON bets
     FOR SELECT USING (true);
 
@@ -99,7 +101,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for code_name generation
+-- Create trigger for code_name generation if it doesn't exist
+DROP TRIGGER IF EXISTS generate_code_name_trigger ON bets;
 CREATE TRIGGER generate_code_name_trigger
     BEFORE INSERT ON bets
     FOR EACH ROW
