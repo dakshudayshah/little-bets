@@ -43,22 +43,42 @@ export const BetDetail = () => {
     fetchData();
   }, [codeName]);
 
+  useEffect(() => {
+    if (!bet) return;
+    
+    // Set up polling as a fallback
+    const pollInterval = setInterval(() => {
+      fetchBetParticipants(bet.id).then(result => {
+        if (!result.error) {
+          setParticipants(result.data || []);
+        }
+      });
+    }, 5000); // Poll every 5 seconds
+    
+    // Clean up on unmount
+    return () => clearInterval(pollInterval);
+  }, [bet]);
+
   const shareBet = async () => {
     if (!bet) return;
+    
+    const shareText = `Join me in predicting: ${bet.question} on Little Bets!`;
+    const shareUrl = window.location.href;
     
     if (navigator.share) {
       try {
         await navigator.share({
           title: bet.question,
-          text: `Check out this bet: ${bet.question}`,
-          url: window.location.href
+          text: shareText,
+          url: shareUrl
         });
       } catch (err) {
         console.error('Error sharing:', err);
       }
     } else {
-      // Fallback for browsers that don't support Web Share API
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+      // Show confirmation toast
+      showToast('Link copied to clipboard!');
     }
   };
 
@@ -137,3 +157,31 @@ export const BetDetail = () => {
     </div>
   );
 };
+
+const PredictionChart = ({ participants, bet }) => {
+  // Count predictions per option
+  const counts = participants.reduce((acc, p) => {
+    acc[p.prediction] = (acc[p.prediction] || 0) + 1;
+    return acc;
+  }, {});
+  
+  const totalCount = participants.length;
+  
+  return (
+    <div className="prediction-chart">
+      <h3>Prediction Distribution</h3>
+      {Object.entries(counts).map(([prediction, count]) => (
+        <div key={prediction} className="chart-row">
+          <div className="prediction-label">{prediction}</div>
+          <div className="prediction-bar-container">
+            <div 
+              className="prediction-bar"
+              style={{ width: `${(count / totalCount) * 100}%` }}
+            ></div>
+            <span className="prediction-count">{count}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
