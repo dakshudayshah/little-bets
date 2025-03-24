@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react';
-import { createBet, BetType, BET_TYPE_NAMES } from '../lib/supabase';
+import { createBet, BetType } from '../lib/supabase';
 import '../styles/CreateBetForm.css';
 
 interface CreateBetFormProps {
