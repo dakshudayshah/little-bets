@@ -61,6 +61,8 @@ export const BetDetail = () => {
   }, [bet]);
 
   const shareBet = async () => {
+    if (!bet) return;
+    
     if (navigator.share) {
       try {
         await navigator.share({
@@ -72,6 +74,7 @@ export const BetDetail = () => {
         console.error('Error sharing:', err);
       }
     } else {
+      // Fallback for browsers that don't support Web Share API
       navigator.clipboard.writeText(window.location.href);
     }
   };
