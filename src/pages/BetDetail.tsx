@@ -12,6 +12,7 @@ export const BetDetail = () => {
   const [participants, setParticipants] = useState<BetParticipant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showCopiedMessage, setShowCopiedMessage] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,8 +78,8 @@ export const BetDetail = () => {
       }
     } else {
       navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-      // Show confirmation toast
-      showToast('Link copied to clipboard!');
+      setShowCopiedMessage(true);
+      setTimeout(() => setShowCopiedMessage(false), 2000);
     }
   };
 
@@ -111,6 +112,9 @@ export const BetDetail = () => {
             Share 📤
           </button>
         </div>
+        {showCopiedMessage && (
+          <div className="copied-message">Link copied to clipboard!</div>
+        )}
       </div>
 
       <div className="bet-info">
