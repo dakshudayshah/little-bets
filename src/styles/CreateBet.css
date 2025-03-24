@@ -57,4 +57,66 @@ select:disabled,
 textarea:disabled {
   background-color: #f7fafc;
   cursor: not-allowed;
+}
+
+.create-bet-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.create-bet-header {
+  margin-bottom: 1.5rem;
+}
+
+.create-bet-header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 1rem 0;
+  line-height: 1.4;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.back-button:hover {
+  color: var(--primary-hover);
+}
+
+.create-bet-content {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .create-bet-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .create-bet-content {
+    padding: 1rem;
+  }
+
+  /* Ensure form inputs are large enough for touch */
+  .create-bet-content input,
+  .create-bet-content select,
+  .create-bet-content textarea {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    min-height: 44px; /* Minimum touch target size */
+  }
 } 

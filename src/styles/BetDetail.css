@@ -3,218 +3,194 @@
 .bet-detail-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 1.5rem;
-  background-color: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-md);
+  padding: 0 1rem;
 }
 
-.bet-detail-container h1 {
+.bet-header {
   margin-bottom: 1.5rem;
-  color: var(--text-color);
-  font-size: 1.75rem;
-  line-height: 1.3;
 }
 
-/* Bet Info */
-.bet-info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  background-color: var(--background-color);
-  border-radius: var(--border-radius);
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-  min-width: 120px;
-}
-
-.label {
-  font-size: 0.875rem;
-  color: var(--light-text);
-  margin-bottom: 0.25rem;
-}
-
-.value {
-  font-weight: 500;
-  color: var(--text-color);
-}
-
-/* Bet Description */
-.bet-description {
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background-color: var(--background-color);
-  border-radius: var(--border-radius);
-  color: var(--text-color);
-}
-
-/* Make Prediction Form */
-.make-prediction {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background-color: white;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-sm);
-}
-
-.make-prediction h2 {
-  margin-bottom: 1.5rem;
+.bet-header h1 {
   font-size: 1.5rem;
+  font-weight: 600;
   color: var(--text-color);
+  margin: 1rem 0;
+  line-height: 1.4;
 }
 
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: var(--text-color);
-}
-
-.form-input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  font-size: 1rem;
-  transition: border-color 0.2s ease;
-}
-
-.form-input:focus {
-  border-color: var(--primary-color);
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
-}
-
-.submit-button {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  background-color: var(--primary-color);
-  color: white;
+.back-button {
+  background: none;
   border: none;
-  border-radius: var(--border-radius);
+  color: var(--primary-color);
   font-size: 1rem;
   font-weight: 500;
+  padding: 0.5rem 0;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.submit-button:hover:not(:disabled) {
-  background-color: var(--primary-hover);
+.back-button:hover {
+  color: var(--primary-hover);
 }
 
-.submit-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.error-message {
-  margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  background-color: #fee2e2;
-  color: #b91c1c;
-  border-radius: var(--border-radius);
-}
-
-.success-message {
-  margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  background-color: #dcfce7;
-  color: #166534;
-  border-radius: var(--border-radius);
-}
-
-/* Current Predictions */
-.current-predictions {
-  padding: 1.5rem;
+.bet-info {
   background-color: white;
-  border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-sm);
-}
-
-.current-predictions h2 {
+  padding: 1.5rem;
   margin-bottom: 1.5rem;
-  font-size: 1.5rem;
-  color: var(--text-color);
 }
 
-.no-predictions {
-  color: var(--light-text);
-  font-style: italic;
-}
-
-.predictions-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.prediction-item {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border-color);
+.bet-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  align-items: center;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
 }
 
-.prediction-item:last-child {
-  border-bottom: none;
+.bet-creator {
+  color: var(--light-text);
+}
+
+.bet-type {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.bet-date {
+  color: var(--light-text);
+}
+
+.bet-description,
+.bet-options {
+  margin-bottom: 1.5rem;
+}
+
+.bet-description h2,
+.bet-options h2,
+.predictions-section h2,
+.participants-section h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--text-color);
+}
+
+.bet-description p,
+.bet-options p {
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+.predictions-section {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.participants-section {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+}
+
+.predictions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.prediction-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  padding: 1rem;
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
 }
 
 .participant-name {
   font-weight: 500;
-  min-width: 120px;
+  color: var(--text-color);
 }
 
-.participant-prediction {
-  flex: 1;
-  font-weight: 600;
+.prediction-value {
   color: var(--primary-color);
+  font-weight: 500;
 }
 
 .prediction-date {
+  grid-column: 1 / -1;
+  font-size: 0.75rem;
   color: var(--light-text);
-  font-size: 0.875rem;
 }
 
-/* Loading and Error States */
-.loading, .error {
+.no-predictions {
   text-align: center;
+  color: var(--light-text);
+  padding: 2rem 0;
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
   padding: 2rem;
+}
+
+.loading-spinner {
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-left-color: var(--primary-color);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+/* Error State */
+.error-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  margin: 1rem;
   background-color: white;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-md);
 }
 
-.error {
-  color: #b91c1c;
+.error-state p {
+  color: var(--error-color);
+  margin-bottom: 1rem;
 }
 
 /* Responsive Design */
 @media (max-width: 640px) {
-  .bet-info {
-    flex-direction: column;
-    gap: 1rem;
+  .bet-header h1 {
+    font-size: 1.25rem;
   }
-  
-  .prediction-item {
+
+  .bet-info,
+  .predictions-section,
+  .participants-section {
+    padding: 1rem;
+  }
+
+  .bet-meta {
     flex-direction: column;
-    align-items: flex-start;
     gap: 0.5rem;
   }
-  
-  .participant-name, .participant-prediction {
-    min-width: 100%;
+
+  .prediction-card {
+    padding: 0.75rem;
   }
 } 

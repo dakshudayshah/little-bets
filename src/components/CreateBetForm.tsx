@@ -1,276 +1,225 @@
-import { useState, FormEvent, ChangeEvent, memo, useCallback } from 'react';
-import { BetType, createBet } from '../lib/supabase';
+import { useState, FormEvent } from 'react';
+import { createBet, BetType, BET_TYPE_NAMES } from '../lib/supabase';
 import '../styles/CreateBetForm.css';
 
-// Helper text for different bet types
-const HELPER_TEXT: Record<BetType, string> = {
-  yesno: "A simple yes or no prediction.",
-  number: "Predict a whole number (days, months, years, etc.). Example: How many days until...?",
-  custom: "Create a bet with two custom options. Example: Will it be X or Y?"
-};
-
-// Form input component
-interface FormInputProps {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
-  placeholder?: string;
-  required?: boolean;
-  type?: string;
-  as?: 'input' | 'textarea' | 'select';
-  options?: Array<{ value: string; label: string }>;
-  helperText?: string;
+interface CreateBetFormProps {
+  onSuccess: (codeName: string) => void;
 }
 
-const FormInput = memo(({ 
-  id, 
-  label, 
-  value, 
-  onChange, 
-  placeholder = '', 
-  required = false, 
-  type = 'text',
-  as = 'input',
-  options = [],
-  helperText
-}: FormInputProps) => (
-  <div className="form-group">
-    <label htmlFor={id}>{label}</label>
-    
-    {as === 'textarea' ? (
-      <textarea
-        id={id}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        className="form-input"
-      />
-    ) : as === 'select' ? (
-      <select
-        id={id}
-        value={value}
-        onChange={onChange}
-        required={required}
-        className="form-input"
-      >
-        {options.map(option => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    ) : (
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        className="form-input"
-      />
-    )}
-    
-    {helperText && <div className="helper-text">{helperText}</div>}
-  </div>
-));
-
-FormInput.displayName = 'FormInput';
-
-// Main CreateBetForm component
-export const CreateBetForm = () => {
-  // Form state
-  const [creatorName, setCreatorName] = useState('');
-  const [betType, setBetType] = useState<BetType | ''>('');
-  const [question, setQuestion] = useState('');
-  const [description, setDescription] = useState('');
-  const [customOption1, setCustomOption1] = useState('');
-  const [customOption2, setCustomOption2] = useState('');
-  const [unit, setUnit] = useState('');
-  
-  // UI state
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-
-  // Reset form to initial state
-  const resetForm = useCallback(() => {
-    setCreatorName('');
-    setBetType('');
-    setQuestion('');
-    setDescription('');
-    setCustomOption1('');
-    setCustomOption2('');
-    setUnit('');
-  }, []);
-
-  // Handle form submission
-  const handleSubmit = async (e: FormEvent) => {
+  const [betType, setBetType] = useState<BetType>('yesno');
+  
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
-    setSuccess(false);
-    setIsSubmitting(true);
+    setLoading(true);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     
     try {
-      // Form validation
-      if (!betType) {
-        throw new Error('Please select a bet type');
+      // Validate and convert form data
+      const creatorName = (formData.get('creator_name') as string)?.trim();
+      const question = (formData.get('question') as string)?.trim();
+      const description = (formData.get('description') as string)?.trim();
+      const unit = (formData.get('unit') as string)?.trim();
+      const minValue = formData.get('min_value') ? Number(formData.get('min_value')) : undefined;
+      const maxValue = formData.get('max_value') ? Number(formData.get('max_value')) : undefined;
+      const customOption1 = (formData.get('customoption1') as string)?.trim();
+      const customOption2 = (formData.get('customoption2') as string)?.trim();
+
+      // Validation checks
+      if (!creatorName) {
+        throw new Error('Please enter your name');
       }
-      
-      if (betType === 'custom' && (!customOption1.trim() || !customOption2.trim())) {
-        throw new Error('Both custom options are required');
+      if (!question) {
+        throw new Error('Please enter a question');
       }
-      
-      // Create bet data object with exact column names from the database
+      if (betType === 'number') {
+        if (minValue === undefined) {
+          throw new Error('Please enter a minimum value');
+        }
+        if (maxValue === undefined) {
+          throw new Error('Please enter a maximum value');
+        }
+        if (maxValue <= minValue) {
+          throw new Error('Maximum value must be greater than minimum value');
+        }
+      }
+      if (betType === 'custom') {
+        if (!customOption1) {
+          throw new Error('Please enter the first option');
+        }
+        if (!customOption2) {
+          throw new Error('Please enter the second option');
+        }
+      }
+
       const betData = {
         creator_name: creatorName,
-        bettype: betType,
         question,
-        description: description.trim() || undefined,
-        // code_name will be auto-generated by the database default value
-        ...(betType === 'number' ? { 
-          unit,
-          min_value: 0,  // Default values for min/max
-          max_value: 100
-        } : {}),
-        ...(betType === 'custom' ? { 
-          customoption1: customOption1,
-          customoption2: customOption2
-        } : {})
+        description: description || undefined,
+        bettype: betType,
+        unit: unit || undefined,
+        min_value: minValue,
+        max_value: maxValue,
+        customoption1: customOption1,
+        customoption2: customOption2,
       };
+
+      const { data, error: submitError } = await createBet(betData);
       
-      console.log('Submitting bet data:', betData);
+      if (submitError) throw submitError;
+      if (!data?.code_name) throw new Error('Failed to create bet: No code name returned');
       
-      // Submit to Supabase
-      const { error: supabaseError } = await createBet(betData);
-      
-      if (supabaseError) {
-        throw supabaseError;
-      }
-      
-      // Reset form
-      resetForm();
-      setSuccess(true);
-      
-      // Scroll to top to show success message
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      form.reset();
+      onSuccess(data.code_name);
       
     } catch (err) {
-      console.error('Form submission error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsSubmitting(false);
+      console.error('Error creating bet:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create bet');
+      setLoading(false);
     }
   };
 
-  // Render type-specific form fields
-  const renderTypeSpecificFields = useCallback(() => {
-    if (!betType) return null;
-    
-    switch (betType) {
-      case 'number':
-        return (
-          <FormInput
-            id="unit"
-            label="Unit (days, months, etc.)"
-            value={unit}
-            onChange={(e) => setUnit(e.target.value)}
-            placeholder="e.g., days, months, years"
-            required
-          />
-        );
-      
-      case 'custom':
-        return (
-          <div className="custom-options">
-            <FormInput
-              id="customOption1"
-              label="Option 1"
-              value={customOption1}
-              onChange={(e) => setCustomOption1(e.target.value)}
-              placeholder="First option"
-              required
-            />
-            
-            <FormInput
-              id="customOption2"
-              label="Option 2"
-              value={customOption2}
-              onChange={(e) => setCustomOption2(e.target.value)}
-              placeholder="Second option"
-              required
-            />
-          </div>
-        );
-      
-      default:
-        return null;
-    }
-  }, [betType, unit, customOption1, customOption2]);
-
   return (
-    <div className="create-bet-container">
-      <h1>Create a New Bet</h1>
-      
+    <form onSubmit={handleSubmit} className="create-bet-form" noValidate>
       {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">Bet created successfully!</div>}
       
-      <form onSubmit={handleSubmit}>
-        <FormInput
-          id="creatorName"
-          label="Your Name"
-          value={creatorName}
-          onChange={(e) => setCreatorName(e.target.value)}
-          placeholder="Enter your name"
+      <div className="form-group">
+        <label htmlFor="creator_name">Your Name *</label>
+        <input
+          type="text"
+          id="creator_name"
+          name="creator_name"
           required
+          maxLength={50}
+          placeholder="Enter your name"
+          disabled={loading}
         />
+      </div>
 
-        <FormInput
-          id="betType"
-          label="Bet Type"
+      <div className="form-group">
+        <label htmlFor="question">Question *</label>
+        <input
+          type="text"
+          id="question"
+          name="question"
+          required
+          maxLength={200}
+          placeholder="What do you want to predict?"
+          disabled={loading}
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="description">Description</label>
+        <textarea
+          id="description"
+          name="description"
+          rows={3}
+          maxLength={1000}
+          placeholder="Add more details about your bet (optional)"
+          disabled={loading}
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="bettype">Bet Type *</label>
+        <select
+          id="bettype"
           value={betType}
           onChange={(e) => setBetType(e.target.value as BetType)}
           required
-          as="select"
-          options={[
-            { value: '', label: 'Select a type...' },
-            { value: 'yesno', label: 'Yes/No' },
-            { value: 'number', label: 'Number (days/months/years)' },
-            { value: 'custom', label: 'Custom Options' }
-          ]}
-          helperText={betType ? HELPER_TEXT[betType as BetType] : ''}
-        />
-
-        <FormInput
-          id="question"
-          label="Question"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="What's your bet about?"
-          required
-        />
-
-        {renderTypeSpecificFields()}
-
-        <FormInput
-          id="description"
-          label="Description (Optional)"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Add more details about your bet..."
-          as="textarea"
-        />
-
-        <button 
-          type="submit" 
-          className="submit-button"
-          disabled={isSubmitting}
+          disabled={loading}
         >
-          {isSubmitting ? 'Creating...' : 'Create Bet'}
-        </button>
-      </form>
-    </div>
+          {Object.entries(BET_TYPE_NAMES).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {betType === 'number' && (
+        <div className="number-inputs">
+          <div className="form-group">
+            <label htmlFor="min_value">Minimum Value *</label>
+            <input
+              type="number"
+              id="min_value"
+              name="min_value"
+              required
+              placeholder="0"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="max_value">Maximum Value *</label>
+            <input
+              type="number"
+              id="max_value"
+              name="max_value"
+              required
+              placeholder="100"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="unit">Unit</label>
+            <input
+              type="text"
+              id="unit"
+              name="unit"
+              maxLength={20}
+              placeholder="e.g., points, dollars"
+              disabled={loading}
+            />
+          </div>
+        </div>
+      )}
+
+      {betType === 'custom' && (
+        <div className="custom-inputs">
+          <div className="form-group">
+            <label htmlFor="customoption1">First Option *</label>
+            <input
+              type="text"
+              id="customoption1"
+              name="customoption1"
+              required
+              maxLength={50}
+              placeholder="Enter first option"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="customoption2">Second Option *</label>
+            <input
+              type="text"
+              id="customoption2"
+              name="customoption2"
+              required
+              maxLength={50}
+              placeholder="Enter second option"
+              disabled={loading}
+            />
+          </div>
+        </div>
+      )}
+
+      <button 
+        type="submit" 
+        className="submit-button" 
+        disabled={loading}
+      >
+        {loading ? 'Creating...' : 'Create Bet'}
+      </button>
+    </form>
   );
 }; 

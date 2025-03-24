@@ -1,54 +1,70 @@
-import { FormEvent, useState } from 'react';
-import { Bet } from '../lib/supabase';
+import { useState, FormEvent } from 'react';
+import { Bet, addBetParticipant } from '../lib/supabase';
 import '../styles/PredictionForm.css';
 
 interface PredictionFormProps {
   bet: Bet;
-  onSubmit: (name: string, prediction: string) => Promise<void>;
-  submitError?: string;
-  submitSuccess?: boolean;
-  isSubmitting?: boolean;
+  onSuccess: () => void;
 }
 
-export const PredictionForm = ({ 
-  bet, 
-  onSubmit,
-  submitError = '',
-  submitSuccess = false,
-  isSubmitting = false
-}: PredictionFormProps) => {
-  const [name, setName] = useState('');
-  const [prediction, setPrediction] = useState('');
-  
-  // Validate prediction based on bet type
-  const validatePrediction = (value: string): boolean => {
+export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const validatePrediction = (prediction: string): boolean => {
     switch (bet.bettype) {
       case 'yesno':
-        return value.toLowerCase() === 'yes' || value.toLowerCase() === 'no';
+        return prediction === 'yes' || prediction === 'no';
       case 'number':
-        return !isNaN(Number(value));
+        const num = Number(prediction);
+        return !isNaN(num) && 
+               num >= (bet.min_value ?? 0) && 
+               num <= (bet.max_value ?? 100);
       case 'custom':
-        return value === bet.customoption1 || value === bet.customoption2;
+        return prediction === bet.customoption1 || prediction === bet.customoption2;
       default:
-        return true;
+        return false;
     }
   };
 
-  // Handle form submission
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     
-    // Form validation
-    if (!name.trim() || !prediction.trim() || !validatePrediction(prediction)) {
-      return;
-    }
-    
-    await onSubmit(name, prediction);
-    
-    // Reset form on successful submission
-    if (!submitError) {
-      setName('');
-      setPrediction('');
+    try {
+      const name = (formData.get('name') as string)?.trim();
+      const prediction = (formData.get('prediction') as string)?.trim().toLowerCase();
+
+      if (!name) {
+        throw new Error('Please enter your name');
+      }
+      if (!prediction) {
+        throw new Error('Please make a prediction');
+      }
+      if (!validatePrediction(prediction)) {
+        throw new Error('Invalid prediction value');
+      }
+
+      const { error: submitError } = await addBetParticipant({
+        bet_id: bet.id,
+        name,
+        prediction
+      });
+
+      if (submitError) throw submitError;
+      
+      form.reset();
+      onSuccess();
+      
+    } catch (err) {
+      console.error('Error submitting prediction:', err);
+      setError(err instanceof Error ? err.message : 'Failed to submit prediction');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,105 +72,78 @@ export const PredictionForm = ({
     switch (bet.bettype) {
       case 'yesno':
         return (
-          <div className="form-group">
-            <label htmlFor="prediction">Your Prediction</label>
-            <select
-              id="prediction"
-              value={prediction}
-              onChange={(e) => setPrediction(e.target.value)}
-              required
-              className="form-input"
-            >
-              <option value="">Select...</option>
-              <option value="Yes">Yes</option>
-              <option value="No">No</option>
-            </select>
-          </div>
+          <select
+            name="prediction"
+            required
+            disabled={loading}
+          >
+            <option value="">Select your prediction</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
         );
       
       case 'number':
         return (
-          <div className="form-group">
-            <label htmlFor="prediction">Your Prediction ({bet.unit})</label>
-            <input
-              id="prediction"
-              type="number"
-              value={prediction}
-              onChange={(e) => setPrediction(e.target.value)}
-              placeholder={`Enter a number (${bet.unit})`}
-              required
-              className="form-input"
-            />
-          </div>
+          <input
+            type="number"
+            name="prediction"
+            required
+            min={bet.min_value}
+            max={bet.max_value}
+            placeholder={`Enter a number between ${bet.min_value} and ${bet.max_value}`}
+            disabled={loading}
+          />
         );
       
       case 'custom':
         return (
-          <div className="form-group">
-            <label htmlFor="prediction">Your Prediction</label>
-            <select
-              id="prediction"
-              value={prediction}
-              onChange={(e) => setPrediction(e.target.value)}
-              required
-              className="form-input"
-            >
-              <option value="">Select...</option>
-              <option value={bet.customoption1}>{bet.customoption1}</option>
-              <option value={bet.customoption2}>{bet.customoption2}</option>
-            </select>
-          </div>
+          <select
+            name="prediction"
+            required
+            disabled={loading}
+          >
+            <option value="">Select your prediction</option>
+            <option value={bet.customoption1}>{bet.customoption1}</option>
+            <option value={bet.customoption2}>{bet.customoption2}</option>
+          </select>
         );
       
       default:
-        return (
-          <div className="form-group">
-            <label htmlFor="prediction">Your Prediction</label>
-            <input
-              id="prediction"
-              type="text"
-              value={prediction}
-              onChange={(e) => setPrediction(e.target.value)}
-              placeholder="Enter your prediction"
-              required
-              className="form-input"
-            />
-          </div>
-        );
+        return null;
     }
   };
 
   return (
-    <div className="make-prediction">
-      <h2>Make Your Prediction</h2>
+    <form onSubmit={handleSubmit} className="prediction-form" noValidate>
+      {error && <div className="error-message">{error}</div>}
       
-      {submitError && <div className="error-message">{submitError}</div>}
-      {submitSuccess && <div className="success-message">Your prediction has been recorded!</div>}
-      
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="name">Your Name</label>
-          <input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your name"
-            required
-            className="form-input"
-          />
-        </div>
-        
+      <div className="form-group">
+        <label htmlFor="name">Your Name *</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          required
+          maxLength={50}
+          placeholder="Enter your name"
+          disabled={loading}
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="prediction">Your Prediction *</label>
         {renderPredictionInput()}
-        
-        <button 
-          type="submit" 
-          className="submit-button"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Submitting...' : 'Submit Prediction'}
-        </button>
-      </form>
-    </div>
+        {bet.unit && <span className="unit-label">{bet.unit}</span>}
+      </div>
+
+      <button 
+        type="submit" 
+        className="submit-button" 
+        disabled={loading}
+      >
+        {loading ? 'Submitting...' : 'Submit Prediction'}
+      </button>
+    </form>
   );
 }; 
