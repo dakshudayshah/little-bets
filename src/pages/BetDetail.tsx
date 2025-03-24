@@ -4,8 +4,6 @@ import { Bet, BetParticipant, fetchBetByCodeName, fetchBetParticipants, BET_TYPE
 import { PredictionForm } from '../components/PredictionForm';
 import { formatDate } from '../utils/helpers';
 import '../styles/BetDetail.css';
-import { supabase } from '../lib/supabase';
-import { Share2 } from 'lucide-react';
 
 export const BetDetail = () => {
   const { id: codeName } = useParams();
@@ -44,21 +42,6 @@ export const BetDetail = () => {
 
     fetchData();
   }, [codeName]);
-
-  useEffect(() => {
-    if (!bet) return;
-    
-    const subscription = supabase
-      .from(`bet_participants:bet_id=eq.${bet.id}`)
-      .on('INSERT', (payload) => {
-        setParticipants(current => [payload.new, ...current]);
-      })
-      .subscribe();
-    
-    return () => {
-      supabase.removeSubscription(subscription);
-    };
-  }, [bet]);
 
   const shareBet = async () => {
     if (!bet) return;
@@ -99,26 +82,13 @@ export const BetDetail = () => {
     );
   }
 
-  const getBetOptions = () => {
-    switch (bet.bettype) {
-      case 'yesno':
-        return 'Yes or No';
-      case 'custom':
-        return bet.customoption1 && bet.customoption2 
-          ? `${bet.customoption1} or ${bet.customoption2}`
-          : 'Multiple options';
-      default:
-        return '';
-    }
-  };
-
   return (
     <div className="bet-detail-container">
       <div className="bet-header">
         <div className="header-content">
           <h1>{bet.question}</h1>
           <button onClick={shareBet} className="share-button" aria-label="Share bet">
-            <Share2 size={20} />
+            Share 📤
           </button>
         </div>
       </div>
