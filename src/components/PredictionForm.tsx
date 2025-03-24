@@ -15,11 +15,6 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
     switch (bet.bettype) {
       case 'yesno':
         return prediction === 'yes' || prediction === 'no';
-      case 'number':
-        const num = Number(prediction);
-        return !isNaN(num) && 
-               num >= (bet.min_value ?? 0) && 
-               num <= (bet.max_value ?? 100);
       case 'custom':
         return prediction === bet.customoption1 || prediction === bet.customoption2;
       default:
@@ -83,19 +78,6 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
           </select>
         );
       
-      case 'number':
-        return (
-          <input
-            type="number"
-            name="prediction"
-            required
-            min={bet.min_value}
-            max={bet.max_value}
-            placeholder={`Enter a number between ${bet.min_value} and ${bet.max_value}`}
-            disabled={loading}
-          />
-        );
-      
       case 'custom':
         return (
           <select
@@ -134,7 +116,6 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
       <div className="form-group">
         <label htmlFor="prediction">Your Prediction *</label>
         {renderPredictionInput()}
-        {bet.unit && <span className="unit-label">{bet.unit}</span>}
       </div>
 
       <button 
