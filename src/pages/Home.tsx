@@ -84,9 +84,6 @@ export const Home = () => {
             {bet.description && (
               <p className="bet-description">{bet.description}</p>
             )}
-            <div className="bet-options">
-              <p>{getBetOptions(bet)}</p>
-            </div>
           </Link>
         ))}
       </div>
