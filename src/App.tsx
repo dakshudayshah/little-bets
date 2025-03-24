@@ -1,11 +1,11 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Suspense, lazy, Component, ErrorInfo, ReactNode } from 'react';
 import './styles/App.css';
 
 // Lazy load components for better performance
-const AllBets = lazy(() => import('./pages/AllBets').then(module => ({ default: module.AllBets })));
 const BetDetail = lazy(() => import('./pages/BetDetail').then(module => ({ default: module.BetDetail })));
 const CreateBet = lazy(() => import('./pages/CreateBet').then(module => ({ default: module.CreateBet })));
+const Home = lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
 
 // Loading component
 const Loading = () => (
@@ -63,11 +63,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 const Header = () => (
   <header className="app-header">
     <div className="header-content">
-      <a href="/" className="logo">Little Bets</a>
-      <nav className="main-nav">
-        <a href="/" className="nav-link">Home</a>
-        <a href="/create" className="nav-link">Create Bet</a>
-      </nav>
+      <Link to="/" className="logo">Little Bets</Link>
+      <Link to="/create" className="create-bet-button">Create Bet</Link>
     </div>
   </header>
 );
@@ -92,7 +89,7 @@ function App() {
           <ErrorBoundary>
             <Suspense fallback={<Loading />}>
               <Routes>
-                <Route path="/" element={<AllBets />} />
+                <Route path="/" element={<Home />} />
                 <Route path="/bet/:id" element={<BetDetail />} />
                 <Route path="/create" element={<CreateBet />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
