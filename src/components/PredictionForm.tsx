@@ -1,6 +1,8 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { Bet, addBetParticipant } from '../lib/supabase';
 import '../styles/PredictionForm.css';
+import { useAuth } from '../context/AuthContext';
+import { AuthModal } from './AuthModal';
 
 interface PredictionFormProps {
   bet: Bet;
@@ -8,8 +10,18 @@ interface PredictionFormProps {
 }
 
 export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
+  const [participantName, setParticipantName] = useState(user?.email?.split('@')[0] || '');
+
+  useEffect(() => {
+    if (user?.email) {
+      setParticipantName(user.email.split('@')[0]);
+    }
+  }, [user]);
 
   const validatePrediction = (prediction: string): boolean => {
     switch (bet.bettype) {
@@ -26,19 +38,32 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
-    const form = e.currentTarget;
-    const formData = new FormData(form);
+    // Store form data
+    const formData = new FormData(e.currentTarget);
+    setPendingFormData(formData);
+
+    // Check if user is logged in
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    // Process form submission
+    await submitPrediction(formData);
+  };
+
+  const submitPrediction = async (formData: FormData) => {
+    setLoading(true);
     
     try {
-      const name = (formData.get('name') as string)?.trim();
-      const prediction = (formData.get('prediction') as string)?.trim();
+      const name = formData.get('name') as string;
+      const prediction = formData.get('prediction') as string;
 
-      if (!name) {
+      if (!name?.trim()) {
         throw new Error('Please enter your name');
       }
-      if (!prediction) {
+      if (!prediction?.trim()) {
         throw new Error('Please make a prediction');
       }
       if (!validatePrediction(prediction)) {
@@ -47,13 +72,12 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
 
       const { error: submitError } = await addBetParticipant({
         bet_id: bet.id,
-        name,
-        prediction
+        name: name.trim(),
+        prediction: prediction.trim()
       });
 
       if (submitError) throw submitError;
       
-      form.reset();
       onSuccess();
       
     } catch (err) {
@@ -62,6 +86,13 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAuthSuccess = () => {
+    if (pendingFormData) {
+      submitPrediction(pendingFormData);
+    }
+    setShowAuthModal(false);
   };
 
   const renderPredictionInput = () => {
@@ -102,32 +133,44 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="prediction-form" noValidate>
-      {error && <div className="error-message">{error}</div>}
-      
-      <div className="form-group">
-        <input
-          type="text"
-          id="name"
-          name="name"
-          required
-          maxLength={50}
-          placeholder="Enter your name"
+    <>
+      <form onSubmit={handleSubmit} className="prediction-form" noValidate>
+        {error && <div className="error-message">{error}</div>}
+        
+        <div className="form-group">
+          <input
+            type="text"
+            id="name"
+            name="name"
+            required
+            maxLength={50}
+            placeholder="Enter your name"
+            disabled={loading}
+            value={participantName}
+            onChange={(e) => setParticipantName(e.target.value)}
+          />
+        </div>
+
+        <div className="form-group">
+          {renderPredictionInput()}
+        </div>
+
+        <button 
+          type="submit" 
+          className="submit-button" 
           disabled={loading}
+        >
+          {loading ? 'Submitting...' : 'Submit Prediction'}
+        </button>
+      </form>
+
+      {showAuthModal && (
+        <AuthModal
+          message="Please sign in to submit your prediction"
+          onClose={() => setShowAuthModal(false)}
+          onSuccess={handleAuthSuccess}
         />
-      </div>
-
-      <div className="form-group">
-        {renderPredictionInput()}
-      </div>
-
-      <button 
-        type="submit" 
-        className="submit-button" 
-        disabled={loading}
-      >
-        {loading ? 'Submitting...' : 'Submit Prediction'}
-      </button>
-    </form>
+      )}
+    </>
   );
 }; 

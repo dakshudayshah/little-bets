@@ -1,0 +1,113 @@
+.profile-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.profile-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.profile-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: var(--text-primary);
+}
+
+.profile-email {
+  color: var(--text-secondary);
+  margin: 0.5rem 0 0;
+}
+
+.profile-section {
+  margin: 2rem 0;
+}
+
+.profile-section h2 {
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 2rem;
+  background: var(--background-secondary);
+  border-radius: 8px;
+}
+
+.bets-grid,
+.predictions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.bet-card,
+.prediction-card {
+  display: block;
+  padding: 1rem;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.bet-card:hover,
+.prediction-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.bet-card h3,
+.prediction-card h3 {
+  margin: 0 0 1rem;
+  color: var(--text-primary);
+}
+
+.bet-meta,
+.prediction-meta {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.prediction-value {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  background: var(--background-primary);
+  border-radius: 4px;
+}
+
+.prediction-value strong {
+  color: var(--text-primary);
+}
+
+.profile-loading {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.error-message {
+  color: var(--error);
+  text-align: center;
+  padding: 1rem;
+  margin: 1rem 0;
+  background: var(--error-bg);
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 1rem;
+  }
+
+  .bets-grid,
+  .predictions-grid {
+    grid-template-columns: 1fr;
+  }
+} 
