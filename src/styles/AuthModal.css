@@ -1,0 +1,74 @@
+.auth-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.auth-modal {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.auth-modal h2 {
+  margin-bottom: 1rem;
+  color: var(--text-color);
+  font-size: 1.25rem;
+}
+
+.auth-modal p {
+  margin-bottom: 1.5rem;
+  color: var(--light-text);
+}
+
+.google-sign-in-button {
+  background-color: white;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-bottom: 1rem;
+  transition: background-color 0.2s;
+}
+
+.google-sign-in-button:hover {
+  background-color: var(--background-color);
+}
+
+.cancel-button {
+  background: none;
+  border: none;
+  color: var(--light-text);
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.cancel-button:hover {
+  color: var(--text-color);
+}
+
+/* Safe area support */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .auth-modal-overlay {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+} 

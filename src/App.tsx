@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Suspense, lazy, Component, ErrorInfo, ReactNode } from 'react';
 import './styles/App.css';
+import { AuthProvider } from './context/AuthContext';
+import { Profile } from './pages/Profile';
 
 // Lazy load components for better performance
 const BetDetail = lazy(() => import('./pages/BetDetail').then(module => ({ default: module.BetDetail })));
@@ -81,26 +83,29 @@ const Footer = () => (
 // Main App component
 function App() {
   return (
-    <Router>
-      <div className="app">
-        <Header />
-        
-        <main className="app-content">
-          <ErrorBoundary>
-            <Suspense fallback={<Loading />}>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/bet/:id" element={<BetDetail />} />
-                <Route path="/create" element={<CreateBet />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
-          </ErrorBoundary>
-        </main>
-        
-        <Footer />
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="app">
+          <Header />
+          
+          <main className="app-content">
+            <ErrorBoundary>
+              <Suspense fallback={<Loading />}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/bet/:id" element={<BetDetail />} />
+                  <Route path="/create" element={<CreateBet />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
+          </main>
+          
+          <Footer />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
