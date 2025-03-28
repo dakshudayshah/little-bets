@@ -3,6 +3,9 @@ import { Suspense, lazy, Component, ErrorInfo, ReactNode } from 'react';
 import './styles/App.css';
 import { AuthProvider } from './context/AuthContext';
 import { Profile } from './pages/Profile';
+import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { supabase } from './lib/supabase';
 
 // Lazy load components for better performance
 const BetDetail = lazy(() => import('./pages/BetDetail').then(module => ({ default: module.BetDetail })));
@@ -80,6 +83,34 @@ const Footer = () => (
   </footer>
 );
 
+const AuthCallback = () => {
+  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleCallback = async () => {
+      try {
+        const { error } = await supabase.auth.getSession();
+        if (error) throw error;
+        
+        // Redirect to the home page or the page they were trying to access
+        navigate('/', { replace: true });
+      } catch (err) {
+        console.error('Error in auth callback:', err);
+        setError('Failed to complete authentication');
+      }
+    };
+
+    handleCallback();
+  }, [navigate]);
+
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
+
+  return <Loading />;
+};
+
 // Main App component
 function App() {
   return (
@@ -96,6 +127,7 @@ function App() {
                   <Route path="/bet/:id" element={<BetDetail />} />
                   <Route path="/create" element={<CreateBet />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Suspense>
