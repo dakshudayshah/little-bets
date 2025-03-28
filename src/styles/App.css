@@ -59,6 +59,7 @@ html, body {
   width: 100%;
   overflow: hidden;
   position: fixed;
+  overflow-y: auto;
 }
 
 body {
@@ -372,12 +373,14 @@ body {
 .app-container {
   min-height: 100vh;
   padding-bottom: 60px; /* Height of bottom nav */
+  overflow-y: auto; /* Enable scrolling */
 }
 
 .main-content {
   max-width: 800px;
   margin: 0 auto;
   padding: 1rem;
+  padding-bottom: 80px; /* Extra padding to account for bottom nav */
 }
 
 /* Update mobile styles */

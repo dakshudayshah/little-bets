@@ -86,10 +86,6 @@ const Header = () => {
       <div className="header-content">
         <div className="header-left">
           <Link to="/" className="logo">Little Bets</Link>
-          <nav className="desktop-nav">
-            <Link to="/" className="nav-link">Trending</Link>
-            <Link to="/markets" className="nav-link">Markets</Link>
-          </nav>
         </div>
         
         <div className="header-right">
@@ -104,14 +100,9 @@ const Header = () => {
               </button>
             </>
           ) : (
-            <>
-              <button onClick={handleSignIn} className="sign-in-button" disabled={loading}>
-                {loading ? <span className="loading-spinner"></span> : 'Log In'}
-              </button>
-              <button onClick={handleSignIn} className="sign-up-button" disabled={loading}>
-                Sign Up
-              </button>
-            </>
+            <button onClick={handleSignIn} className="sign-in-button" disabled={loading}>
+              {loading ? <span className="loading-spinner"></span> : 'Sign In'}
+            </button>
           )}
         </div>
       </div>
