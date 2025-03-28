@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Suspense, lazy, Component, ErrorInfo, ReactNode } from 'react';
 import './styles/App.css';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { Profile } from './pages/Profile';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -65,14 +65,57 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 }
 
 // Header component
-const Header = () => (
-  <header className="app-header">
-    <div className="header-content">
-      <Link to="/" className="logo">Little Bets</Link>
-      <Link to="/create" className="create-bet-button">Create Bet</Link>
-    </div>
-  </header>
-);
+const Header = () => {
+  const { user, signOut } = useAuth();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  
+  return (
+    <header className="app-header">
+      <div className="header-content">
+        <Link to="/" className="logo">Little Bets</Link>
+        <div className="header-actions">
+          <Link to="/create" className="create-bet-button">Create Bet</Link>
+          
+          {user ? (
+            <div className="user-menu-container">
+              <button 
+                className="user-menu-trigger"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+              >
+                {user.email?.split('@')[0]}
+                <span className="arrow-down">▼</span>
+              </button>
+              
+              {showUserMenu && (
+                <div className="user-menu">
+                  <Link to="/profile" className="menu-item">
+                    My Profile
+                  </Link>
+                  <button 
+                    onClick={() => {
+                      signOut();
+                      setShowUserMenu(false);
+                    }}
+                    className="menu-item sign-out"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button 
+              onClick={() => window.location.href = '/create'} 
+              className="sign-in-button"
+            >
+              Sign In
+            </button>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+};
 
 // Footer component
 const Footer = () => (

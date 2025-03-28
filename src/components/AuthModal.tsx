@@ -1,19 +1,29 @@
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import '../styles/AuthModal.css';
 
 interface AuthModalProps {
+  message?: string;
   onClose: () => void;
-  message: string;
-  onSuccess?: () => void;
+  onSuccess: () => void;
 }
 
-export const AuthModal = ({ onClose, message, onSuccess }: AuthModalProps) => {
+export const AuthModal = ({ message, onClose, onSuccess }: AuthModalProps) => {
   const { signInWithGoogle } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSignIn = async () => {
-    await signInWithGoogle();
-    if (onSuccess) {
+    try {
+      setLoading(true);
+      setError('');
+      await signInWithGoogle();
       onSuccess();
+    } catch (err) {
+      setError('Failed to sign in. Please try again.');
+      console.error('Sign in error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -21,16 +31,29 @@ export const AuthModal = ({ onClose, message, onSuccess }: AuthModalProps) => {
     <div className="auth-modal-overlay">
       <div className="auth-modal">
         <h2>Sign In Required</h2>
-        <p>{message}</p>
+        <p>{message || 'Please sign in to continue'}</p>
+        
+        {error && <div className="error-message">{error}</div>}
+        
         <button 
-          className="google-sign-in-button"
           onClick={handleSignIn}
+          className="google-sign-in-button"
+          disabled={loading}
         >
-          Sign in with Google
+          {loading ? (
+            <span className="loading-spinner"></span>
+          ) : (
+            <>
+              <img src="/google-icon.svg" alt="Google" />
+              Sign in with Google
+            </>
+          )}
         </button>
+        
         <button 
-          className="cancel-button"
           onClick={onClose}
+          className="cancel-button"
+          disabled={loading}
         >
           Cancel
         </button>
