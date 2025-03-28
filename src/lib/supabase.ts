@@ -33,6 +33,7 @@ export interface Bet {
   customoption1?: string;
   customoption2?: string;
   participants?: BetParticipant[];
+  participant_count?: number;
 }
 
 export interface BetParticipant {
@@ -60,13 +61,24 @@ export const fetchAllBets = async () => {
   try {
     const { data, error } = await supabase
       .from('bets')
-      .select('*')
+      .select(`
+        *,
+        participants: bet_participants (id)
+      `)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return { data, error: null };
+
+    // Transform the data to include participant count
+    const betsWithCounts = data?.map(bet => ({
+      ...bet,
+      participants: bet.participants || [],
+      participant_count: bet.participants?.length || 0
+    })) || [];
+
+    return { data: betsWithCounts, error: null };
   } catch (error) {
-    return handleError(error);
+    return { data: null, error };
   }
 };
 

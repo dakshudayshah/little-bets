@@ -56,7 +56,7 @@ export const Home = () => {
                   </div>
                 </div>
                 <div className="bet-stats">
-                  <span>{(bet.participants?.[0]?.count || 0)} predictions</span>
+                  <span>{bet.participant_count || 0} predictions</span>
                 </div>
               </Link>
             ))
