@@ -38,51 +38,24 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
-
-    // Store form data
-    const formData = new FormData(e.currentTarget);
-    setPendingFormData(formData);
-
-    // Check if user is logged in
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-
-    // Process form submission
-    await submitPrediction(formData);
-  };
-
-  const submitPrediction = async (formData: FormData) => {
     setLoading(true);
-    
+
     try {
-      const name = formData.get('name') as string;
-      const prediction = formData.get('prediction') as string;
-
-      if (!name?.trim()) {
-        throw new Error('Please enter your name');
-      }
-      if (!prediction?.trim()) {
-        throw new Error('Please make a prediction');
-      }
-      if (!validatePrediction(prediction)) {
-        throw new Error('Invalid prediction value');
-      }
-
-      const { error: submitError } = await addBetParticipant({
+      const formData = new FormData(e.currentTarget);
+      const prediction = {
         bet_id: bet.id,
-        name: name.trim(),
-        prediction: prediction.trim()
-      });
+        name: formData.get('name') as string,
+        prediction: formData.get('prediction') as string,
+      };
 
+      const { error: submitError } = await addBetParticipant(prediction);
       if (submitError) throw submitError;
       
       onSuccess();
-      
+      e.currentTarget.reset();
     } catch (err) {
       console.error('Error submitting prediction:', err);
-      setError(err instanceof Error ? err.message : 'Failed to submit prediction');
+      setError('Failed to submit prediction. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -90,7 +63,7 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
 
   const handleAuthSuccess = () => {
     if (pendingFormData) {
-      submitPrediction(pendingFormData);
+      handleSubmit(pendingFormData as FormEvent<HTMLFormElement>);
     }
     setShowAuthModal(false);
   };
