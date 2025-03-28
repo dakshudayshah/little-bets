@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Bet, fetchAllBets, BET_TYPE_NAMES } from '../lib/supabase';
-import { formatDate } from '../utils/helpers';
 import '../styles/Home.css';
 
 export const Home = () => {
@@ -26,54 +25,46 @@ export const Home = () => {
     loadBets();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="loading-state">
-        <div className="loading-spinner"></div>
-        <p>Loading bets...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="error-state">
-        <p>{error}</p>
-        <button onClick={() => window.location.reload()} className="retry-button">
-          Try Again
-        </button>
-      </div>
-    );
-  }
-
-  if (bets.length === 0) {
-    return (
-      <div className="empty-state">
-        <p>No bets yet. Be the first to create one!</p>
-        <Link to="/create" className="create-bet-button">
-          Create a Bet
-        </Link>
-      </div>
-    );
-  }
-
   return (
     <div className="home-container">
-      <div className="bets-list">
-        {bets.map((bet) => (
-          <Link to={`/bet/${bet.code_name}`} key={bet.id} className="bet-card">
-            <h2>{bet.question}</h2>
-            <div className="bet-meta">
-              <span className="bet-creator">Created by {bet.creator_name}</span>
-              <span className="bet-type">{BET_TYPE_NAMES[bet.bettype]}</span>
-              <span className="bet-date">{formatDate(bet.created_at)}</span>
-            </div>
-            {bet.description && (
-              <p className="bet-description">{bet.description}</p>
-            )}
-          </Link>
-        ))}
+      <div className="hero-section">
+        <h1>Little Bets</h1>
+        <p className="tagline">friendly bets on life's little moments</p>
       </div>
+
+      {loading ? (
+        <div className="loading-state">Loading bets...</div>
+      ) : error ? (
+        <div className="error-state">
+          <p>{error}</p>
+          <button onClick={() => window.location.reload()}>Try Again</button>
+        </div>
+      ) : (
+        <div className="bets-list">
+          {bets.length === 0 ? (
+            <div className="empty-state">
+              No bets yet. Start one!
+            </div>
+          ) : (
+            bets.map(bet => (
+              <Link to={`/bet/${bet.code_name}`} key={bet.id} className="bet-item">
+                <div className="bet-content">
+                  <h2>{bet.question}</h2>
+                  <div className="bet-details">
+                    <span className="bet-type">{BET_TYPE_NAMES[bet.bettype]}</span>
+                    <span className="bet-creator">by {bet.creator_name}</span>
+                  </div>
+                </div>
+                <div className="bet-stats">
+                  <div className="prediction-count">
+                    {bet.participants?.length || 0} predictions
+                  </div>
+                </div>
+              </Link>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }; 

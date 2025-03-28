@@ -1,113 +1,125 @@
 .profile-container {
-  max-width: 1200px;
+  max-width: 800px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 1rem;
 }
 
 .profile-header {
-  margin-bottom: 2rem;
   text-align: center;
+  margin-bottom: 2rem;
 }
 
 .profile-header h1 {
-  margin: 0;
-  font-size: 2rem;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.email {
+  color: var(--text-secondary);
+}
+
+.profile-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
-.profile-email {
+.stat-label {
   color: var(--text-secondary);
-  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
 }
 
 .profile-section {
-  margin: 2rem 0;
+  margin-bottom: 2rem;
 }
 
 .profile-section h2 {
+  font-size: 1.25rem;
   margin-bottom: 1rem;
   color: var(--text-primary);
 }
 
-.empty-state {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: 2rem;
-  background: var(--background-secondary);
+.bets-list,
+.predictions-list {
+  background: white;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
+  overflow: hidden;
 }
 
-.bets-grid,
-.predictions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
-}
-
-.bet-card,
-.prediction-card {
+.bet-item,
+.prediction-item {
   display: block;
   padding: 1rem;
-  background: var(--background-secondary);
-  border-radius: 8px;
   text-decoration: none;
   color: inherit;
-  transition: transform 0.2s, box-shadow 0.2s;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.bet-card:hover,
-.prediction-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.bet-item:last-child,
+.prediction-item:last-child {
+  border-bottom: none;
 }
 
-.bet-card h3,
-.prediction-card h3 {
-  margin: 0 0 1rem;
+.bet-item h3,
+.prediction-item h3 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
   color: var(--text-primary);
 }
 
-.bet-meta,
-.prediction-meta {
+.bet-meta {
   display: flex;
   justify-content: space-between;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
 .prediction-value {
-  margin: 0.5rem 0;
-  padding: 0.5rem;
-  background: var(--background-primary);
-  border-radius: 4px;
+  color: var(--primary-color);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
 }
 
-.prediction-value strong {
-  color: var(--text-primary);
-}
-
-.profile-loading {
+.empty-state {
   text-align: center;
   padding: 2rem;
   color: var(--text-secondary);
-}
-
-.error-message {
-  color: var(--error);
-  text-align: center;
-  padding: 1rem;
-  margin: 1rem 0;
-  background: var(--error-bg);
+  background: var(--background-secondary);
   border-radius: 8px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .profile-container {
+    padding: 0;
+  }
+
+  .profile-header,
+  .profile-stats {
     padding: 1rem;
   }
 
-  .bets-grid,
-  .predictions-grid {
-    grid-template-columns: 1fr;
+  .profile-section {
+    padding: 0 1rem;
+  }
+
+  .bets-list,
+  .predictions-list {
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
   }
 } 

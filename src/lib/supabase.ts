@@ -32,6 +32,7 @@ export interface Bet {
   bettype: BetType;
   customoption1?: string;
   customoption2?: string;
+  participants?: BetParticipant[];
 }
 
 export interface BetParticipant {

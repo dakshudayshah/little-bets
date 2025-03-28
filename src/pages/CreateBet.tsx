@@ -13,12 +13,13 @@ export const CreateBet = () => {
     <div className="create-bet-container">
       <div className="create-bet-header">
         <h1>Create a New Bet</h1>
+        <p className="subtitle">Set up your prediction market</p>
       </div>
 
       <div className="create-bet-content">
-        <CreateBetForm onSuccess={(codeName) => {
-          navigate(`/bet/${codeName}`);
-        }} />
+        <CreateBetForm 
+          onSuccess={(codeName) => navigate(`/bet/${codeName}`)} 
+        />
       </div>
     </div>
   );

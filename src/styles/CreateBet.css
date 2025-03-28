@@ -62,19 +62,29 @@ textarea:disabled {
 .create-bet-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 1rem;
 }
 
 .create-bet-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
 }
 
 .create-bet-header h1 {
   font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-color);
-  margin: 1rem 0;
-  line-height: 1.4;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+}
+
+.create-bet-content {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
 }
 
 .back-button {
@@ -95,21 +105,24 @@ textarea:disabled {
   color: var(--primary-hover);
 }
 
-.create-bet-content {
-  background-color: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-sm);
-  padding: 1.5rem;
-}
-
 /* Responsive Design */
 @media (max-width: 640px) {
-  .create-bet-header h1 {
-    font-size: 1.25rem;
+  .create-bet-container {
+    padding: 0;
+  }
+
+  .create-bet-header {
+    padding: 1rem;
   }
 
   .create-bet-content {
-    padding: 1rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .create-bet-header h1 {
+    font-size: 1.25rem;
   }
 
   /* Ensure form inputs are large enough for touch */
