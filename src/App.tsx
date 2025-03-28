@@ -66,8 +66,20 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
 // Header component
 const Header = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, signInWithGoogle } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  const handleSignIn = async () => {
+    try {
+      setLoading(true);
+      await signInWithGoogle();
+    } catch (err) {
+      console.error('Sign in error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   return (
     <header className="app-header">
@@ -105,10 +117,15 @@ const Header = () => {
             </div>
           ) : (
             <button 
-              onClick={() => window.location.href = '/create'} 
+              onClick={handleSignIn}
               className="sign-in-button"
+              disabled={loading}
             >
-              Sign In
+              {loading ? (
+                <span className="loading-spinner"></span>
+              ) : (
+                'Sign In'
+              )}
             </button>
           )}
         </div>
