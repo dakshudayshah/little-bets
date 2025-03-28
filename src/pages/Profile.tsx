@@ -4,116 +4,93 @@ import { useAuth } from '../context/AuthContext';
 import { fetchUserBets, fetchUserPredictions, Bet } from '../lib/supabase';
 import '../styles/Profile.css';
 
-interface PredictionWithBet {
-  id: string;
-  created_at: string;
-  prediction: string;
-  bet: Bet;
-}
-
 export const Profile = () => {
   const { user } = useAuth();
+  const [bets, setBets] = useState<Bet[]>([]);
+  const [predictions, setPredictions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [userBets, setUserBets] = useState<Bet[]>([]);
-  const [userPredictions, setUserPredictions] = useState<PredictionWithBet[]>([]);
 
   useEffect(() => {
     const loadUserData = async () => {
-      setLoading(true);
-      setError('');
-
+      if (!user) return;
+      
       try {
-        const [betsResponse, predictionsResponse] = await Promise.all([
+        const [betsRes, predictionsRes] = await Promise.all([
           fetchUserBets(),
           fetchUserPredictions()
         ]);
 
-        if (betsResponse.error) throw betsResponse.error;
-        if (predictionsResponse.error) throw predictionsResponse.error;
-
-        setUserBets(betsResponse.data || []);
-        setUserPredictions(predictionsResponse.data || []);
+        setBets(betsRes.data || []);
+        setPredictions(predictionsRes.data || []);
       } catch (err) {
-        console.error('Error loading user data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load user data');
+        setError('Failed to load profile data');
       } finally {
         setLoading(false);
       }
     };
 
     loadUserData();
-  }, []);
+  }, [user]);
 
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (loading) {
-    return <div className="profile-loading">Loading...</div>;
-  }
+  if (!user) return <Navigate to="/" />;
+  if (loading) return <div className="loading-state">Loading profile...</div>;
+  if (error) return <div className="error-state">{error}</div>;
 
   return (
     <div className="profile-container">
-      <header className="profile-header">
-        <h1>Your Profile</h1>
-        <p className="profile-email">{user.email}</p>
-      </header>
+      <div className="profile-header">
+        <h1>{user.email?.split('@')[0]}</h1>
+        <p className="email">{user.email}</p>
+      </div>
 
-      {error && <div className="error-message">{error}</div>}
+      <div className="profile-stats">
+        <div className="stat-item">
+          <span className="stat-value">{bets.length}</span>
+          <span className="stat-label">Bets Created</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-value">{predictions.length}</span>
+          <span className="stat-label">Predictions Made</span>
+        </div>
+      </div>
 
-      <section className="profile-section">
+      <div className="profile-section">
         <h2>Your Bets</h2>
-        {userBets.length === 0 ? (
-          <p className="empty-state">You haven't created any bets yet.</p>
+        {bets.length === 0 ? (
+          <div className="empty-state">You haven't created any bets yet</div>
         ) : (
-          <div className="bets-grid">
-            {userBets.map(bet => (
-              <Link 
-                to={`/bet/${bet.code_name}`} 
-                key={bet.id}
-                className="bet-card"
-              >
+          <div className="bets-list">
+            {bets.map(bet => (
+              <Link to={`/bet/${bet.code_name}`} key={bet.id} className="bet-item">
                 <h3>{bet.question}</h3>
                 <div className="bet-meta">
                   <span className="bet-type">{bet.bettype}</span>
-                  <span className="bet-date">
-                    {new Date(bet.created_at).toLocaleDateString()}
-                  </span>
+                  <span>{bet.participants?.length || 0} predictions</span>
                 </div>
               </Link>
             ))}
           </div>
         )}
-      </section>
+      </div>
 
-      <section className="profile-section">
+      <div className="profile-section">
         <h2>Your Predictions</h2>
-        {userPredictions.length === 0 ? (
-          <p className="empty-state">You haven't made any predictions yet.</p>
+        {predictions.length === 0 ? (
+          <div className="empty-state">You haven't made any predictions yet</div>
         ) : (
-          <div className="predictions-grid">
-            {userPredictions.map(({ id, prediction, created_at, bet }) => (
-              <Link 
-                to={`/bet/${bet.code_name}`}
-                key={id}
-                className="prediction-card"
-              >
-                <h3>{bet.question}</h3>
-                <p className="prediction-value">
-                  Your prediction: <strong>{prediction}</strong>
-                </p>
-                <div className="prediction-meta">
-                  <span className="prediction-creator">by {bet.creator_name}</span>
-                  <span className="prediction-date">
-                    {new Date(created_at).toLocaleDateString()}
-                  </span>
+          <div className="predictions-list">
+            {predictions.map(pred => (
+              <Link to={`/bet/${pred.bet.code_name}`} key={pred.id} className="prediction-item">
+                <div className="prediction-content">
+                  <h3>{pred.bet.question}</h3>
+                  <p className="prediction-value">Your prediction: {pred.prediction}</p>
                 </div>
               </Link>
             ))}
           </div>
         )}
-      </section>
+      </div>
     </div>
   );
 }; 

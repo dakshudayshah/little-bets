@@ -6,6 +6,7 @@ import { Profile } from './pages/Profile';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase';
+import { BottomNav } from './components/BottomNav';
 
 // Lazy load components for better performance
 const BetDetail = lazy(() => import('./pages/BetDetail').then(module => ({ default: module.BetDetail })));
@@ -67,7 +68,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 // Header component
 const Header = () => {
   const { user, signOut, signInWithGoogle } = useAuth();
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const [loading, setLoading] = useState(false);
   
   const handleSignIn = async () => {
@@ -84,64 +84,40 @@ const Header = () => {
   return (
     <header className="app-header">
       <div className="header-content">
-        <Link to="/" className="logo">Little Bets</Link>
-        <div className="header-actions">
-          <Link to="/create" className="create-bet-button">Create Bet</Link>
-          
+        <div className="header-left">
+          <Link to="/" className="logo">Little Bets</Link>
+          <nav className="desktop-nav">
+            <Link to="/" className="nav-link">Trending</Link>
+            <Link to="/markets" className="nav-link">Markets</Link>
+          </nav>
+        </div>
+        
+        <div className="header-right">
           {user ? (
-            <div className="user-menu-container">
-              <button 
-                className="user-menu-trigger"
-                onClick={() => setShowUserMenu(!showUserMenu)}
-              >
+            <>
+              <Link to="/create" className="create-bet-button">Create Bet</Link>
+              <Link to="/profile" className="profile-link">
                 {user.email?.split('@')[0]}
-                <span className="arrow-down">▼</span>
+              </Link>
+              <button onClick={signOut} className="sign-out-button">
+                Sign Out
               </button>
-              
-              {showUserMenu && (
-                <div className="user-menu">
-                  <Link to="/profile" className="menu-item">
-                    My Profile
-                  </Link>
-                  <button 
-                    onClick={() => {
-                      signOut();
-                      setShowUserMenu(false);
-                    }}
-                    className="menu-item sign-out"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              )}
-            </div>
+            </>
           ) : (
-            <button 
-              onClick={handleSignIn}
-              className="sign-in-button"
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="loading-spinner"></span>
-              ) : (
-                'Sign In'
-              )}
-            </button>
+            <>
+              <button onClick={handleSignIn} className="sign-in-button" disabled={loading}>
+                {loading ? <span className="loading-spinner"></span> : 'Log In'}
+              </button>
+              <button onClick={handleSignIn} className="sign-up-button" disabled={loading}>
+                Sign Up
+              </button>
+            </>
           )}
         </div>
       </div>
     </header>
   );
 };
-
-// Footer component
-const Footer = () => (
-  <footer className="app-footer">
-    <div className="footer-content">
-      <p>&copy; {new Date().getFullYear()} Little Bets. All rights reserved.</p>
-    </div>
-  </footer>
-);
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -172,14 +148,13 @@ const AuthCallback = () => {
 };
 
 // Main App component
-function App() {
+const App = () => {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="app">
+    <Router>
+      <AuthProvider>
+        <div className="app-container">
           <Header />
-          
-          <main className="app-content">
+          <main className="main-content">
             <ErrorBoundary>
               <Suspense fallback={<Loading />}>
                 <Routes>
@@ -187,18 +162,18 @@ function App() {
                   <Route path="/bet/:id" element={<BetDetail />} />
                   <Route path="/create" element={<CreateBet />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/markets" element={<Home />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Suspense>
             </ErrorBoundary>
           </main>
-          
-          <Footer />
+          <BottomNav />
         </div>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
-}
+};
 
 export default App; 
