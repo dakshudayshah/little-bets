@@ -299,10 +299,28 @@ body {
   border-radius: 20px;
   cursor: pointer;
   transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
 }
 
-.sign-in-button:hover {
+.sign-in-button:hover:not(:disabled) {
   background-color: var(--primary-hover);
+}
+
+.sign-in-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.sign-in-button .loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-left-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
 /* Add responsive styles */
