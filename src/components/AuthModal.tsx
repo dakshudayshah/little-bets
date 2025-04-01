@@ -30,8 +30,9 @@ export const AuthModal = ({ message, onClose, onSuccess }: AuthModalProps) => {
   return (
     <div className="auth-modal-overlay">
       <div className="auth-modal">
-        <h2>Sign In Required</h2>
-        <p>{message || 'Please sign in to continue'}</p>
+        <h2>Almost There!</h2>
+        <p>{message}</p>
+        <p className="note">Don't worry, your form data will be preserved.</p>
         
         {error && <div className="error-message">{error}</div>}
         
