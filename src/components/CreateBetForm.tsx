@@ -1,11 +1,20 @@
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent } from 'react';
 import { createBet, BetType } from '../lib/supabase';
-import '../styles/CreateBetForm.css';
 import { useAuth } from '../context/AuthContext';
 import { AuthModal } from './AuthModal';
+import '../styles/CreateBetForm.css';
 
 interface CreateBetFormProps {
   onSuccess: (codeName: string) => void;
+}
+
+interface BetFormData {
+  creator_name: string;
+  question: string;
+  description: string;
+  bettype: BetType;
+  customoption1?: string;
+  customoption2?: string;
 }
 
 export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
@@ -14,46 +23,36 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
   const [error, setError] = useState('');
   const [betType, setBetType] = useState<BetType>('yesno');
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [pendingFormData, setPendingFormData] = useState<{
-    creator_name: string;
-    question: string;
-    description: string;
-    bettype: BetType;
-    customoption1?: string;
-    customoption2?: string;
-  } | null>(null);
-  const [creatorName, setCreatorName] = useState(user?.email?.split('@')[0] || '');
-  
-  useEffect(() => {
-    if (user?.email) {
-      setCreatorName(user.email.split('@')[0]);
-    }
-  }, [user]);
+  const [pendingFormData, setPendingFormData] = useState<BetFormData | null>(null);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    
-    const betData = {
+    const betData: BetFormData = {
       creator_name: formData.get('creator_name') as string,
       question: formData.get('question') as string,
       description: formData.get('description') as string,
       bettype: betType,
-      customoption1: betType === 'custom' ? formData.get('customoption1') as string : undefined,
-      customoption2: betType === 'custom' ? formData.get('customoption2') as string : undefined,
+      ...(betType === 'custom' && {
+        customoption1: formData.get('customoption1') as string,
+        customoption2: formData.get('customoption2') as string,
+      })
     };
 
     // Store form data before checking auth
     if (!user) {
       setPendingFormData(betData);
       setShowAuthModal(true);
-      setLoading(false);
       return;
     }
 
+    await submitBet(betData);
+  };
+
+  const submitBet = async (betData: BetFormData) => {
+    setLoading(true);
     try {
       const { data, error: submitError } = await createBet(betData);
       
@@ -70,38 +69,17 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
     }
   };
 
-  const handleAuthSuccess = () => {
-    if (pendingFormData) {
-      // Create a form element and submit event
-      const form = document.createElement('form');
-      const event = new Event('submit', { 
-        bubbles: true, 
-        cancelable: true 
-      }) as SubmitEvent;
-      
-      // Set the form as the target
-      Object.defineProperty(event, 'target', { value: form });
-      
-      // Add the pending form data to the form
-      Object.entries(pendingFormData).forEach(([key, value]) => {
-        if (value) {
-          const input = document.createElement('input');
-          input.name = key;
-          input.value = value;
-          form.appendChild(input);
-        }
-      });
-
-      // Call handleSubmit with the event
-      handleSubmit(event as unknown as FormEvent<HTMLFormElement>);
-    }
+  const handleAuthSuccess = async () => {
     setShowAuthModal(false);
-    setPendingFormData(null);
+    if (pendingFormData) {
+      await submitBet(pendingFormData);
+      setPendingFormData(null);
+    }
   };
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="create-bet-form" noValidate>
+      <form onSubmit={handleSubmit} className="create-bet-form">
         {error && <div className="error-message">{error}</div>}
         
         <div className="form-group">
@@ -113,24 +91,9 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
             required
             maxLength={50}
             placeholder="Enter your name"
+            defaultValue={user?.email?.split('@')[0] || ''}
             disabled={loading}
-            value={creatorName}
-            onChange={(e) => setCreatorName(e.target.value)}
           />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="bettype">Bet Type *</label>
-          <select
-            id="bettype"
-            value={betType}
-            onChange={(e) => setBetType(e.target.value as BetType)}
-            required
-            disabled={loading}
-          >
-            <option value="yesno">Yes or No</option>
-            <option value="custom">Multiple Choice</option>
-          </select>
         </div>
 
         <div className="form-group">
@@ -151,17 +114,44 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
           <textarea
             id="description"
             name="description"
-            rows={3}
             maxLength={1000}
-            placeholder="Add more details about your bet (optional)"
+            placeholder="Add any additional details"
             disabled={loading}
           />
         </div>
 
+        <div className="form-group">
+          <label>Bet Type *</label>
+          <div className="bet-type-options">
+            <label>
+              <input
+                type="radio"
+                name="bettype"
+                value="yesno"
+                checked={betType === 'yesno'}
+                onChange={(e) => setBetType(e.target.value as BetType)}
+                disabled={loading}
+              />
+              Yes or No
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="bettype"
+                value="custom"
+                checked={betType === 'custom'}
+                onChange={(e) => setBetType(e.target.value as BetType)}
+                disabled={loading}
+              />
+              Multiple Choice
+            </label>
+          </div>
+        </div>
+
         {betType === 'custom' && (
-          <div className="custom-inputs">
+          <>
             <div className="form-group">
-              <label htmlFor="customoption1">First Option *</label>
+              <label htmlFor="customoption1">Option 1 *</label>
               <input
                 type="text"
                 id="customoption1"
@@ -172,9 +162,8 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
                 disabled={loading}
               />
             </div>
-
             <div className="form-group">
-              <label htmlFor="customoption2">Second Option *</label>
+              <label htmlFor="customoption2">Option 2 *</label>
               <input
                 type="text"
                 id="customoption2"
@@ -185,7 +174,7 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
                 disabled={loading}
               />
             </div>
-          </div>
+          </>
         )}
 
         <button 
@@ -199,7 +188,7 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
 
       {showAuthModal && (
         <AuthModal
-          message="Please sign in to create your bet"
+          message="Sign in to create your bet"
           onClose={() => setShowAuthModal(false)}
           onSuccess={handleAuthSuccess}
         />
