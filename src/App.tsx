@@ -89,9 +89,9 @@ const Header = () => {
         </div>
         
         <div className="header-right">
+          <Link to="/create" className="create-bet-button">Create Bet</Link>
           {user ? (
             <>
-              <Link to="/create" className="create-bet-button">Create Bet</Link>
               <Link to="/profile" className="profile-link">
                 {user.email?.split('@')[0]}
               </Link>
@@ -101,7 +101,7 @@ const Header = () => {
             </>
           ) : (
             <button onClick={handleSignIn} className="sign-in-button" disabled={loading}>
-              {loading ? <span className="loading-spinner"></span> : 'Sign In'}
+              {loading ? '...' : 'Sign In'}
             </button>
           )}
         </div>

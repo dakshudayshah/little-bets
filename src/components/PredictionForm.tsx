@@ -1,7 +1,6 @@
-import { useState, FormEvent, useEffect } from 'react';
-import { Bet, addBetParticipant } from '../lib/supabase';
+import { useState, FormEvent } from 'react';
+import { addBetParticipant, Bet } from '../lib/supabase';
 import '../styles/PredictionForm.css';
-import { useAuth } from '../context/AuthContext';
 
 interface PredictionFormProps {
   bet: Bet;
@@ -9,34 +8,29 @@ interface PredictionFormProps {
 }
 
 export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
-  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [participantName, setParticipantName] = useState(user?.email?.split('@')[0] || '');
-
-  useEffect(() => {
-    if (user?.email) {
-      setParticipantName(user.email.split('@')[0]);
-    }
-  }, [user]);
+  const [name, setName] = useState('');
+  const [prediction, setPrediction] = useState('');
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+    if (!name.trim()) {
+      setError('Please enter your name');
+      setLoading(false);
+      return;
+    }
+
+    if (!prediction.trim()) {
+      setError('Please make a prediction');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const formData = new FormData(e.currentTarget);
-      const name = formData.get('name') as string;
-      const prediction = formData.get('prediction') as string;
-
-      if (!name?.trim()) {
-        throw new Error('Please enter your name');
-      }
-      if (!prediction?.trim()) {
-        throw new Error('Please make a prediction');
-      }
-
       const { error: submitError } = await addBetParticipant({
         bet_id: bet.id,
         name: name.trim(),
@@ -46,80 +40,48 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
       if (submitError) throw submitError;
       
       onSuccess();
-      e.currentTarget.reset();
+      setName('');
+      setPrediction('');
       
     } catch (err) {
       console.error('Error submitting prediction:', err);
-      setError(err instanceof Error ? err.message : 'Failed to submit prediction');
+      setError('Failed to submit prediction. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const renderPredictionInput = () => {
-    switch (bet.bettype) {
-      case 'yesno':
-        return (
-          <select
-            name="prediction"
-            required
-            disabled={loading}
-          >
-            <option value="">Select your prediction</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        );
-      
-      case 'custom':
-        return (
-          <select
-            name="prediction"
-            required
-            disabled={loading}
-          >
-            <option value="">Select your prediction</option>
-            {bet.customoption1 && (
-              <option value={bet.customoption1}>{bet.customoption1}</option>
-            )}
-            {bet.customoption2 && (
-              <option value={bet.customoption2}>{bet.customoption2}</option>
-            )}
-          </select>
-        );
-      
-      default:
-        return null;
-    }
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="prediction-form" noValidate>
+    <form onSubmit={handleSubmit} className="prediction-form">
       {error && <div className="error-message">{error}</div>}
       
       <div className="form-group">
+        <label htmlFor="name">Your Name</label>
         <input
           type="text"
           id="name"
-          name="name"
-          required
-          maxLength={50}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           placeholder="Enter your name"
           disabled={loading}
-          value={participantName}
-          onChange={(e) => setParticipantName(e.target.value)}
+          required
         />
       </div>
 
       <div className="form-group">
-        {renderPredictionInput()}
+        <label htmlFor="prediction">Your Prediction</label>
+        <input
+          type="text"
+          id="prediction"
+          value={prediction}
+          onChange={(e) => setPrediction(e.target.value)}
+          placeholder="Enter your prediction"
+          disabled={loading}
+          required
+        />
       </div>
 
-      <button 
-        type="submit" 
-        className="submit-button" 
-        disabled={loading}
-      >
+      <button type="submit" disabled={loading}>
         {loading ? 'Submitting...' : 'Submit Prediction'}
       </button>
     </form>

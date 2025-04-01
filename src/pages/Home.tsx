@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Bet, fetchAllBets, BET_TYPE_NAMES } from '../lib/supabase';
+import { Bet, fetchAllBets, fetchBetParticipants, BET_TYPE_NAMES } from '../lib/supabase';
 import '../styles/Home.css';
 
 export const Home = () => {
@@ -13,7 +13,19 @@ export const Home = () => {
       try {
         const { data, error } = await fetchAllBets();
         if (error) throw error;
-        setBets(data || []);
+        
+        // Fetch participants for each bet
+        const betsWithParticipants = await Promise.all(
+          (data || []).map(async (bet) => {
+            const { data: participants } = await fetchBetParticipants(bet.id);
+            return {
+              ...bet,
+              participants: participants || []
+            };
+          })
+        );
+        
+        setBets(betsWithParticipants);
       } catch (err) {
         console.error('Error loading bets:', err);
         setError('Failed to load bets');
@@ -56,7 +68,9 @@ export const Home = () => {
                   </div>
                 </div>
                 <div className="bet-stats">
-                  <span>{bet.participant_count || 0} predictions</span>
+                  <div className="prediction-count">
+                    {bet.participants?.length || 0} predictions
+                  </div>
                 </div>
               </Link>
             ))

@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { CreateBetForm } from '../components/CreateBetForm';
 import '../styles/CreateBet.css';
+import { useAuth } from '../context/AuthContext';
+import { AuthModal } from '../components/AuthModal';
 
 /**
  * CreateBet page component
@@ -8,6 +10,23 @@ import '../styles/CreateBet.css';
  */
 export const CreateBet = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  if (!user) {
+    return (
+      <div className="create-bet-container">
+        <div className="auth-required">
+          <h2>Sign in Required</h2>
+          <p>Please sign in to create a bet</p>
+          <AuthModal 
+            message="Sign in to create your bet"
+            onClose={() => navigate('/')}
+            onSuccess={() => {}} 
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="create-bet-container">
@@ -17,9 +36,7 @@ export const CreateBet = () => {
       </div>
 
       <div className="create-bet-content">
-        <CreateBetForm 
-          onSuccess={(codeName) => navigate(`/bet/${codeName}`)} 
-        />
+        <CreateBetForm onSuccess={(codeName) => navigate(`/bet/${codeName}`)} />
       </div>
     </div>
   );
