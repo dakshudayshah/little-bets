@@ -33,16 +33,15 @@ export interface Bet {
   customoption1?: string;
   customoption2?: string;
   participants?: BetParticipant[];
-  participant_count?: number;
 }
 
 export interface BetParticipant {
   id: string;
   created_at: string;
   bet_id: string;
-  user_id: string;
   name: string;
   prediction: string;
+  user_id?: string;  // Optional since we don't require auth
 }
 
 // Error handling helper
@@ -61,24 +60,13 @@ export const fetchAllBets = async () => {
   try {
     const { data, error } = await supabase
       .from('bets')
-      .select(`
-        *,
-        participants: bet_participants (id)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-
-    // Transform the data to include participant count
-    const betsWithCounts = data?.map(bet => ({
-      ...bet,
-      participants: bet.participants || [],
-      participant_count: bet.participants?.length || 0
-    })) || [];
-
-    return { data: betsWithCounts, error: null };
+    return { data, error: null };
   } catch (error) {
-    return { data: null, error };
+    return handleError(error);
   }
 };
 
@@ -147,18 +135,21 @@ export const addBetParticipant = async (participantData: {
   name: string;
   prediction: string;
 }) => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    return { error: new Error('User not authenticated') };
+  try {
+    // Get user first
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    return supabase
+      .from('bet_participants')
+      .insert({
+        ...participantData,
+        // Only add user_id if user exists
+        ...(user ? { user_id: user.id } : {})
+      });
+  } catch (error) {
+    console.error('Error adding bet participant:', error);
+    return { error };
   }
-
-  return supabase
-    .from('bet_participants')
-    .insert({
-      ...participantData,
-      user_id: user.id
-    });
 };
 
 /**
