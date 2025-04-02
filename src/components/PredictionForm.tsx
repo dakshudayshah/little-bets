@@ -29,15 +29,16 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
     setError('');
 
     try {
-      // Log the bet data for debugging
-      console.log('Current bet:', bet);
-      
-      // Simplified prediction data
+      // Validate the option index
+      if (selectedOption >= bet.options.length) {
+        throw new Error('Invalid option selected');
+      }
+
       const predictionData = {
         bet_id: bet.id,
         name: name.trim(),
         option_index: selectedOption,
-        prediction: prediction // Just 'yes' or 'no'
+        prediction: prediction
       };
 
       console.log('Submitting prediction:', predictionData);
@@ -46,20 +47,17 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
 
       if (submitError) {
         console.error('Submit error:', submitError);
-        setError(submitError.message || 'Failed to submit prediction');
-        return;
+        throw submitError;
       }
 
       if (!data) {
-        console.error('No data returned from submission');
-        setError('No response from server');
-        return;
+        throw new Error('No response from server');
       }
       
       console.log('Prediction submitted successfully:', data);
-      
-      // Clear form and show success
       onSuccess();
+      
+      // Clear form
       setName('');
       setSelectedOption(null);
       setPrediction(null);
@@ -86,6 +84,7 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
           placeholder="Enter your name"
           disabled={loading}
           required
+          autoComplete="off"
         />
       </div>
 
