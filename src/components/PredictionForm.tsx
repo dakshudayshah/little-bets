@@ -39,13 +39,20 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
 
       console.log('Submitting prediction:', predictionData);
 
-      const { error: submitError } = await addBetParticipant(predictionData);
+      const { data, error: submitError } = await addBetParticipant(predictionData);
 
       if (submitError) {
         console.error('Submit error:', submitError);
-        throw submitError;
+        setError(submitError.message || 'Failed to submit prediction');
+        return;
+      }
+
+      if (!data) {
+        setError('No response from server');
+        return;
       }
       
+      console.log('Prediction submitted successfully:', data);
       onSuccess();
       setName('');
       setSelectedOption(null);
