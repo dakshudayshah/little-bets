@@ -1,7 +1,7 @@
 /* PredictionForm Styles */
 
 .prediction-form {
-  margin-bottom: var(--spacing-xl);
+  margin-top: 2rem;
 }
 
 .make-prediction {
@@ -20,45 +20,103 @@
 }
 
 .form-group {
-  margin-bottom: var(--spacing-md);
+  margin-bottom: 1.5rem;
 }
 
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: var(--text-color);
+  color: var(--text-primary);
 }
 
-.form-group input,
-.form-group select {
+.form-group input {
   width: 100%;
-  padding: var(--spacing-sm);
-  font-size: var(--font-size-base);
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  background-color: white;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
 }
 
-.form-group input::placeholder {
-  color: #64748b;
+.options-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.option-card {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.option-card:hover {
+  border-color: var(--primary-color);
+}
+
+.option-card.selected {
+  border-color: var(--primary-color);
+  background: var(--background-secondary);
+}
+
+.option-header {
+  margin-bottom: 1rem;
+}
+
+.option-text {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.prediction-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.prediction-button {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.prediction-button.yes {
+  color: #10B981;
+}
+
+.prediction-button.no {
+  color: #EF4444;
+}
+
+.prediction-button.yes.selected {
+  background: #10B981;
+  color: white;
+  border-color: #10B981;
+}
+
+.prediction-button.no.selected {
+  background: #EF4444;
+  color: white;
+  border-color: #EF4444;
 }
 
 .submit-button {
   width: 100%;
-  padding: var(--spacing-sm);
-  font-size: var(--font-size-base);
-  font-weight: 500;
+  padding: 1rem;
+  background: var(--primary-color);
   color: white;
-  background-color: #4f46e5;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.submit-button:hover:not(:disabled) {
-  background-color: #4338ca;
 }
 
 .submit-button:disabled {
@@ -67,11 +125,11 @@
 }
 
 .error-message {
+  color: var(--error);
   margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  background-color: #fee2e2;
-  color: #b91c1c;
-  border-radius: var(--border-radius);
+  padding: 0.75rem;
+  background: var(--error-bg);
+  border-radius: 6px;
 }
 
 .success-message {
@@ -80,4 +138,14 @@
   background-color: #dcfce7;
   color: #166534;
   border-radius: var(--border-radius);
+}
+
+@media (max-width: 640px) {
+  .prediction-form {
+    margin-top: 1rem;
+  }
+
+  .option-card {
+    padding: 0.75rem;
+  }
 } 

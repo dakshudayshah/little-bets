@@ -18,77 +18,106 @@
 
 /* Form Styles */
 .create-bet-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
 }
 
 .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
   font-weight: 500;
-  color: var(--text-color);
+  color: var(--text-primary);
 }
 
-.form-group input,
-.form-group select,
+.form-group input[type="text"],
 .form-group textarea {
+  width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  background-color: white;
-  color: var(--text-color);
+  border-radius: 8px;
   font-size: 1rem;
-  transition: var(--transition);
-  width: 100%;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+  background: white;
 }
 
 .form-group textarea {
-  resize: vertical;
   min-height: 100px;
+  resize: vertical;
 }
 
-.helper-text {
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--light-text);
-}
-
-/* Custom Options */
-.custom-options {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.bet-type-selector {
+  display: flex;
   gap: 1rem;
+  margin-top: 0.5rem;
 }
 
-/* Submit Button */
-.submit-button {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 0.875rem;
-  border-radius: var(--border-radius);
-  font-weight: 500;
+.bet-type-button {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: white;
   font-size: 1rem;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.2s;
+}
+
+.bet-type-button.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.option-input {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.option-input input {
+  flex: 1;
+}
+
+.remove-option {
+  padding: 0.5rem;
+  border: none;
+  background: none;
+  color: var(--error);
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.add-option {
+  padding: 0.75rem;
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  background: none;
+  color: var(--primary-color);
+  cursor: pointer;
+  width: 100%;
   margin-top: 0.5rem;
 }
 
-.submit-button:hover:not(:disabled) {
-  background-color: var(--primary-hover);
+.submit-button {
+  width: 100%;
+  padding: 1rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
 }
 
 .submit-button:disabled {
@@ -121,27 +150,11 @@
   }
   
   .create-bet-form {
-    gap: 1rem;
+    padding: 1rem;
   }
 
-  .form-group input,
-  .form-group select,
-  .form-group textarea {
-    font-size: 16px; /* Prevents iOS zoom */
-    padding: 0.625rem;
-  }
-
-  .custom-options {
-    grid-template-columns: 1fr;
-  }
-
-  .number-inputs {
-    grid-template-columns: 1fr;
-  }
-
-  .submit-button {
-    padding: 0.75rem;
-    margin-top: 1rem;
+  .bet-type-selector {
+    flex-direction: column;
   }
 }
 

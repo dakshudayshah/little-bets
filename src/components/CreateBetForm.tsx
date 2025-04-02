@@ -13,8 +13,8 @@ interface BetFormData {
   question: string;
   description: string;
   bettype: BetType;
-  customoption1?: string;
-  customoption2?: string;
+  options: string[];
+  total_predictions: number;
 }
 
 export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
@@ -24,24 +24,42 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
   const [betType, setBetType] = useState<BetType>('yesno');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<BetFormData | null>(null);
+  const [options, setOptions] = useState<string[]>(['', '']);
+
+  const addOption = () => {
+    if (options.length < 4) {
+      setOptions([...options, '']);
+    }
+  };
+
+  const removeOption = (index: number) => {
+    if (options.length > 2) {
+      setOptions(options.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateOption = (index: number, value: string) => {
+    const newOptions = [...options];
+    newOptions[index] = value;
+    setOptions(newOptions);
+  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
 
     const formData = new FormData(e.currentTarget);
+    const rawOptions = betType === 'yesno' ? ['Yes', 'No'] : options.filter(opt => opt.trim() !== '');
+    
     const betData: BetFormData = {
       creator_name: formData.get('creator_name') as string,
       question: formData.get('question') as string,
       description: formData.get('description') as string,
       bettype: betType,
-      ...(betType === 'custom' && {
-        customoption1: formData.get('customoption1') as string,
-        customoption2: formData.get('customoption2') as string,
-      })
+      options: rawOptions,
+      total_predictions: 0
     };
 
-    // Store form data before checking auth
     if (!user) {
       setPendingFormData(betData);
       setShowAuthModal(true);
@@ -54,7 +72,17 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
   const submitBet = async (betData: BetFormData) => {
     setLoading(true);
     try {
-      const { data, error: submitError } = await createBet(betData);
+      // Transform the options into the correct format
+      const formattedBetData = {
+        ...betData,
+        options: betData.options.map(optionText => ({
+          text: optionText,
+          yes_count: 0,
+          no_count: 0
+        }))
+      };
+
+      const { data, error: submitError } = await createBet(formattedBetData);
       
       if (submitError) throw submitError;
       if (!data?.code_name) throw new Error('Failed to create bet: No code name returned');
@@ -83,20 +111,6 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
         {error && <div className="error-message">{error}</div>}
         
         <div className="form-group">
-          <label htmlFor="creator_name">Your Name *</label>
-          <input
-            type="text"
-            id="creator_name"
-            name="creator_name"
-            required
-            maxLength={50}
-            placeholder="Enter your name"
-            defaultValue={user?.email?.split('@')[0] || ''}
-            disabled={loading}
-          />
-        </div>
-
-        <div className="form-group">
           <label htmlFor="question">Question *</label>
           <input
             type="text"
@@ -122,60 +136,80 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
 
         <div className="form-group">
           <label>Bet Type *</label>
-          <div className="bet-type-options">
-            <label>
-              <input
-                type="radio"
-                name="bettype"
-                value="yesno"
-                checked={betType === 'yesno'}
-                onChange={(e) => setBetType(e.target.value as BetType)}
-                disabled={loading}
-              />
-              Yes or No
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="bettype"
-                value="custom"
-                checked={betType === 'custom'}
-                onChange={(e) => setBetType(e.target.value as BetType)}
-                disabled={loading}
-              />
+          <div className="bet-type-selector">
+            <button
+              type="button"
+              className={`bet-type-button ${betType === 'yesno' ? 'active' : ''}`}
+              onClick={() => setBetType('yesno')}
+              disabled={loading}
+            >
+              Yes/No
+            </button>
+            <button
+              type="button"
+              className={`bet-type-button ${betType === 'multiple' ? 'active' : ''}`}
+              onClick={() => setBetType('multiple')}
+              disabled={loading}
+            >
               Multiple Choice
-            </label>
+            </button>
           </div>
         </div>
 
-        {betType === 'custom' && (
-          <>
-            <div className="form-group">
-              <label htmlFor="customoption1">Option 1 *</label>
-              <input
-                type="text"
-                id="customoption1"
-                name="customoption1"
-                required
-                maxLength={50}
-                placeholder="Enter first option"
-                disabled={loading}
-              />
+        {betType === 'multiple' && (
+          <div className="form-group">
+            <label>Options *</label>
+            <div className="options-list">
+              {options.map((option, index) => (
+                <div key={index} className="option-input">
+                  <input
+                    type="text"
+                    value={option}
+                    onChange={(e) => updateOption(index, e.target.value)}
+                    placeholder={`Option ${index + 1}`}
+                    required
+                    maxLength={50}
+                    disabled={loading}
+                  />
+                  {options.length > 2 && (
+                    <button
+                      type="button"
+                      className="remove-option"
+                      onClick={() => removeOption(index)}
+                      disabled={loading}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+              {options.length < 4 && (
+                <button
+                  type="button"
+                  className="add-option"
+                  onClick={addOption}
+                  disabled={loading}
+                >
+                  + Add Option
+                </button>
+              )}
             </div>
-            <div className="form-group">
-              <label htmlFor="customoption2">Option 2 *</label>
-              <input
-                type="text"
-                id="customoption2"
-                name="customoption2"
-                required
-                maxLength={50}
-                placeholder="Enter second option"
-                disabled={loading}
-              />
-            </div>
-          </>
+          </div>
         )}
+
+        <div className="form-group">
+          <label htmlFor="creator_name">Your Name *</label>
+          <input
+            type="text"
+            id="creator_name"
+            name="creator_name"
+            required
+            maxLength={50}
+            placeholder="Enter your name"
+            defaultValue={user?.email?.split('@')[0] || ''}
+            disabled={loading}
+          />
+        </div>
 
         <button 
           type="submit" 

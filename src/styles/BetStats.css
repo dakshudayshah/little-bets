@@ -1,0 +1,67 @@
+.bet-stats {
+  margin: 1rem 0;
+}
+
+.option-stats {
+  margin-bottom: 1.5rem;
+}
+
+.option-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.option-text {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.vote-count {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.prediction-bars {
+  background: var(--background-secondary);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.bar-container {
+  display: flex;
+  height: 32px;
+}
+
+.yes-bar,
+.no-bar {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  transition: width 0.3s ease;
+}
+
+.yes-bar {
+  background-color: #10B981;
+  justify-content: flex-start;
+}
+
+.no-bar {
+  background-color: #EF4444;
+  justify-content: flex-end;
+}
+
+.bar-label {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .bar-label {
+    font-size: 0.75rem;
+  }
+} 
