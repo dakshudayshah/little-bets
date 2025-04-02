@@ -13,14 +13,20 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Bet types with display names
-export type BetType = 'yesno' | 'custom';
+export type BetType = 'yesno' | 'multiple';
 
 export const BET_TYPE_NAMES: Record<BetType, string> = {
   yesno: 'Yes or No',
-  custom: 'Multiple Choice'
+  multiple: 'Multiple Choice'
 };
 
 // Database interfaces
+export interface BetOption {
+  text: string;
+  yes_count: number;
+  no_count: number;
+}
+
 export interface Bet {
   id: string;
   created_at: string;
@@ -30,9 +36,8 @@ export interface Bet {
   question: string;
   description?: string;
   bettype: BetType;
-  customoption1?: string;
-  customoption2?: string;
-  participants?: BetParticipant[];
+  options: BetOption[];  // For both yes/no and multiple choice
+  total_predictions: number;
 }
 
 export interface BetParticipant {

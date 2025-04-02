@@ -66,7 +66,7 @@ export const Profile = () => {
                 <h3>{bet.question}</h3>
                 <div className="bet-meta">
                   <span className="bet-type">{bet.bettype}</span>
-                  <span>{bet.participants?.length || 0} predictions</span>
+                  <span>{bet.total_predictions} predictions</span>
                 </div>
               </Link>
             ))}

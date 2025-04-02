@@ -69,7 +69,7 @@ export const Home = () => {
                 </div>
                 <div className="bet-stats">
                   <div className="prediction-count">
-                    {bet.participants?.length || 0} predictions
+                    {bet.total_predictions} predictions
                   </div>
                 </div>
               </Link>
