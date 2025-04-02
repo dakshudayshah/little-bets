@@ -138,19 +138,26 @@ export const createBet = async (betData: Omit<Bet, 'id' | 'created_at' | 'creato
 export const addBetParticipant = async (participantData: {
   bet_id: string;
   name: string;
+  option_index: number;
   prediction: string;
 }) => {
   try {
     // Get user first
     const { data: { user } } = await supabase.auth.getUser();
     
-    return supabase
+    console.log('Adding bet participant:', participantData); // Debug log
+    
+    const result = await supabase
       .from('bet_participants')
       .insert({
         ...participantData,
         // Only add user_id if user exists
         ...(user ? { user_id: user.id } : {})
       });
+
+    console.log('Insert result:', result); // Debug log
+    
+    return result;
   } catch (error) {
     console.error('Error adding bet participant:', error);
     return { error };

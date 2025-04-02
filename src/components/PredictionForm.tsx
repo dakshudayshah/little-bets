@@ -29,13 +29,22 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
     setError('');
 
     try {
-      const { error: submitError } = await addBetParticipant({
+      // Format the prediction data
+      const predictionData = {
         bet_id: bet.id,
         name: name.trim(),
-        prediction: prediction  // Just send the prediction as a string
-      });
+        option_index: selectedOption,
+        prediction: `${selectedOption}:${prediction}` // Format: "optionIndex:prediction"
+      };
 
-      if (submitError) throw submitError;
+      console.log('Submitting prediction:', predictionData); // Debug log
+
+      const { error: submitError } = await addBetParticipant(predictionData);
+
+      if (submitError) {
+        console.error('Submit error:', submitError); // Debug log
+        throw submitError;
+      }
       
       onSuccess();
       setName('');
