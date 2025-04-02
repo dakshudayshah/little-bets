@@ -29,6 +29,9 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
     setError('');
 
     try {
+      // Log the bet data for debugging
+      console.log('Current bet:', bet);
+      
       // Simplified prediction data
       const predictionData = {
         bet_id: bet.id,
@@ -48,11 +51,14 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
       }
 
       if (!data) {
+        console.error('No data returned from submission');
         setError('No response from server');
         return;
       }
       
       console.log('Prediction submitted successfully:', data);
+      
+      // Clear form and show success
       onSuccess();
       setName('');
       setSelectedOption(null);
@@ -60,7 +66,7 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
       
     } catch (err) {
       console.error('Error submitting prediction:', err);
-      setError('Failed to submit prediction. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to submit prediction. Please try again.');
     } finally {
       setLoading(false);
     }
