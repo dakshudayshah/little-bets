@@ -13,11 +13,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Bet types with display names
-export type BetType = 'yesno' | 'multiple';
+export type BetType = 'yesno' | 'multiple_choice';
 
 export const BET_TYPE_NAMES: Record<BetType, string> = {
   yesno: 'Yes or No',
-  multiple: 'Multiple Choice'
+  multiple_choice: 'Multiple Choice'
 };
 
 // Database interfaces
@@ -44,9 +44,10 @@ export interface BetParticipant {
   id: string;
   created_at: string;
   bet_id: string;
+  user_id?: string;
   name: string;
-  prediction: string;
-  user_id?: string;  // Optional since we don't require auth
+  option_index: number;
+  prediction: boolean;
 }
 
 // Error handling helper
@@ -139,7 +140,7 @@ export const addBetParticipant = async (participantData: {
   bet_id: string;
   name: string;
   option_index: number;
-  prediction: string;
+  prediction: boolean;
 }) => {
   try {
     // Get user if logged in (optional)

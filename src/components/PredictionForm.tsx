@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { addBetParticipant, Bet } from '../lib/supabase';
+import { PostgrestError } from '@supabase/supabase-js';
 import '../styles/PredictionForm.css';
 
 interface PredictionFormProps {
@@ -12,7 +13,7 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
   const [error, setError] = useState('');
   const [name, setName] = useState('');
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [prediction, setPrediction] = useState<'yes' | 'no' | null>(null);
+  const [prediction, setPrediction] = useState<boolean | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -20,7 +21,7 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
       setError('Please enter your name');
       return;
     }
-    if (selectedOption === null || !prediction) {
+    if (selectedOption === null || prediction === null) {
       setError('Please make a prediction');
       return;
     }
@@ -29,11 +30,6 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
     setError('');
 
     try {
-      // Validate the option index
-      if (selectedOption >= bet.options.length) {
-        throw new Error('Invalid option selected');
-      }
-
       const predictionData = {
         bet_id: bet.id,
         name: name.trim(),
@@ -46,7 +42,13 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
       const { data, error: submitError } = await addBetParticipant(predictionData);
 
       if (submitError) {
-        console.error('Submit error:', submitError);
+        // Handle unique constraint violation
+        if (
+          (submitError as PostgrestError).code === '23505' && 
+          (submitError as PostgrestError).message?.includes('unique_user_bet_prediction')
+        ) {
+          throw new Error('You have already submitted a prediction for this bet');
+        }
         throw submitError;
       }
 
@@ -54,21 +56,57 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
         throw new Error('No response from server');
       }
       
-      console.log('Prediction submitted successfully:', data);
       onSuccess();
-      
-      // Clear form
       setName('');
       setSelectedOption(null);
       setPrediction(null);
       
     } catch (err) {
-      console.error('Error submitting prediction:', err);
       setError(err instanceof Error ? err.message : 'Failed to submit prediction. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  const renderYesNoOptions = () => (
+    <div className="prediction-buttons">
+      <button
+        type="button"
+        className={`prediction-button yes ${prediction === true ? 'selected' : ''}`}
+        onClick={() => setPrediction(true)}
+        disabled={loading}
+      >
+        Yes
+      </button>
+      <button
+        type="button"
+        className={`prediction-button no ${prediction === false ? 'selected' : ''}`}
+        onClick={() => setPrediction(false)}
+        disabled={loading}
+      >
+        No
+      </button>
+    </div>
+  );
+
+  const renderMultipleChoiceOptions = () => (
+    <div className="options-group">
+      {bet.options.map((option: any, index: number) => (
+        <div 
+          key={index} 
+          className={`option-card ${selectedOption === index ? 'selected' : ''}`}
+          onClick={() => {
+            setSelectedOption(index);
+            setPrediction(true); // In multiple choice, we always set prediction to true
+          }}
+        >
+          <div className="option-header">
+            <span className="option-text">{option.text}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <form onSubmit={handleSubmit} className="prediction-form">
@@ -88,50 +126,23 @@ export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
         />
       </div>
 
-      <div className="options-group">
-        {bet.options.map((option, index) => (
-          <div 
-            key={index} 
-            className={`option-card ${selectedOption === index ? 'selected' : ''}`}
-            onClick={() => setSelectedOption(index)}
-          >
+      {bet.bettype === 'yesno' ? (
+        <>
+          <div className="option-card">
             <div className="option-header">
-              <span className="option-text">{option.text}</span>
+              <span className="option-text">{bet.options[0]?.text}</span>
             </div>
-            <div className="prediction-buttons">
-              <button
-                type="button"
-                className={`prediction-button yes ${prediction === 'yes' && selectedOption === index ? 'selected' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedOption(index);
-                  setPrediction('yes');
-                }}
-                disabled={loading}
-              >
-                Yes
-              </button>
-              <button
-                type="button"
-                className={`prediction-button no ${prediction === 'no' && selectedOption === index ? 'selected' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedOption(index);
-                  setPrediction('no');
-                }}
-                disabled={loading}
-              >
-                No
-              </button>
-            </div>
+            {renderYesNoOptions()}
           </div>
-        ))}
-      </div>
+        </>
+      ) : (
+        renderMultipleChoiceOptions()
+      )}
 
       <button 
         type="submit" 
         className="submit-button" 
-        disabled={loading || !name || selectedOption === null || !prediction}
+        disabled={loading || !name || (bet.bettype === 'yesno' ? prediction === null : selectedOption === null)}
       >
         {loading ? 'Submitting...' : 'Submit Prediction'}
       </button>
