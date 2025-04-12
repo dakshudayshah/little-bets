@@ -147,8 +147,8 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
             </button>
             <button
               type="button"
-              className={`bet-type-button ${betType === 'multiple' ? 'active' : ''}`}
-              onClick={() => setBetType('multiple')}
+              className={`bet-type-button ${betType === 'multiple_choice' ? 'active' : ''}`}
+              onClick={() => setBetType('multiple_choice')}
               disabled={loading}
             >
               Multiple Choice
@@ -156,7 +156,7 @@ export const CreateBetForm = ({ onSuccess }: CreateBetFormProps) => {
           </div>
         </div>
 
-        {betType === 'multiple' && (
+        {betType === 'multiple_choice' && (
           <div className="form-group">
             <label>Options *</label>
             <div className="options-list">
