@@ -1,74 +1,57 @@
 .auth-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
+  z-index: 200;
 }
 
 .auth-modal {
-  background-color: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  max-width: 400px;
-  width: 100%;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 32px;
+  max-width: 360px;
+  width: 90%;
   text-align: center;
+  box-shadow: var(--shadow-md);
 }
 
 .auth-modal h2 {
-  margin-bottom: 1rem;
-  color: var(--text-color);
+  margin: 0 0 8px;
   font-size: 1.25rem;
 }
 
 .auth-modal p {
-  margin-bottom: 1.5rem;
-  color: var(--light-text);
+  margin: 0 0 24px;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
 }
 
-.google-sign-in-button {
-  background-color: white;
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+.auth-google-btn {
   width: 100%;
-  margin-bottom: 1rem;
-  transition: background-color 0.2s;
+  padding: 12px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 12px;
 }
 
-.google-sign-in-button:hover {
-  background-color: var(--background-color);
+.auth-google-btn:hover {
+  background: var(--color-primary-hover);
 }
 
-.cancel-button {
+.auth-close-btn {
+  width: 100%;
+  padding: 12px;
   background: none;
-  border: none;
-  color: var(--light-text);
-  cursor: pointer;
-  padding: 0.5rem;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
 }
 
-.cancel-button:hover {
-  color: var(--text-color);
+.auth-close-btn:hover {
+  color: var(--color-text);
 }
-
-/* Safe area support */
-@supports (padding: env(safe-area-inset-bottom)) {
-  .auth-modal-overlay {
-    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
-  }
-} 

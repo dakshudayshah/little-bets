@@ -1,26 +1,33 @@
-import { useNavigate } from 'react-router-dom';
-import { CreateBetForm } from '../components/CreateBetForm';
-import '../styles/CreateBet.css';
+import { useAuth } from '../context/AuthContext';
+import CreateBetForm from '../components/CreateBetForm';
 
-/**
- * CreateBet page component
- * This is a simple wrapper around the CreateBetForm component
- */
-export const CreateBet = () => {
-  const navigate = useNavigate();
+interface CreateBetProps {
+  onSignInClick: () => void;
+}
+
+function CreateBet({ onSignInClick }: CreateBetProps) {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div className="page"><p>Loading...</p></div>;
+
+  if (!user) {
+    return (
+      <div className="page">
+        <h1>Create a Bet</h1>
+        <p>You need to sign in to create a bet.</p>
+        <button className="form-submit-btn" onClick={onSignInClick}>
+          Sign In
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="create-bet-container">
-      <div className="create-bet-header">
-        <h1>Create a New Bet</h1>
-        <p className="subtitle">Set up your prediction market</p>
-      </div>
-
-      <div className="create-bet-content">
-        <CreateBetForm 
-          onSuccess={(codeName) => navigate(`/bet/${codeName}`)} 
-        />
-      </div>
+    <div className="page">
+      <h1>Create a Bet</h1>
+      <CreateBetForm />
     </div>
   );
-}; 
+}
+
+export default CreateBet;

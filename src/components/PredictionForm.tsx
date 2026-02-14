@@ -1,151 +1,106 @@
-import { useState, FormEvent } from 'react';
-import { addBetParticipant, Bet } from '../lib/supabase';
-import { PostgrestError } from '@supabase/supabase-js';
+import { useState } from 'react';
+import { submitPrediction } from '../lib/supabase';
+import type { Bet } from '../types';
 import '../styles/PredictionForm.css';
 
 interface PredictionFormProps {
   bet: Bet;
-  onSuccess: () => void;
+  onPredictionSubmitted: () => void;
 }
 
-export const PredictionForm = ({ bet, onSuccess }: PredictionFormProps) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+function PredictionForm({ bet, onPredictionSubmitted }: PredictionFormProps) {
   const [name, setName] = useState('');
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [prediction, setPrediction] = useState<boolean | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) {
+  async function handlePredict(prediction: boolean, optionIndex: number) {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
       setError('Please enter your name');
       return;
     }
-    if (selectedOption === null || prediction === null) {
-      setError('Please make a prediction');
-      return;
-    }
 
-    setLoading(true);
-    setError('');
+    setSubmitting(true);
+    setError(null);
 
     try {
-      const predictionData = {
+      await submitPrediction({
         bet_id: bet.id,
-        name: name.trim(),
-        option_index: selectedOption,
-        prediction: prediction
-      };
-
-      console.log('Submitting prediction:', predictionData);
-
-      const { data, error: submitError } = await addBetParticipant(predictionData);
-
-      if (submitError) {
-        // Handle unique constraint violation
-        if (
-          (submitError as PostgrestError).code === '23505' && 
-          (submitError as PostgrestError).message?.includes('unique_user_bet_prediction')
-        ) {
-          throw new Error('You have already submitted a prediction for this bet');
-        }
-        throw submitError;
-      }
-
-      if (!data) {
-        throw new Error('No response from server');
-      }
-      
-      onSuccess();
-      setName('');
-      setSelectedOption(null);
-      setPrediction(null);
-      
+        participant_name: trimmedName,
+        prediction,
+        option_index: optionIndex,
+      });
+      setSubmitted(true);
+      onPredictionSubmitted();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit prediction. Please try again.');
+      const message = err instanceof Error ? err.message : 'Failed to submit prediction';
+      if (message.includes('duplicate') || message.includes('unique')) {
+        setError('You have already made a prediction on this bet');
+      } else {
+        setError(message);
+      }
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
-  };
+  }
 
-  const renderYesNoOptions = () => (
-    <div className="prediction-buttons">
-      <button
-        type="button"
-        className={`prediction-button yes ${prediction === true ? 'selected' : ''}`}
-        onClick={() => setPrediction(true)}
-        disabled={loading}
-      >
-        Yes
-      </button>
-      <button
-        type="button"
-        className={`prediction-button no ${prediction === false ? 'selected' : ''}`}
-        onClick={() => setPrediction(false)}
-        disabled={loading}
-      >
-        No
-      </button>
-    </div>
-  );
-
-  const renderMultipleChoiceOptions = () => (
-    <div className="options-group">
-      {bet.options.map((option: any, index: number) => (
-        <div 
-          key={index} 
-          className={`option-card ${selectedOption === index ? 'selected' : ''}`}
-          onClick={() => {
-            setSelectedOption(index);
-            setPrediction(true); // In multiple choice, we always set prediction to true
-          }}
-        >
-          <div className="option-header">
-            <span className="option-text">{option.text}</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  if (submitted) {
+    return (
+      <div className="prediction-form">
+        <p className="prediction-success">Your prediction has been recorded!</p>
+      </div>
+    );
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="prediction-form">
-      {error && <div className="error-message">{error}</div>}
-      
+    <div className="prediction-form">
+      <h3 className="prediction-title">Make Your Prediction</h3>
       <div className="form-group">
-        <label htmlFor="name">Your Name</label>
         <input
+          className="form-input"
           type="text"
-          id="name"
+          placeholder="Your name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter your name"
-          disabled={loading}
-          required
-          autoComplete="off"
+          onChange={e => setName(e.target.value)}
         />
       </div>
 
-      {bet.bettype === 'yesno' ? (
-        <>
-          <div className="option-card">
-            <div className="option-header">
-              <span className="option-text">{bet.options[0]?.text}</span>
-            </div>
-            {renderYesNoOptions()}
-          </div>
-        </>
-      ) : (
-        renderMultipleChoiceOptions()
-      )}
+      {error && <p className="form-error">{error}</p>}
 
-      <button 
-        type="submit" 
-        className="submit-button" 
-        disabled={loading || !name || (bet.bettype === 'yesno' ? prediction === null : selectedOption === null)}
-      >
-        {loading ? 'Submitting...' : 'Submit Prediction'}
-      </button>
-    </form>
+      {bet.bet_type === 'yesno' ? (
+        <div className="prediction-buttons">
+          <button
+            className="predict-btn yes"
+            onClick={() => handlePredict(true, 0)}
+            disabled={submitting}
+          >
+            Yes
+          </button>
+          <button
+            className="predict-btn no"
+            onClick={() => handlePredict(false, 0)}
+            disabled={submitting}
+          >
+            No
+          </button>
+        </div>
+      ) : (
+        <div className="prediction-options">
+          {bet.options.map((option, index) => (
+            <button
+              key={index}
+              className="predict-option-btn"
+              onClick={() => handlePredict(true, index)}
+              disabled={submitting}
+            >
+              {option.text}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
-}; 
+}
+
+export default PredictionForm;
