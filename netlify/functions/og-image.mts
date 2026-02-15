@@ -29,9 +29,9 @@ export default async function handler(req: Request, _context: Context) {
     return new Response("Missing env vars", { status: 500 });
   }
 
-  let question = "Make your prediction!";
+  let question = "Make predictions with friends";
   let typeLabel = "";
-  let statsText = "";
+  let statsText = "Bragging rights, no real money";
 
   try {
     const res = await fetch(
