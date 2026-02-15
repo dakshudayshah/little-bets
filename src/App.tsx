@@ -16,7 +16,7 @@ function App() {
     <>
       <Header onSignInClick={() => setShowAuthModal(true)} />
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home onSignInClick={() => setShowAuthModal(true)} />} />
         <Route path="/bet/:id" element={<BetDetail />} />
         <Route path="/create" element={<CreateBet onSignInClick={() => setShowAuthModal(true)} />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
