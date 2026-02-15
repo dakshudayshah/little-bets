@@ -25,7 +25,7 @@ export default async function handler(request: Request, context: Context) {
 
   try {
     const res = await fetch(
-      `${supabaseUrl}/rest/v1/bets?code_name=eq.${encodeURIComponent(codeName)}&select=question,bet_type,total_predictions,creator_name,resolved`,
+      `${supabaseUrl}/rest/v1/bets?code_name=eq.${encodeURIComponent(codeName)}&select=question,bet_type,total_predictions,creator_name,resolved,winning_option_index,options`,
       {
         headers: {
           apikey: supabaseKey,
@@ -44,10 +44,24 @@ export default async function handler(request: Request, context: Context) {
     }
 
     const bet = bets[0];
-    const typeLabel = bet.bet_type === "yesno" ? "Yes/No" : "Multiple Choice";
-    const status = bet.resolved ? "Resolved" : `${bet.total_predictions} prediction${bet.total_predictions !== 1 ? "s" : ""}`;
-    const description = escapeHtml(`${typeLabel} · ${status}${bet.creator_name ? ` · by ${bet.creator_name}` : ""}`);
-    const ogTitle = escapeHtml(bet.question);
+    let ogTitle: string;
+    let description: string;
+
+    if (bet.resolved && bet.winning_option_index !== null) {
+      let winLabel: string;
+      if (bet.bet_type === "yesno") {
+        winLabel = bet.winning_option_index === 0 ? "Yes" : "No";
+      } else {
+        const options = bet.options || [];
+        winLabel = options[bet.winning_option_index]?.text ?? "Unknown";
+      }
+      ogTitle = escapeHtml(`The results are in! "${bet.question}" — ${winLabel}!`);
+      description = escapeHtml(`${bet.total_predictions} prediction${bet.total_predictions !== 1 ? "s" : ""}${bet.creator_name ? ` · by ${bet.creator_name}` : ""}`);
+    } else {
+      ogTitle = escapeHtml(bet.question);
+      const typeLabel = bet.bet_type === "yesno" ? "Yes/No" : "Multiple Choice";
+      description = escapeHtml(`${typeLabel} · ${bet.total_predictions} prediction${bet.total_predictions !== 1 ? "s" : ""}${bet.creator_name ? ` · by ${bet.creator_name}` : ""}`);
+    }
     const ogUrl = `https://littlebets.netlify.app/bet/${codeName}`;
     const ogImage = `https://littlebets.netlify.app/.netlify/functions/og-image?code=${encodeURIComponent(codeName)}`;
 
