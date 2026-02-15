@@ -116,6 +116,26 @@ export async function submitPrediction(prediction: {
   return data as BetParticipant;
 }
 
+export async function fetchResolvedBetsWithParticipants(): Promise<{ bets: Bet[]; participants: BetParticipant[] }> {
+  const { data: bets, error: betsErr } = await supabase
+    .from('bets')
+    .select('*')
+    .eq('resolved', true);
+
+  if (betsErr) throw betsErr;
+
+  const betIds = (bets as Bet[]).map(b => b.id);
+  if (betIds.length === 0) return { bets: [], participants: [] };
+
+  const { data: participants, error: partErr } = await supabase
+    .from('bet_participants')
+    .select('*')
+    .in('bet_id', betIds);
+
+  if (partErr) throw partErr;
+  return { bets: bets as Bet[], participants: participants as BetParticipant[] };
+}
+
 export async function fetchUserPredictions(participantName: string): Promise<(BetParticipant & { bets: Bet })[]> {
   const { data, error } = await supabase
     .from('bet_participants')
