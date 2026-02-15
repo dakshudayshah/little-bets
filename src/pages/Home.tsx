@@ -30,6 +30,7 @@ function Home() {
             <Link key={bet.id} to={`/bet/${bet.code_name}`} className="bet-card">
               <div className="bet-card-type">
                 {bet.bet_type === 'yesno' ? 'Yes / No' : 'Multiple Choice'}
+                {bet.resolved && <span className="bet-card-resolved">Resolved</span>}
               </div>
               <h2 className="bet-card-question">{bet.question}</h2>
               {bet.creator_name && (

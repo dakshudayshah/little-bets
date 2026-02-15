@@ -61,6 +61,22 @@ export async function createBet(bet: {
   return data as Bet;
 }
 
+export async function resolveBet(betId: string, winningOptionIndex: number): Promise<Bet> {
+  const { data, error } = await supabase
+    .from('bets')
+    .update({
+      resolved: true,
+      resolved_at: new Date().toISOString(),
+      winning_option_index: winningOptionIndex,
+    })
+    .eq('id', betId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Bet;
+}
+
 // --- Participant queries ---
 
 export async function fetchParticipants(betId: string): Promise<BetParticipant[]> {
