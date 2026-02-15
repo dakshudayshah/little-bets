@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import type { Bet, BetParticipant } from '../types';
 import BetStats from '../components/BetStats';
 import PredictionForm from '../components/PredictionForm';
+import Confetti from '../components/Confetti';
 import '../styles/BetDetail.css';
 
 function getWinningLabel(bet: Bet): string {
@@ -32,6 +33,7 @@ function BetDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [resolving, setResolving] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const loadBet = useCallback(async () => {
     if (!id) return;
@@ -85,6 +87,31 @@ function BetDetail() {
     try {
       const updated = await resolveBet(bet.id, winningOptionIndex);
       setBet(updated);
+
+      // Fire confetti
+      setShowConfetti(true);
+
+      // Build share message with winners
+      const parts = await fetchParticipants(bet.id);
+      setParticipants(parts);
+      const winLabel = getWinningLabel(updated);
+      const winners = parts
+        .filter(p => didParticipantWin(updated, p))
+        .map(p => p.participant_name);
+      const winnersText = winners.length > 0
+        ? `${winners.join(', ')} called it!`
+        : 'No one got it right!';
+      const shareText = `The results are in! "${bet.question}" — ${winLabel}! ${winnersText}`;
+      const betUrl = `${window.location.origin}/bet/${id}`;
+
+      if (navigator.share) {
+        navigator.share({ title: shareText, url: betUrl }).catch(() => {
+          navigator.clipboard.writeText(`${shareText} ${betUrl}`);
+        });
+      } else {
+        navigator.clipboard.writeText(`${shareText} ${betUrl}`);
+        alert('Results copied to clipboard!');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to resolve bet');
     } finally {
@@ -116,9 +143,13 @@ function BetDetail() {
   if (error || !bet) return <div className="page"><p className="error-text">{error || 'Bet not found'}</p></div>;
 
   const isCreator = user?.id === bet.creator_id;
+  const winners = bet.resolved ? participants.filter(p => didParticipantWin(bet, p)) : [];
+  const losers = bet.resolved ? participants.filter(p => !didParticipantWin(bet, p)) : [];
 
   return (
     <div className="page">
+      {showConfetti && <Confetti onComplete={() => setShowConfetti(false)} />}
+
       <div className="bet-detail-header">
         <div className="bet-detail-type">
           {bet.bet_type === 'yesno' ? 'Yes / No' : 'Multiple Choice'}
@@ -188,40 +219,84 @@ function BetDetail() {
         <PredictionForm bet={bet} onPredictionSubmitted={handlePredictionSubmitted} />
       )}
 
-      {participants.length > 0 && (
-        <div className="participants-section">
-          <h3>{bet.resolved ? 'Results' : 'Recent Predictions'}</h3>
-          <ul className="participants-list">
-            {participants.map(p => {
-              const won = bet.resolved && didParticipantWin(bet, p);
-              const lost = bet.resolved && !didParticipantWin(bet, p);
-              return (
-                <li key={p.id} className={`participant-item ${won ? 'won' : ''} ${lost ? 'lost' : ''}`}>
-                  <span className="participant-name">
-                    {p.participant_name}
-                    {won && <span className="result-tag correct">Correct</span>}
-                    {lost && <span className="result-tag wrong">Wrong</span>}
-                  </span>
-                  <span className="participant-right">
-                    <span className={`participant-prediction ${p.prediction ? 'yes' : 'no'}`}>
+      {bet.resolved && participants.length > 0 && (
+        <>
+          {winners.length > 0 && (
+            <div className="winners-section">
+              <h3 className="winners-title">Called It!</h3>
+              <ul className="winners-list">
+                {winners.map(p => (
+                  <li key={p.id} className="winner-item">
+                    <span className="winner-name">{p.participant_name}</span>
+                    <span className="winner-prediction">
                       {bet.bet_type === 'yesno'
                         ? (p.prediction ? 'Yes' : 'No')
                         : bet.options[p.option_index]?.text ?? 'Unknown'
                       }
                     </span>
-                    {isCreator && (
-                      <button
-                        className="remove-prediction-btn"
-                        onClick={() => handleRemovePrediction(p.id, p.participant_name)}
-                        title="Remove prediction"
-                      >
-                        X
-                      </button>
-                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {losers.length > 0 && (
+            <div className="losers-section">
+              <h3 className="losers-title">Better Luck Next Time</h3>
+              <ul className="participants-list">
+                {losers.map(p => (
+                  <li key={p.id} className="participant-item lost">
+                    <span className="participant-name">{p.participant_name}</span>
+                    <span className="participant-right">
+                      <span className={`participant-prediction ${p.prediction ? 'yes' : 'no'}`}>
+                        {bet.bet_type === 'yesno'
+                          ? (p.prediction ? 'Yes' : 'No')
+                          : bet.options[p.option_index]?.text ?? 'Unknown'
+                        }
+                      </span>
+                      {isCreator && (
+                        <button
+                          className="remove-prediction-btn"
+                          onClick={() => handleRemovePrediction(p.id, p.participant_name)}
+                          title="Remove prediction"
+                        >
+                          X
+                        </button>
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
+      )}
+
+      {!bet.resolved && participants.length > 0 && (
+        <div className="participants-section">
+          <h3>Recent Predictions</h3>
+          <ul className="participants-list">
+            {participants.map(p => (
+              <li key={p.id} className="participant-item">
+                <span className="participant-name">{p.participant_name}</span>
+                <span className="participant-right">
+                  <span className={`participant-prediction ${p.prediction ? 'yes' : 'no'}`}>
+                    {bet.bet_type === 'yesno'
+                      ? (p.prediction ? 'Yes' : 'No')
+                      : bet.options[p.option_index]?.text ?? 'Unknown'
+                    }
                   </span>
-                </li>
-              );
-            })}
+                  {isCreator && (
+                    <button
+                      className="remove-prediction-btn"
+                      onClick={() => handleRemovePrediction(p.id, p.participant_name)}
+                      title="Remove prediction"
+                    >
+                      X
+                    </button>
+                  )}
+                </span>
+              </li>
+            ))}
           </ul>
         </div>
       )}
