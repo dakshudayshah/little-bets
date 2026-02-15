@@ -250,3 +250,61 @@
   background: #fee2e2;
   color: #dc2626;
 }
+
+/* Winners spotlight */
+
+.winners-section {
+  margin-top: 24px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.winners-title {
+  font-size: 1.1rem;
+  margin: 0 0 12px;
+  color: #16a34a;
+}
+
+.winners-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.winner-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #bbf7d0;
+  font-size: 0.9rem;
+}
+
+.winner-item:last-child {
+  border-bottom: none;
+}
+
+.winner-name {
+  font-weight: 600;
+  color: #15803d;
+}
+
+.winner-prediction {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #16a34a;
+}
+
+/* Losers section */
+
+.losers-section {
+  margin-top: 16px;
+}
+
+.losers-title {
+  font-size: 1rem;
+  margin: 0 0 12px;
+  color: var(--color-text-secondary);
+}
