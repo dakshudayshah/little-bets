@@ -32,10 +32,12 @@ export default async function handler(req: Request, _context: Context) {
   let question = "Make predictions with friends";
   let typeLabel = "";
   let statsText = "Bragging rights, no real money";
+  let isResolved = false;
+  let winLabel = "";
 
   try {
     const res = await fetch(
-      `${supabaseUrl}/rest/v1/bets?code_name=eq.${encodeURIComponent(code)}&select=question,bet_type,total_predictions,creator_name,resolved`,
+      `${supabaseUrl}/rest/v1/bets?code_name=eq.${encodeURIComponent(code)}&select=question,bet_type,total_predictions,creator_name,resolved,winning_option_index,options`,
       {
         headers: {
           apikey: supabaseKey,
@@ -50,10 +52,19 @@ export default async function handler(req: Request, _context: Context) {
         const bet = bets[0];
         question = bet.question;
         typeLabel = bet.bet_type === "yesno" ? "YES / NO" : "MULTIPLE CHOICE";
-        const status = bet.resolved
-          ? "Resolved"
-          : `${bet.total_predictions} prediction${bet.total_predictions !== 1 ? "s" : ""}`;
-        statsText = `${status}${bet.creator_name ? ` · by ${bet.creator_name}` : ""}`;
+        isResolved = bet.resolved && bet.winning_option_index !== null;
+
+        if (isResolved) {
+          if (bet.bet_type === "yesno") {
+            winLabel = bet.winning_option_index === 0 ? "Yes" : "No";
+          } else {
+            const options = bet.options || [];
+            winLabel = options[bet.winning_option_index]?.text ?? "Unknown";
+          }
+          statsText = `${bet.total_predictions} prediction${bet.total_predictions !== 1 ? "s" : ""}${bet.creator_name ? ` · by ${bet.creator_name}` : ""}`;
+        } else {
+          statsText = `${bet.total_predictions} prediction${bet.total_predictions !== 1 ? "s" : ""}${bet.creator_name ? ` · by ${bet.creator_name}` : ""}`;
+        }
       }
     }
   } catch {
@@ -61,6 +72,67 @@ export default async function handler(req: Request, _context: Context) {
   }
 
   const font = await loadFont();
+
+  const background = isResolved
+    ? "linear-gradient(135deg, #15803d 0%, #16a34a 50%, #22c55e 100%)"
+    : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)";
+
+  const headerText = isResolved ? "The results are in!" : "Little Bets";
+
+  const mainContent = isResolved
+    ? [
+        {
+          type: "div",
+          props: {
+            style: {
+              fontSize: question.length > 80 ? "28px" : "34px",
+              fontWeight: 700,
+              lineHeight: 1.3,
+              maxWidth: "900px",
+              opacity: 0.9,
+            },
+            children: `"${question}"`,
+          },
+        },
+        {
+          type: "div",
+          props: {
+            style: {
+              display: "flex",
+              alignItems: "center",
+              gap: "16px",
+              marginTop: "12px",
+            },
+            children: [
+              {
+                type: "div",
+                props: {
+                  style: {
+                    fontSize: "64px",
+                    fontWeight: 700,
+                    lineHeight: 1.1,
+                  },
+                  children: winLabel,
+                },
+              },
+            ],
+          },
+        },
+      ]
+    : [
+        {
+          type: "div",
+          props: {
+            style: {
+              fontSize: question.length > 60 ? "42px" : "52px",
+              fontWeight: 700,
+              lineHeight: 1.2,
+              maxWidth: "900px",
+            },
+            children: question,
+          },
+        },
+      ];
 
   const svg = await satori(
     {
@@ -73,7 +145,7 @@ export default async function handler(req: Request, _context: Context) {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "60px 70px",
-          background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)",
+          background,
           fontFamily: "Inter",
           color: "white",
         },
@@ -104,10 +176,10 @@ export default async function handler(req: Request, _context: Context) {
                             fontWeight: 700,
                             opacity: 0.9,
                           },
-                          children: "Little Bets",
+                          children: headerText,
                         },
                       },
-                      typeLabel
+                      typeLabel && !isResolved
                         ? {
                             type: "div",
                             props: {
@@ -122,21 +194,25 @@ export default async function handler(req: Request, _context: Context) {
                             },
                           }
                         : null,
+                      isResolved
+                        ? {
+                            type: "div",
+                            props: {
+                              style: {
+                                fontSize: "14px",
+                                fontWeight: 600,
+                                background: "rgba(255,255,255,0.25)",
+                                padding: "4px 12px",
+                                borderRadius: "20px",
+                              },
+                              children: "RESOLVED",
+                            },
+                          }
+                        : null,
                     ].filter(Boolean),
                   },
                 },
-                {
-                  type: "div",
-                  props: {
-                    style: {
-                      fontSize: question.length > 60 ? "42px" : "52px",
-                      fontWeight: 700,
-                      lineHeight: 1.2,
-                      maxWidth: "900px",
-                    },
-                    children: question,
-                  },
-                },
+                ...mainContent,
               ],
             },
           },
