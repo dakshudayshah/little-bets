@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import { fetchBetByCodeName, fetchParticipants, resolveBet } from '../lib/supabase';
+import { useParams, useNavigate } from 'react-router-dom';
+import { fetchBetByCodeName, fetchParticipants, resolveBet, hideBet } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import type { Bet, BetParticipant } from '../types';
 import BetStats from '../components/BetStats';
@@ -25,6 +25,7 @@ function didParticipantWin(bet: Bet, p: BetParticipant): boolean {
 
 function BetDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [bet, setBet] = useState<Bet | null>(null);
   const [participants, setParticipants] = useState<BetParticipant[]>([]);
@@ -91,6 +92,16 @@ function BetDetail() {
     }
   }
 
+  async function handleDelete() {
+    if (!bet || !confirm('Remove this bet from the public feed? It will still appear on your profile.')) return;
+    try {
+      await hideBet(bet.id);
+      navigate('/');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to hide bet');
+    }
+  }
+
   if (loading) return <div className="page"><p>Loading...</p></div>;
   if (error || !bet) return <div className="page"><p className="error-text">{error || 'Bet not found'}</p></div>;
 
@@ -112,9 +123,16 @@ function BetDetail() {
           <span>{bet.total_predictions} prediction{bet.total_predictions !== 1 ? 's' : ''}</span>
           <span>{new Date(bet.created_at).toLocaleDateString()}</span>
         </div>
-        <button className="share-btn" onClick={handleShare}>
-          Share
-        </button>
+        <div className="bet-detail-actions">
+          <button className="share-btn" onClick={handleShare}>
+            Share
+          </button>
+          {isCreator && (
+            <button className="delete-btn" onClick={handleDelete}>
+              Remove
+            </button>
+          )}
+        </div>
       </div>
 
       {bet.resolved && (
