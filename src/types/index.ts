@@ -20,6 +20,7 @@ export interface Bet {
   resolved: boolean;
   resolved_at: string | null;
   winning_option_index: number | null;
+  hidden: boolean;
 }
 
 export interface BetParticipant {

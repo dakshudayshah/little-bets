@@ -50,7 +50,8 @@ function Profile() {
           {bets.map(bet => (
             <Link key={bet.id} to={`/bet/${bet.code_name}`} className="profile-bet-item">
               <span className="profile-bet-question">{bet.question}</span>
-              <span className="profile-bet-count">
+              <span className="profile-bet-meta">
+                {bet.hidden && <span className="profile-hidden-tag">Hidden</span>}
                 {bet.total_predictions} prediction{bet.total_predictions !== 1 ? 's' : ''}
               </span>
             </Link>

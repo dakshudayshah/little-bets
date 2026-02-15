@@ -12,6 +12,7 @@ export async function fetchBets(): Promise<Bet[]> {
   const { data, error } = await supabase
     .from('bets')
     .select('*')
+    .eq('hidden', false)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -75,6 +76,15 @@ export async function resolveBet(betId: string, winningOptionIndex: number): Pro
 
   if (error) throw error;
   return data as Bet;
+}
+
+export async function hideBet(betId: string): Promise<void> {
+  const { error } = await supabase
+    .from('bets')
+    .update({ hidden: true })
+    .eq('id', betId);
+
+  if (error) throw error;
 }
 
 // --- Participant queries ---
