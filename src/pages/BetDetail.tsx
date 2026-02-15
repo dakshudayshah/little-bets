@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchBetByCodeName, fetchParticipants, resolveBet, hideBet } from '../lib/supabase';
+import { fetchBetByCodeName, fetchParticipants, resolveBet, hideBet, deletePrediction } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import type { Bet, BetParticipant } from '../types';
 import BetStats from '../components/BetStats';
@@ -89,6 +89,16 @@ function BetDetail() {
       setError(err instanceof Error ? err.message : 'Failed to resolve bet');
     } finally {
       setResolving(false);
+    }
+  }
+
+  async function handleRemovePrediction(predictionId: string, name: string) {
+    if (!confirm(`Remove prediction by "${name}"?`)) return;
+    try {
+      await deletePrediction(predictionId);
+      await handlePredictionSubmitted();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove prediction');
     }
   }
 
@@ -192,11 +202,22 @@ function BetDetail() {
                     {won && <span className="result-tag correct">Correct</span>}
                     {lost && <span className="result-tag wrong">Wrong</span>}
                   </span>
-                  <span className={`participant-prediction ${p.prediction ? 'yes' : 'no'}`}>
-                    {bet.bet_type === 'yesno'
-                      ? (p.prediction ? 'Yes' : 'No')
-                      : bet.options[p.option_index]?.text ?? 'Unknown'
-                    }
+                  <span className="participant-right">
+                    <span className={`participant-prediction ${p.prediction ? 'yes' : 'no'}`}>
+                      {bet.bet_type === 'yesno'
+                        ? (p.prediction ? 'Yes' : 'No')
+                        : bet.options[p.option_index]?.text ?? 'Unknown'
+                      }
+                    </span>
+                    {isCreator && (
+                      <button
+                        className="remove-prediction-btn"
+                        onClick={() => handleRemovePrediction(p.id, p.participant_name)}
+                        title="Remove prediction"
+                      >
+                        X
+                      </button>
+                    )}
                   </span>
                 </li>
               );

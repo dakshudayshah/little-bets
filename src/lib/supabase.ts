@@ -116,6 +116,15 @@ export async function submitPrediction(prediction: {
   return data as BetParticipant;
 }
 
+export async function deletePrediction(predictionId: string): Promise<void> {
+  const { error } = await supabase
+    .from('bet_participants')
+    .delete()
+    .eq('id', predictionId);
+
+  if (error) throw error;
+}
+
 export async function fetchResolvedBetsWithParticipants(): Promise<{ bets: Bet[]; participants: BetParticipant[] }> {
   const { data: bets, error: betsErr } = await supabase
     .from('bets')

@@ -98,9 +98,32 @@
   font-weight: 500;
 }
 
+.participant-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .participant-prediction {
   font-weight: 600;
   font-size: 0.85rem;
+}
+
+.remove-prediction-btn {
+  padding: 2px 6px;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 4px;
+  opacity: 0.4;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.remove-prediction-btn:hover {
+  opacity: 1;
+  color: var(--color-danger);
+  background: #fee2e2;
 }
 
 .participant-prediction.yes {
