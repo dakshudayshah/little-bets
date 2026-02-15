@@ -114,6 +114,7 @@ function CreateBetForm() {
           value={question}
           onChange={e => setQuestion(e.target.value)}
           required
+          maxLength={200}
         />
       </div>
 

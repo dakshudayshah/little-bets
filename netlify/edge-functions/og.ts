@@ -1,5 +1,13 @@
 import type { Context } from "https://edge.netlify.com";
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 export default async function handler(request: Request, context: Context) {
   const url = new URL(request.url);
   const codeName = url.pathname.replace("/bet/", "");
@@ -38,8 +46,8 @@ export default async function handler(request: Request, context: Context) {
     const bet = bets[0];
     const typeLabel = bet.bet_type === "yesno" ? "Yes/No" : "Multiple Choice";
     const status = bet.resolved ? "Resolved" : `${bet.total_predictions} prediction${bet.total_predictions !== 1 ? "s" : ""}`;
-    const description = `${typeLabel} · ${status}${bet.creator_name ? ` · by ${bet.creator_name}` : ""}`;
-    const ogTitle = bet.question;
+    const description = escapeHtml(`${typeLabel} · ${status}${bet.creator_name ? ` · by ${bet.creator_name}` : ""}`);
+    const ogTitle = escapeHtml(bet.question);
     const ogUrl = `https://littlebets.netlify.app/bet/${codeName}`;
     const ogImage = `https://littlebets.netlify.app/.netlify/functions/og-image?code=${encodeURIComponent(codeName)}`;
 

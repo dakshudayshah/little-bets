@@ -11,6 +11,21 @@ const PLACEHOLDERS = [
   'Will it snow before March?',
   'Can Sarah finish the book club book this month?',
   'Will the meeting end on time today?',
+  'Will Jake text back within an hour?',
+  'Is the new restaurant going to be worth the hype?',
+  'Will someone fall asleep during the presentation?',
+  'Can anyone beat Mike at ping pong this week?',
+  'Will the group chat stay active for 30 days straight?',
+  'Is the project going to ship on time?',
+  'Will Mom ask about marriage at dinner?',
+  'Can Lisa go a whole day without coffee?',
+  'Will the WiFi crash during the big demo?',
+  'Is anyone actually going to show up on time?',
+  'Will the potluck have more desserts than mains?',
+  'Can the team agree on a restaurant in under 5 minutes?',
+  'Will it be a shorts or jacket kind of weekend?',
+  'Is the sequel going to be better than the original?',
+  'Will someone suggest karaoke tonight?',
 ];
 
 interface HomeProps {
@@ -86,6 +101,7 @@ function Home({ onSignInClick }: HomeProps) {
           value={question}
           onChange={e => setQuestion(e.target.value)}
           disabled={creating}
+          maxLength={200}
         />
         <button
           type="submit"
