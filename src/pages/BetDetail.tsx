@@ -33,6 +33,10 @@ function BetDetail() {
 
   useEffect(() => {
     loadBet();
+
+    // Poll for updates every 5 seconds so other browsers see new predictions
+    const interval = setInterval(loadBet, 5000);
+    return () => clearInterval(interval);
   }, [loadBet]);
 
   function handleShare() {
