@@ -67,6 +67,14 @@ function CreateBetForm() {
         creator_id: user.id,
         creator_name: user.user_metadata?.full_name ?? user.email ?? null,
       });
+      const betUrl = `${window.location.origin}/bet/${bet.code_name}`;
+      if (navigator.share) {
+        navigator.share({ title: bet.question, url: betUrl }).catch(() => {
+          navigator.clipboard.writeText(betUrl);
+        });
+      } else {
+        navigator.clipboard.writeText(betUrl);
+      }
       navigate(`/bet/${bet.code_name}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create bet');

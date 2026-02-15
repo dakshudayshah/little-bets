@@ -1,13 +1,33 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { fetchBets } from '../lib/supabase';
+import { Link, useNavigate } from 'react-router-dom';
+import { fetchBets, createBet } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import type { Bet } from '../types';
 import '../styles/Home.css';
 
-function Home() {
+const PLACEHOLDERS = [
+  'Will Dave actually run that marathon?',
+  'Is pineapple on pizza acceptable?',
+  'Will it snow before March?',
+  'Can Sarah finish the book club book this month?',
+  'Will the meeting end on time today?',
+];
+
+interface HomeProps {
+  onSignInClick: () => void;
+}
+
+function Home({ onSignInClick }: HomeProps) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [bets, setBets] = useState<Bet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [question, setQuestion] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [placeholder] = useState(
+    () => PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]
+  );
 
   useEffect(() => {
     fetchBets()
@@ -16,13 +36,76 @@ function Home() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="page"><p>Loading...</p></div>;
-  if (error) return <div className="page"><p className="error-text">Error: {error}</p></div>;
+  async function handleQuickCreate(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = question.trim();
+    if (!trimmed) return;
+
+    if (!user) {
+      onSignInClick();
+      return;
+    }
+
+    setCreating(true);
+    try {
+      const bet = await createBet({
+        question: trimmed,
+        description: null,
+        bet_type: 'yesno',
+        options: [
+          { text: 'Yes', yes_count: 0, no_count: 0 },
+          { text: 'No', yes_count: 0, no_count: 0 },
+        ],
+        creator_id: user.id,
+        creator_name: user.user_metadata?.full_name ?? user.email ?? null,
+      });
+
+      const betUrl = `${window.location.origin}/bet/${bet.code_name}`;
+      if (navigator.share) {
+        navigator.share({ title: bet.question, url: betUrl }).catch(() => {
+          navigator.clipboard.writeText(betUrl);
+        });
+      } else {
+        navigator.clipboard.writeText(betUrl);
+      }
+
+      navigate(`/bet/${bet.code_name}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create bet');
+      setCreating(false);
+    }
+  }
 
   return (
     <div className="page">
-      <h1 className="home-title">All Bets</h1>
-      {bets.length === 0 ? (
+      <form className="quick-create" onSubmit={handleQuickCreate}>
+        <input
+          className="quick-create-input"
+          type="text"
+          placeholder={placeholder}
+          value={question}
+          onChange={e => setQuestion(e.target.value)}
+          disabled={creating}
+        />
+        <button
+          type="submit"
+          className="quick-create-btn"
+          disabled={creating || !question.trim()}
+        >
+          {creating ? '...' : 'Bet!'}
+        </button>
+      </form>
+      <p className="quick-create-hint">
+        Type a question and hit Bet! to create a Yes/No bet instantly.
+        {' '}<Link to="/create">More options</Link>
+      </p>
+
+      {error && <p className="error-text">{error}</p>}
+
+      <h2 className="home-title">All Bets</h2>
+      {loading ? (
+        <p>Loading...</p>
+      ) : bets.length === 0 ? (
         <p className="home-empty">No bets yet. Be the first to create one!</p>
       ) : (
         <div className="bet-grid">
