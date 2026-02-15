@@ -73,8 +73,12 @@ export default async function handler(request: Request, context: Context) {
         `<meta name="twitter:description" content="${description}" />`
       )
       .replace(
-        /<\/head>/,
-        `<meta property="og:image" content="${ogImage}" />\n<meta name="twitter:image" content="${ogImage}" />\n</head>`
+        /<meta property="og:image" content=".*?" \/>/,
+        `<meta property="og:image" content="${ogImage}" />`
+      )
+      .replace(
+        /<meta name="twitter:image" content=".*?" \/>/,
+        `<meta name="twitter:image" content="${ogImage}" />`
       );
 
     return new Response(updatedHtml, {
