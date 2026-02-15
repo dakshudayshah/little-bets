@@ -41,6 +41,7 @@ export default async function handler(request: Request, context: Context) {
     const description = `${typeLabel} · ${status}${bet.creator_name ? ` · by ${bet.creator_name}` : ""}`;
     const ogTitle = bet.question;
     const ogUrl = `https://littlebets.netlify.app/bet/${codeName}`;
+    const ogImage = `https://littlebets.netlify.app/.netlify/functions/og-image?code=${encodeURIComponent(codeName)}`;
 
     const response = await context.next();
     const html = await response.text();
@@ -60,12 +61,20 @@ export default async function handler(request: Request, context: Context) {
         `<meta property="og:url" content="${ogUrl}" />`
       )
       .replace(
+        /<meta name="twitter:card" content=".*?" \/>/,
+        `<meta name="twitter:card" content="summary_large_image" />`
+      )
+      .replace(
         /<meta name="twitter:title" content=".*?" \/>/,
         `<meta name="twitter:title" content="${ogTitle}" />`
       )
       .replace(
         /<meta name="twitter:description" content=".*?" \/>/,
         `<meta name="twitter:description" content="${description}" />`
+      )
+      .replace(
+        /<\/head>/,
+        `<meta property="og:image" content="${ogImage}" />\n<meta name="twitter:image" content="${ogImage}" />\n</head>`
       );
 
     return new Response(updatedHtml, {
