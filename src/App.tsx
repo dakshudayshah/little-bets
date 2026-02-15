@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import BetDetail from './pages/BetDetail';
 import CreateBet from './pages/CreateBet';
 import Profile from './pages/Profile';
+import Leaderboard from './pages/Leaderboard';
 
 function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -18,6 +19,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/bet/:id" element={<BetDetail />} />
         <Route path="/create" element={<CreateBet onSignInClick={() => setShowAuthModal(true)} />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/profile" element={<Profile />} />
       </Routes>
       <BottomNav />
