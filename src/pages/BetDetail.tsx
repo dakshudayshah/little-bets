@@ -34,6 +34,7 @@ function BetDetail() {
   const [error, setError] = useState<string | null>(null);
   const [resolving, setResolving] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [hasPredicted, setHasPredicted] = useState(false);
 
   const loadBet = useCallback(async () => {
     if (!id) return;
@@ -59,6 +60,10 @@ function BetDetail() {
     return () => clearInterval(interval);
   }, [loadBet]);
 
+  useEffect(() => {
+    document.title = bet ? `${bet.question} - Little Bets` : 'Little Bets';
+  }, [bet]);
+
   function handleShare() {
     const url = window.location.href;
     if (navigator.share) {
@@ -73,6 +78,7 @@ function BetDetail() {
 
   async function handlePredictionSubmitted() {
     if (!id) return;
+    setHasPredicted(true);
     const betData = await fetchBetByCodeName(id);
     if (betData) {
       setBet(betData);
@@ -83,6 +89,10 @@ function BetDetail() {
 
   async function handleResolve(winningOptionIndex: number) {
     if (!bet) return;
+    const label = bet.bet_type === 'yesno'
+      ? (winningOptionIndex === 0 ? 'Yes' : 'No')
+      : bet.options[winningOptionIndex]?.text ?? 'this option';
+    if (!confirm(`Resolve this bet with "${label}" as the winner? This cannot be undone.`)) return;
     setResolving(true);
     try {
       const updated = await resolveBet(bet.id, winningOptionIndex);
@@ -166,7 +176,7 @@ function BetDetail() {
         )}
         <div className="bet-detail-meta">
           {bet.creator_name && <span>Created by {bet.creator_name}</span>}
-          <span>{bet.total_predictions} prediction{bet.total_predictions !== 1 ? 's' : ''}</span>
+          <span key={bet.total_predictions} className="count-pop">{bet.total_predictions} prediction{bet.total_predictions !== 1 ? 's' : ''}</span>
           <span>{timeAgo(bet.created_at)}</span>
         </div>
         <div className="bet-detail-actions">
@@ -188,7 +198,7 @@ function BetDetail() {
         </div>
       )}
 
-      <BetStats bet={bet} />
+      <BetStats bet={bet} hidden={!bet.resolved && !hasPredicted && !isCreator} />
 
       {!bet.resolved && isCreator && participants.length > 0 && (
         <div className="resolve-section">

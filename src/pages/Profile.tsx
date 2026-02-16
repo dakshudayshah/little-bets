@@ -24,6 +24,10 @@ function Profile() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    document.title = 'Profile - Little Bets';
+  }, []);
+
+  useEffect(() => {
     if (!user) return;
     setLoading(true);
 
@@ -54,6 +58,7 @@ function Profile() {
 
   const resolvedPredictions = predictions.filter(p => p.bets.resolved);
   const correct = resolvedPredictions.filter(p => didWin(p.bets, p)).length;
+  const unresolvedBets = bets.filter(b => !b.resolved && b.total_predictions > 0);
 
   return (
     <div className="page">
@@ -69,11 +74,18 @@ function Profile() {
         )}
       </div>
 
+      {!loading && unresolvedBets.length > 0 && (
+        <div className="profile-unresolved">
+          You have {unresolvedBets.length} unresolved bet{unresolvedBets.length !== 1 ? 's' : ''} with predictions waiting.
+          {' '}<Link to={`/bet/${unresolvedBets[0].code_name}`}>Resolve now</Link>
+        </div>
+      )}
+
       <h2 className="profile-section-title">Your Bets</h2>
       {loading && <p>Loading...</p>}
       {error && <p className="error-text">{error}</p>}
       {!loading && bets.length === 0 && (
-        <p className="profile-empty">You haven't created any bets yet.</p>
+        <p className="profile-empty">You haven't created any bets yet. <Link to="/create">Create your first bet</Link></p>
       )}
       {bets.length > 0 && (
         <div className="profile-bet-list">
@@ -89,9 +101,13 @@ function Profile() {
         </div>
       )}
 
+      <h2 className="profile-section-title">Your Predictions</h2>
+      {!loading && predictions.length === 0 && (
+        <p className="profile-empty">No predictions yet. <Link to="/">Browse open bets</Link></p>
+      )}
       {predictions.length > 0 && (
         <>
-          <h2 className="profile-section-title">Your Predictions</h2>
+
           <div className="profile-bet-list">
             {predictions.map(p => {
               const bet = p.bets;

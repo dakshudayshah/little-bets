@@ -28,6 +28,11 @@
   background: var(--color-border);
 }
 
+@keyframes bar-grow {
+  from { max-width: 0; }
+  to { max-width: 100%; }
+}
+
 .stat-bar-fill {
   display: flex;
   align-items: center;
@@ -37,6 +42,8 @@
   color: white;
   transition: width 0.3s ease;
   min-width: 0;
+  animation: bar-grow 0.6s ease-out both;
+  overflow: hidden;
 }
 
 .stat-bar-fill.yes { background: var(--color-yes); }
@@ -61,4 +68,29 @@
 .stat-option-count {
   font-size: 0.8rem;
   color: var(--color-text-secondary);
+}
+
+/* Hidden stats (predict to reveal) */
+
+.stats-hidden {
+  position: relative;
+}
+
+.stats-hidden .stat-bar,
+.stats-hidden .stat-labels,
+.stats-hidden .stat-option-header {
+  filter: blur(6px);
+  user-select: none;
+}
+
+.stats-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  z-index: 1;
 }

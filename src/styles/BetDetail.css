@@ -33,6 +33,17 @@
   margin-bottom: 12px;
 }
 
+@keyframes count-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); color: var(--color-primary); }
+  100% { transform: scale(1); }
+}
+
+.count-pop {
+  display: inline-block;
+  animation: count-pop 0.3s ease;
+}
+
 .bet-detail-actions {
   display: flex;
   gap: 8px;
