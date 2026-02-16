@@ -13,6 +13,7 @@ function PredictionForm({ bet, onPredictionSubmitted }: PredictionFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedLabel, setSubmittedLabel] = useState('');
 
   async function handlePredict(prediction: boolean, optionIndex: number) {
     const trimmedName = name.trim();
@@ -31,6 +32,10 @@ function PredictionForm({ bet, onPredictionSubmitted }: PredictionFormProps) {
         prediction,
         option_index: optionIndex,
       });
+      const label = bet.bet_type === 'yesno'
+        ? (prediction ? 'Yes' : 'No')
+        : bet.options[optionIndex]?.text ?? '';
+      setSubmittedLabel(label);
       setSubmitted(true);
       onPredictionSubmitted();
     } catch (err) {
@@ -47,8 +52,9 @@ function PredictionForm({ bet, onPredictionSubmitted }: PredictionFormProps) {
 
   if (submitted) {
     return (
-      <div className="prediction-form">
-        <p className="prediction-success">Your prediction has been recorded!</p>
+      <div className="prediction-form locked-in">
+        <p className="prediction-locked">Locked in!</p>
+        <p className="prediction-locked-detail">You said <strong>{submittedLabel}</strong></p>
       </div>
     );
   }

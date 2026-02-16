@@ -46,6 +46,10 @@ function Home({ onSignInClick }: HomeProps) {
   );
 
   useEffect(() => {
+    document.title = 'Little Bets';
+  }, []);
+
+  useEffect(() => {
     fetchBets()
       .then(setBets)
       .catch(err => setError(err.message))
@@ -127,7 +131,7 @@ function Home({ onSignInClick }: HomeProps) {
       ) : (
         <div className="bet-grid">
           {bets.map(bet => (
-            <Link key={bet.id} to={`/bet/${bet.code_name}`} className="bet-card">
+            <Link key={bet.id} to={`/bet/${bet.code_name}`} className={`bet-card ${bet.resolved ? 'resolved' : ''}`}>
               <div className="bet-card-type">
                 {bet.bet_type === 'yesno' ? 'Yes / No' : 'Multiple Choice'}
                 {bet.resolved && bet.winning_option_index !== null && (
