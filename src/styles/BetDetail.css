@@ -52,7 +52,7 @@
 .share-btn {
   padding: 8px 20px;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius);
   font-size: 0.875rem;
   color: var(--color-text);
@@ -66,7 +66,7 @@
 .visibility-toggle-btn {
   padding: 8px 16px;
   background: none;
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius);
   font-size: 0.875rem;
   color: var(--color-text-secondary);
@@ -157,7 +157,7 @@
 .remove-prediction-btn:hover {
   opacity: 1;
   color: var(--color-danger);
-  background: #fee2e2;
+  background: var(--color-danger-light);
 }
 
 .participant-prediction.yes {
@@ -197,8 +197,8 @@
 }
 
 .resolved-banner {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: var(--color-success-lighter);
+  border: var(--border-width) solid var(--color-success-border);
   border-radius: var(--radius);
   padding: 12px 16px;
   margin: 12px 0;
@@ -211,7 +211,7 @@
 
 .resolve-section {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius);
   padding: 20px;
   margin: 20px 0;
@@ -269,7 +269,7 @@
 /* Result tags on participants */
 
 .participant-item.won {
-  background: #f0fdf4;
+  background: var(--color-success-lighter);
   padding: 10px 8px;
   border-radius: 4px;
 }
@@ -289,21 +289,21 @@
 }
 
 .result-tag.correct {
-  background: #dcfce7;
-  color: #16a34a;
+  background: var(--color-success-light);
+  color: var(--color-success-medium);
 }
 
 .result-tag.wrong {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--color-danger-light);
+  color: var(--color-danger-dark);
 }
 
 /* Winners spotlight */
 
 .winners-section {
   margin-top: 24px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: var(--color-success-lighter);
+  border: var(--border-width) solid var(--color-success-border);
   border-radius: var(--radius);
   padding: 16px;
 }
@@ -311,7 +311,7 @@
 .winners-title {
   font-size: 1.1rem;
   margin: 0 0 12px;
-  color: #16a34a;
+  color: var(--color-success-medium);
 }
 
 .winners-list {
@@ -325,7 +325,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid #bbf7d0;
+  border-bottom: 1px solid var(--color-success-border);
   font-size: 0.9rem;
 }
 
@@ -335,13 +335,13 @@
 
 .winner-name {
   font-weight: 600;
-  color: #15803d;
+  color: var(--color-success-dark);
 }
 
 .winner-prediction {
   font-weight: 600;
   font-size: 0.85rem;
-  color: #16a34a;
+  color: var(--color-success-medium);
 }
 
 /* Losers section */

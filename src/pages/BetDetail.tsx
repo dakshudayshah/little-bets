@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchBetByCodeName, fetchParticipants, resolveBet, updateBetVisibility, deletePrediction } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import type { Bet, BetParticipant } from '../types';
 import BetStats from '../components/BetStats';
 import PredictionForm from '../components/PredictionForm';
@@ -28,6 +29,7 @@ function didParticipantWin(bet: Bet, p: BetParticipant): boolean {
 function BetDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [bet, setBet] = useState<Bet | null>(null);
   const [participants, setParticipants] = useState<BetParticipant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,8 +66,13 @@ function BetDetail() {
     document.title = bet ? `${bet.question} - Little Bets` : 'Little Bets';
   }, [bet]);
 
+  function getShareUrl() {
+    const base = `${window.location.origin}/bet/${id}`;
+    return theme !== 'default' ? `${base}?theme=${theme}` : base;
+  }
+
   function handleShare() {
-    const url = window.location.href;
+    const url = getShareUrl();
     if (navigator.share) {
       navigator.share({ title: bet?.question, url }).catch(() => {
         navigator.clipboard.writeText(url);
@@ -112,7 +119,7 @@ function BetDetail() {
         ? `${winners.join(', ')} called it!`
         : 'No one got it right!';
       const shareText = `The results are in! "${bet.question}" — ${winLabel}! ${winnersText}`;
-      const betUrl = `${window.location.origin}/bet/${id}`;
+      const betUrl = getShareUrl();
 
       // Delay share prompt so confetti can be enjoyed
       await new Promise(resolve => setTimeout(resolve, 2000));
