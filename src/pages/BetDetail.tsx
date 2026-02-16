@@ -286,7 +286,7 @@ function BetDetail() {
         </>
       )}
 
-      {!bet.resolved && participants.length > 0 && (
+      {!bet.resolved && participants.length > 0 && (hasPredicted || isCreator) && (
         <div className="participants-section">
           <h3>Recent Predictions</h3>
           <ul className="participants-list">
