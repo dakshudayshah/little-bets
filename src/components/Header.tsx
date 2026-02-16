@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from './ThemeToggle';
 import '../styles/Header.css';
 
 interface HeaderProps {
@@ -13,6 +14,7 @@ function Header({ onSignInClick }: HeaderProps) {
     <header className="header">
       <div className="header-inner">
         <Link to="/" className="header-logo">Little Bets</Link>
+        <ThemeToggle />
         <div className="header-actions">
           <Link to="/create" className="header-create-btn">Create Bet</Link>
           {user ? (

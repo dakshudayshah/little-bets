@@ -63,7 +63,9 @@ export default async function handler(request: Request, context: Context) {
       description = escapeHtml(`${typeLabel} · ${bet.total_predictions} prediction${bet.total_predictions !== 1 ? "s" : ""}${bet.creator_name ? ` · by ${bet.creator_name}` : ""}`);
     }
     const ogUrl = `https://littlebets.netlify.app/bet/${codeName}`;
-    const ogImage = `https://littlebets.netlify.app/.netlify/functions/og-image?code=${encodeURIComponent(codeName)}`;
+    const theme = url.searchParams.get("theme") || "";
+    const themeParam = theme ? `&theme=${encodeURIComponent(theme)}` : "";
+    const ogImage = `https://littlebets.netlify.app/.netlify/functions/og-image?code=${encodeURIComponent(codeName)}${themeParam}`;
 
     const response = await context.next();
     const html = await response.text();

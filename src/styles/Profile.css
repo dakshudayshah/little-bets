@@ -1,6 +1,6 @@
 .profile-info {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius);
   padding: 16px;
   margin-bottom: 24px;
@@ -26,17 +26,17 @@
 }
 
 .profile-unresolved {
-  background: #fef3c7;
-  border: 1px solid #fcd34d;
+  background: var(--color-warning-bg);
+  border: var(--border-width) solid var(--color-warning-border);
   border-radius: var(--radius);
   padding: 12px 16px;
   font-size: 0.85rem;
-  color: #92400e;
+  color: var(--color-warning-text);
   margin-bottom: 20px;
 }
 
 .profile-unresolved a {
-  color: #92400e;
+  color: var(--color-warning-text);
   font-weight: 600;
   text-decoration: underline;
 }
@@ -66,7 +66,7 @@
   align-items: center;
   padding: 12px 16px;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius);
   text-decoration: none;
   color: var(--color-text);
@@ -94,7 +94,7 @@
 .profile-link-only-tag {
   font-size: 0.65rem;
   font-weight: 600;
-  background: #e0e7ff;
+  background: var(--color-primary-light);
   color: var(--color-primary);
   padding: 2px 6px;
   border-radius: 4px;
@@ -120,13 +120,13 @@
 }
 
 .profile-result-tag.correct {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--color-success-light);
+  color: var(--color-success-dark);
 }
 
 .profile-result-tag.wrong {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--color-danger-light);
+  color: var(--color-danger-dark);
 }
 
 .profile-pending-tag {

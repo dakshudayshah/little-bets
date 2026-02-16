@@ -73,9 +73,39 @@ export default async function handler(req: Request, _context: Context) {
 
   const font = await loadFont();
 
-  const background = isResolved
-    ? "linear-gradient(135deg, #15803d 0%, #16a34a 50%, #22c55e 100%)"
-    : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)";
+  const theme = url.searchParams.get("theme") || "default";
+
+  type ThemeStyle = { bg: string; resolvedBg: string; textColor: string; badgeBg: string };
+  const themeStyles: Record<string, ThemeStyle> = {
+    default: {
+      bg: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)",
+      resolvedBg: "linear-gradient(135deg, #15803d 0%, #16a34a 50%, #22c55e 100%)",
+      textColor: "white",
+      badgeBg: "rgba(255,255,255,0.2)",
+    },
+    retro: {
+      bg: "linear-gradient(135deg, #92400e 0%, #b45309 50%, #d97706 100%)",
+      resolvedBg: "linear-gradient(135deg, #14532d 0%, #15803d 50%, #22c55e 100%)",
+      textColor: "white",
+      badgeBg: "rgba(255,255,255,0.2)",
+    },
+    brutalist: {
+      bg: "#f5f020",
+      resolvedBg: "#22c55e",
+      textColor: "#000000",
+      badgeBg: "rgba(0,0,0,0.12)",
+    },
+    dark: {
+      bg: "linear-gradient(135deg, #0f0f23 0%, #1e1b4b 50%, #312e81 100%)",
+      resolvedBg: "linear-gradient(135deg, #052e16 0%, #14532d 50%, #166534 100%)",
+      textColor: "#e2e8f0",
+      badgeBg: "rgba(255,255,255,0.12)",
+    },
+  };
+
+  const style = themeStyles[theme] || themeStyles.default;
+  const background = isResolved ? style.resolvedBg : style.bg;
+  const textColor = style.textColor;
 
   const headerText = isResolved ? "The results are in!" : "Little Bets";
 
@@ -147,7 +177,7 @@ export default async function handler(req: Request, _context: Context) {
           padding: "60px 70px",
           background,
           fontFamily: "Inter",
-          color: "white",
+          color: textColor,
         },
         children: [
           {
@@ -186,9 +216,9 @@ export default async function handler(req: Request, _context: Context) {
                               style: {
                                 fontSize: "14px",
                                 fontWeight: 600,
-                                background: "rgba(255,255,255,0.2)",
+                                background: style.badgeBg,
                                 padding: "4px 12px",
-                                borderRadius: "20px",
+                                borderRadius: theme === "brutalist" ? "0px" : "20px",
                               },
                               children: typeLabel,
                             },
@@ -201,9 +231,9 @@ export default async function handler(req: Request, _context: Context) {
                               style: {
                                 fontSize: "14px",
                                 fontWeight: 600,
-                                background: "rgba(255,255,255,0.25)",
+                                background: style.badgeBg,
                                 padding: "4px 12px",
-                                borderRadius: "20px",
+                                borderRadius: theme === "brutalist" ? "0px" : "20px",
                               },
                               children: "RESOLVED",
                             },
