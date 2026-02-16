@@ -14,13 +14,6 @@ function BottomNav() {
         <span className="bottom-nav-label">Home</span>
       </Link>
       <Link
-        to="/leaderboard"
-        className={`bottom-nav-item ${location.pathname === '/leaderboard' ? 'active' : ''}`}
-      >
-        <span className="bottom-nav-icon">&#9733;</span>
-        <span className="bottom-nav-label">Rankings</span>
-      </Link>
-      <Link
         to="/create"
         className={`bottom-nav-item ${location.pathname === '/create' ? 'active' : ''}`}
       >

@@ -64,6 +64,15 @@
   gap: 8px;
 }
 
+.profile-link-only-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: #e0e7ff;
+  color: var(--color-primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
 .profile-hidden-tag {
   font-size: 0.65rem;
   font-weight: 600;

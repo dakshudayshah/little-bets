@@ -13,6 +13,7 @@ export async function fetchBets(): Promise<Bet[]> {
     .from('bets')
     .select('*')
     .eq('hidden', false)
+    .eq('visibility', 'open')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -51,6 +52,7 @@ export async function createBet(bet: {
   options: { text: string; yes_count: number; no_count: number }[];
   creator_id: string;
   creator_name: string | null;
+  visibility?: string;
 }): Promise<Bet> {
   const { data, error } = await supabase
     .from('bets')
@@ -123,26 +125,6 @@ export async function deletePrediction(predictionId: string): Promise<void> {
     .eq('id', predictionId);
 
   if (error) throw error;
-}
-
-export async function fetchResolvedBetsWithParticipants(): Promise<{ bets: Bet[]; participants: BetParticipant[] }> {
-  const { data: bets, error: betsErr } = await supabase
-    .from('bets')
-    .select('*')
-    .eq('resolved', true);
-
-  if (betsErr) throw betsErr;
-
-  const betIds = (bets as Bet[]).map(b => b.id);
-  if (betIds.length === 0) return { bets: [], participants: [] };
-
-  const { data: participants, error: partErr } = await supabase
-    .from('bet_participants')
-    .select('*')
-    .in('bet_id', betIds);
-
-  if (partErr) throw partErr;
-  return { bets: bets as Bet[], participants: participants as BetParticipant[] };
 }
 
 export async function fetchUserPredictions(participantName: string): Promise<(BetParticipant & { bets: Bet })[]> {

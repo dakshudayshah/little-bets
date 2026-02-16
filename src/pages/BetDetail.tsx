@@ -153,6 +153,7 @@ function BetDetail() {
       <div className="bet-detail-header">
         <div className="bet-detail-type">
           {bet.bet_type === 'yesno' ? 'Yes / No' : 'Multiple Choice'}
+          {bet.visibility === 'link_only' && <span className="link-only-badge">Link Only</span>}
           {bet.resolved && <span className="resolved-badge">Resolved</span>}
         </div>
         <h1 className="bet-detail-question">{bet.question}</h1>
