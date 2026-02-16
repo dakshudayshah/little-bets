@@ -136,6 +136,19 @@
 
 /* Resolution */
 
+.link-only-badge {
+  display: inline-block;
+  background: var(--color-text-secondary);
+  color: white;
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+  vertical-align: middle;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 .resolved-badge {
   display: inline-block;
   background: var(--color-success);

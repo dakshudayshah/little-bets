@@ -1,4 +1,5 @@
 export type BetType = 'yesno' | 'multiple_choice';
+export type BetVisibility = 'open' | 'link_only';
 
 export interface BetOption {
   text: string;
@@ -21,6 +22,7 @@ export interface Bet {
   resolved_at: string | null;
   winning_option_index: number | null;
   hidden: boolean;
+  visibility: BetVisibility;
 }
 
 export interface BetParticipant {

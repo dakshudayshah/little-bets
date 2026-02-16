@@ -51,6 +51,7 @@ function Profile() {
             <Link key={bet.id} to={`/bet/${bet.code_name}`} className="profile-bet-item">
               <span className="profile-bet-question">{bet.question}</span>
               <span className="profile-bet-meta">
+                {bet.visibility === 'link_only' && <span className="profile-link-only-tag">Link Only</span>}
                 {bet.hidden && <span className="profile-hidden-tag">Hidden</span>}
                 {bet.total_predictions} prediction{bet.total_predictions !== 1 ? 's' : ''}
               </span>

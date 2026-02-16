@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { createBet } from '../lib/supabase';
-import type { BetType } from '../types';
+import type { BetType, BetVisibility } from '../types';
 import '../styles/CreateBet.css';
 
 function CreateBetForm() {
@@ -12,6 +12,7 @@ function CreateBetForm() {
   const [question, setQuestion] = useState('');
   const [description, setDescription] = useState('');
   const [options, setOptions] = useState(['', '']);
+  const [visibility, setVisibility] = useState<BetVisibility>('open');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,6 +67,7 @@ function CreateBetForm() {
         options: betOptions,
         creator_id: user.id,
         creator_name: user.user_metadata?.full_name ?? user.email ?? null,
+        visibility,
       });
       const betUrl = `${window.location.origin}/bet/${bet.code_name}`;
       if (navigator.share) {
@@ -160,6 +162,34 @@ function CreateBetForm() {
           onChange={e => setDescription(e.target.value)}
           rows={3}
         />
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Who can see this?</label>
+        <div className="visibility-toggle">
+          <button
+            type="button"
+            className={`visibility-btn ${visibility === 'open' ? 'active' : ''}`}
+            onClick={() => setVisibility('open')}
+          >
+            <span className="visibility-icon">&#127760;</span>
+            <span className="visibility-text">
+              <strong>Open</strong>
+              <small>Anyone on Little Bets</small>
+            </span>
+          </button>
+          <button
+            type="button"
+            className={`visibility-btn ${visibility === 'link_only' ? 'active' : ''}`}
+            onClick={() => setVisibility('link_only')}
+          >
+            <span className="visibility-icon">&#128279;</span>
+            <span className="visibility-text">
+              <strong>Link Only</strong>
+              <small>Only people with the link</small>
+            </span>
+          </button>
+        </div>
       </div>
 
       {error && <p className="form-error">{error}</p>}

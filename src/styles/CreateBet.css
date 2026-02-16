@@ -106,6 +106,48 @@
   margin-bottom: 12px;
 }
 
+.visibility-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.visibility-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  text-align: left;
+  transition: border-color 0.15s;
+}
+
+.visibility-btn.active {
+  border-color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.visibility-icon {
+  font-size: 1.25rem;
+}
+
+.visibility-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.visibility-text strong {
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.visibility-text small {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+}
+
 .form-submit-btn {
   width: 100%;
   padding: 12px;
