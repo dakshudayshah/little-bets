@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { fetchBetByCodeName, fetchParticipants, resolveBet, hideBet, deletePrediction } from '../lib/supabase';
+import { useParams } from 'react-router-dom';
+import { fetchBetByCodeName, fetchParticipants, resolveBet, updateBetVisibility, deletePrediction } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import type { Bet, BetParticipant } from '../types';
 import BetStats from '../components/BetStats';
@@ -26,7 +26,6 @@ function didParticipantWin(bet: Bet, p: BetParticipant): boolean {
 
 function BetDetail() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [bet, setBet] = useState<Bet | null>(null);
   const [participants, setParticipants] = useState<BetParticipant[]>([]);
@@ -129,13 +128,14 @@ function BetDetail() {
     }
   }
 
-  async function handleDelete() {
-    if (!bet || !confirm('Remove this bet from the public feed? It will still appear on your profile.')) return;
+  async function handleToggleVisibility() {
+    if (!bet) return;
+    const newVisibility = bet.visibility === 'open' ? 'link_only' : 'open';
     try {
-      await hideBet(bet.id);
-      navigate('/');
+      const updated = await updateBetVisibility(bet.id, newVisibility);
+      setBet(updated);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to hide bet');
+      setError(err instanceof Error ? err.message : 'Failed to update visibility');
     }
   }
 
@@ -170,8 +170,8 @@ function BetDetail() {
             Share
           </button>
           {isCreator && (
-            <button className="delete-btn" onClick={handleDelete}>
-              Remove
+            <button className="visibility-toggle-btn" onClick={handleToggleVisibility}>
+              {bet.visibility === 'open' ? 'Make Link Only' : 'Make Open'}
             </button>
           )}
         </div>

@@ -52,18 +52,19 @@
   background: var(--color-bg);
 }
 
-.delete-btn {
+.visibility-toggle-btn {
   padding: 8px 16px;
   background: none;
-  border: 1px solid var(--color-danger);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   font-size: 0.875rem;
-  color: var(--color-danger);
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
-.delete-btn:hover {
-  background: #fef2f2;
+.visibility-toggle-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .participants-section {
