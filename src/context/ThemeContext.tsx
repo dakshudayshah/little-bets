@@ -14,11 +14,11 @@ const STORAGE_KEY = 'littlebets-theme';
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return (stored === 'neo' ? 'neo' : 'retro') as Theme;
+    return (stored === 'retro' ? 'retro' : 'neo') as Theme;
   });
 
   useEffect(() => {
-    if (theme === 'retro') {
+    if (theme === 'neo') {
       document.documentElement.removeAttribute('data-theme');
     } else {
       document.documentElement.setAttribute('data-theme', theme);
