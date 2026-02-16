@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { fetchBets, createBet } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import type { Bet } from '../types';
+import { timeAgo } from '../lib/time';
 import '../styles/Home.css';
 
 const PLACEHOLDERS = [
@@ -129,7 +130,14 @@ function Home({ onSignInClick }: HomeProps) {
             <Link key={bet.id} to={`/bet/${bet.code_name}`} className="bet-card">
               <div className="bet-card-type">
                 {bet.bet_type === 'yesno' ? 'Yes / No' : 'Multiple Choice'}
-                {bet.resolved && <span className="bet-card-resolved">Resolved</span>}
+                {bet.resolved && bet.winning_option_index !== null && (
+                  <span className="bet-card-result">
+                    {bet.bet_type === 'yesno'
+                      ? (bet.winning_option_index === 0 ? 'Yes' : 'No')
+                      : bet.options[bet.winning_option_index]?.text ?? 'Resolved'
+                    }
+                  </span>
+                )}
               </div>
               <h2 className="bet-card-question">{bet.question}</h2>
               {bet.creator_name && (
@@ -137,7 +145,7 @@ function Home({ onSignInClick }: HomeProps) {
               )}
               <div className="bet-card-footer">
                 <span>{bet.total_predictions} prediction{bet.total_predictions !== 1 ? 's' : ''}</span>
-                <span>{new Date(bet.created_at).toLocaleDateString()}</span>
+                <span>{timeAgo(bet.created_at)}</span>
               </div>
             </Link>
           ))}

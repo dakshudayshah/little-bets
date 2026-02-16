@@ -6,6 +6,7 @@ import type { Bet, BetParticipant } from '../types';
 import BetStats from '../components/BetStats';
 import PredictionForm from '../components/PredictionForm';
 import Confetti from '../components/Confetti';
+import { timeAgo } from '../lib/time';
 import '../styles/BetDetail.css';
 
 function getWinningLabel(bet: Bet): string {
@@ -103,6 +104,9 @@ function BetDetail() {
       const shareText = `The results are in! "${bet.question}" — ${winLabel}! ${winnersText}`;
       const betUrl = `${window.location.origin}/bet/${id}`;
 
+      // Delay share prompt so confetti can be enjoyed
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       if (navigator.share) {
         navigator.share({ title: shareText, url: betUrl }).catch(() => {
           navigator.clipboard.writeText(`${shareText} ${betUrl}`);
@@ -163,7 +167,7 @@ function BetDetail() {
         <div className="bet-detail-meta">
           {bet.creator_name && <span>Created by {bet.creator_name}</span>}
           <span>{bet.total_predictions} prediction{bet.total_predictions !== 1 ? 's' : ''}</span>
-          <span>{new Date(bet.created_at).toLocaleDateString()}</span>
+          <span>{timeAgo(bet.created_at)}</span>
         </div>
         <div className="bet-detail-actions">
           <button className="share-btn" onClick={handleShare}>
