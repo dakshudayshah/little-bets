@@ -2,8 +2,8 @@ import { useTheme, type Theme } from '../context/ThemeContext';
 import '../styles/ThemeToggle.css';
 
 const themes: { key: Theme; icon: string; label: string }[] = [
-  { key: 'retro', icon: '◐', label: 'Retro' },
   { key: 'neo', icon: '■', label: 'Neo' },
+  { key: 'retro', icon: '◐', label: 'Retro' },
 ];
 
 function ThemeToggle() {

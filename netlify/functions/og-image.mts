@@ -73,7 +73,7 @@ export default async function handler(req: Request, _context: Context) {
 
   const font = await loadFont();
 
-  const theme = url.searchParams.get("theme") || "default";
+  const theme = url.searchParams.get("theme") || "neo";
 
   type ThemeStyle = { bg: string; resolvedBg: string; textColor: string; badgeBg: string };
   const themeStyles: Record<string, ThemeStyle> = {
@@ -91,7 +91,7 @@ export default async function handler(req: Request, _context: Context) {
     },
   };
 
-  const style = themeStyles[theme] || themeStyles.retro;
+  const style = themeStyles[theme] || themeStyles.neo;
   const background = isResolved ? style.resolvedBg : style.bg;
   const textColor = style.textColor;
 
