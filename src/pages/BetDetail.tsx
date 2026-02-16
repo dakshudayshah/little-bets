@@ -286,8 +286,8 @@ function BetDetail() {
         </>
       )}
 
-      {!bet.resolved && participants.length > 0 && (hasPredicted || isCreator) && (
-        <div className="participants-section">
+      {!bet.resolved && participants.length > 0 && (
+        <div className={`participants-section ${!hasPredicted && !isCreator ? 'section-hidden' : ''}`}>
           <h3>Recent Predictions</h3>
           <ul className="participants-list">
             {participants.map(p => (
