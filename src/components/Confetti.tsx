@@ -3,10 +3,8 @@ import { useTheme, type Theme } from '../context/ThemeContext';
 import '../styles/Confetti.css';
 
 const THEME_COLORS: Record<Theme, string[]> = {
-  default: ['#6366f1', '#8b5cf6', '#22c55e', '#eab308', '#ef4444', '#ec4899', '#06b6d4'],
   retro: ['#b45309', '#d97706', '#92400e', '#ca8a04', '#a16207', '#78350f', '#f59e0b'],
-  brutalist: ['#000000', '#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#ec4899', '#ffffff'],
-  dark: ['#818cf8', '#a78bfa', '#4ade80', '#facc15', '#f87171', '#fb923c', '#38bdf8'],
+  neo: ['#000000', '#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#ec4899', '#ffffff'],
 };
 const PARTICLE_COUNT = 50;
 

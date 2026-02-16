@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <title>Little Bets</title>
     <meta name="description" content="Make predictions with friends. Bragging rights, no real money." />
     <meta property="og:title" content="Little Bets" />
@@ -30,7 +30,7 @@
     <script>
       (function() {
         var t = localStorage.getItem('littlebets-theme');
-        if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
+        if (t === 'neo') document.documentElement.setAttribute('data-theme', 'neo');
       })();
     </script>
     <div id="root"></div>

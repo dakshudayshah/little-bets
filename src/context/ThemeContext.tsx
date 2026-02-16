@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
-export type Theme = 'default' | 'retro' | 'brutalist' | 'dark';
+export type Theme = 'retro' | 'neo';
 
 interface ThemeContextType {
   theme: Theme;
@@ -14,11 +14,11 @@ const STORAGE_KEY = 'littlebets-theme';
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return (stored as Theme) || 'default';
+    return (stored === 'neo' ? 'neo' : 'retro') as Theme;
   });
 
   useEffect(() => {
-    if (theme === 'default') {
+    if (theme === 'retro') {
       document.documentElement.removeAttribute('data-theme');
     } else {
       document.documentElement.setAttribute('data-theme', theme);

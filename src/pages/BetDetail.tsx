@@ -68,7 +68,7 @@ function BetDetail() {
 
   function getShareUrl() {
     const base = `${window.location.origin}/bet/${id}`;
-    return theme !== 'default' ? `${base}?theme=${theme}` : base;
+    return theme !== 'retro' ? `${base}?theme=${theme}` : base;
   }
 
   function handleShare() {
