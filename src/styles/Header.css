@@ -26,24 +26,36 @@
   text-decoration: none;
 }
 
-.header-actions {
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-nav-link {
+  padding: 6px 14px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  border-radius: var(--radius);
+  transition: color 0.15s, background 0.15s;
+}
+
+.header-nav-link:hover {
+  color: var(--color-text);
+  background: var(--color-primary-tint);
+}
+
+.header-nav-link.active {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.header-right {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.header-create-btn {
-  background: var(--color-primary);
-  color: white;
-  padding: 8px 16px;
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-decoration: none;
-}
-
-.header-create-btn:hover {
-  background: var(--color-primary-hover);
 }
 
 .header-auth-btn {
@@ -57,8 +69,9 @@
   color: var(--color-text);
 }
 
-@media (max-width: 480px) {
-  .header-create-btn {
+/* Hide desktop nav on mobile (BottomNav handles it) */
+@media (max-width: 768px) {
+  .header-nav {
     display: none;
   }
 }

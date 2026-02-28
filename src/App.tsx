@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import BottomNav from './components/BottomNav';
+import ScrollToTop from './components/ScrollToTop';
 import AuthModal from './components/AuthModal';
 import Home from './pages/Home';
 import BetDetail from './pages/BetDetail';
@@ -13,6 +14,7 @@ function App() {
 
   return (
     <>
+      <ScrollToTop />
       <Header onSignInClick={() => setShowAuthModal(true)} />
       <Routes>
         <Route path="/" element={<Home onSignInClick={() => setShowAuthModal(true)} />} />

@@ -118,6 +118,11 @@ function CreateBetForm() {
           required
           maxLength={200}
         />
+        {question.length > 0 && (
+          <span className={`char-count ${question.length >= 180 ? 'warn' : ''}`}>
+            {question.length}/200
+          </span>
+        )}
       </div>
 
       {betType === 'multiple_choice' && (

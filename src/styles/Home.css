@@ -1,7 +1,10 @@
 .quick-create {
+  margin-bottom: 6px;
+}
+
+.quick-create-top {
   display: flex;
   gap: 8px;
-  margin-bottom: 6px;
 }
 
 .quick-create-input {
@@ -45,10 +48,102 @@
   cursor: not-allowed;
 }
 
+/* Bet type toggle row */
+.quick-create-type-row {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.quick-type-btn {
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: none;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius);
+  border: var(--border-width) solid transparent;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.quick-type-btn:hover {
+  color: var(--color-text);
+}
+
+.quick-type-btn.active {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-tint);
+}
+
+/* Multiple choice options inline */
+.quick-create-options {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quick-option-row {
+  display: flex;
+  gap: 6px;
+}
+
+.quick-option-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.quick-option-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-focus);
+}
+
+.quick-option-remove {
+  padding: 6px 10px;
+  background: var(--color-danger);
+  color: white;
+  border-radius: var(--radius);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.quick-add-option {
+  padding: 6px 12px;
+  background: none;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  align-self: flex-start;
+}
+
+.quick-add-option:hover {
+  text-decoration: underline;
+}
+
+/* Meta row */
+.quick-create-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 24px;
+}
+
 .quick-create-hint {
   font-size: 0.75rem;
   color: var(--color-text-secondary);
-  margin: 0 0 24px;
+  margin: 0;
+}
+
+.quick-create-meta .char-count {
+  margin-top: 0;
+  flex-shrink: 0;
 }
 
 .quick-create-hint a {
