@@ -36,11 +36,5 @@
 }
 
 .theme-toggle-label {
-  display: none;
-}
-
-@media (min-width: 600px) {
-  .theme-toggle-label {
-    display: inline;
-  }
+  display: inline;
 }
