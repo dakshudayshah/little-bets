@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchBets, createBet } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import type { Bet } from '../types';
+import type { Bet, BetType } from '../types';
 import { timeAgo } from '../lib/time';
 import '../styles/Home.css';
 
@@ -40,6 +40,8 @@ function Home({ onSignInClick }: HomeProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [question, setQuestion] = useState('');
+  const [betType, setBetType] = useState<BetType>('yesno');
+  const [options, setOptions] = useState(['', '']);
   const [creating, setCreating] = useState(false);
   const [placeholder] = useState(
     () => PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]
@@ -56,6 +58,24 @@ function Home({ onSignInClick }: HomeProps) {
       .finally(() => setLoading(false));
   }, []);
 
+  function updateOption(index: number, value: string) {
+    const newOptions = [...options];
+    newOptions[index] = value;
+    setOptions(newOptions);
+  }
+
+  function addOption() {
+    if (options.length < 4) {
+      setOptions([...options, '']);
+    }
+  }
+
+  function removeOption(index: number) {
+    if (options.length > 2) {
+      setOptions(options.filter((_, i) => i !== index));
+    }
+  }
+
   async function handleQuickCreate(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = question.trim();
@@ -66,16 +86,32 @@ function Home({ onSignInClick }: HomeProps) {
       return;
     }
 
+    if (betType === 'multiple_choice') {
+      const validOptions = options.map(o => o.trim()).filter(o => o.length > 0);
+      if (validOptions.length < 2) {
+        setError('At least 2 options are required');
+        return;
+      }
+    }
+
     setCreating(true);
+    setError(null);
     try {
+      const betOptions = betType === 'yesno'
+        ? [
+            { text: 'Yes', yes_count: 0, no_count: 0 },
+            { text: 'No', yes_count: 0, no_count: 0 },
+          ]
+        : options
+            .map(o => o.trim())
+            .filter(o => o.length > 0)
+            .map(text => ({ text, yes_count: 0, no_count: 0 }));
+
       const bet = await createBet({
         question: trimmed,
         description: null,
-        bet_type: 'yesno',
-        options: [
-          { text: 'Yes', yes_count: 0, no_count: 0 },
-          { text: 'No', yes_count: 0, no_count: 0 },
-        ],
+        bet_type: betType,
+        options: betOptions,
         creator_id: user.id,
         creator_name: user.user_metadata?.full_name ?? user.email ?? null,
       });
@@ -99,27 +135,84 @@ function Home({ onSignInClick }: HomeProps) {
   return (
     <div className="page">
       <form className="quick-create" onSubmit={handleQuickCreate}>
-        <input
-          className="quick-create-input"
-          type="text"
-          placeholder={placeholder}
-          value={question}
-          onChange={e => setQuestion(e.target.value)}
-          disabled={creating}
-          maxLength={200}
-        />
-        <button
-          type="submit"
-          className="quick-create-btn"
-          disabled={creating || !question.trim()}
-        >
-          {creating ? '...' : 'Bet!'}
-        </button>
+        <div className="quick-create-top">
+          <input
+            className="quick-create-input"
+            type="text"
+            placeholder={placeholder}
+            value={question}
+            onChange={e => setQuestion(e.target.value)}
+            disabled={creating}
+            maxLength={200}
+          />
+          <button
+            type="submit"
+            className="quick-create-btn"
+            disabled={creating || !question.trim()}
+          >
+            {creating ? '...' : 'Bet!'}
+          </button>
+        </div>
+
+        <div className="quick-create-type-row">
+          <button
+            type="button"
+            className={`quick-type-btn ${betType === 'yesno' ? 'active' : ''}`}
+            onClick={() => setBetType('yesno')}
+          >
+            Yes / No
+          </button>
+          <button
+            type="button"
+            className={`quick-type-btn ${betType === 'multiple_choice' ? 'active' : ''}`}
+            onClick={() => setBetType('multiple_choice')}
+          >
+            Multiple Choice
+          </button>
+        </div>
+
+        {betType === 'multiple_choice' && (
+          <div className="quick-create-options">
+            {options.map((option, index) => (
+              <div key={index} className="quick-option-row">
+                <input
+                  className="quick-option-input"
+                  type="text"
+                  placeholder={`Option ${index + 1}`}
+                  value={option}
+                  onChange={e => updateOption(index, e.target.value)}
+                  disabled={creating}
+                />
+                {options.length > 2 && (
+                  <button
+                    type="button"
+                    className="quick-option-remove"
+                    onClick={() => removeOption(index)}
+                  >
+                    X
+                  </button>
+                )}
+              </div>
+            ))}
+            {options.length < 4 && (
+              <button type="button" className="quick-add-option" onClick={addOption}>
+                + Add Option
+              </button>
+            )}
+          </div>
+        )}
       </form>
-      <p className="quick-create-hint">
-        Type a question and hit Bet! to create a Yes/No bet instantly.
-        {' '}<Link to="/create">More options</Link>
-      </p>
+      <div className="quick-create-meta">
+        <p className="quick-create-hint">
+          Type a question and hit Bet! to create instantly.
+          {' '}<Link to="/create">More options</Link>
+        </p>
+        {question.length > 0 && (
+          <span className={`char-count ${question.length >= 180 ? 'warn' : ''}`}>
+            {question.length}/200
+          </span>
+        )}
+      </div>
 
       {error && <p className="error-text">{error}</p>}
 

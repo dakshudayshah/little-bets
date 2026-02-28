@@ -25,7 +25,7 @@
   height: 32px;
   border-radius: var(--radius);
   overflow: hidden;
-  background: var(--color-border);
+  background: var(--color-bar-bg);
 }
 
 @keyframes bar-grow {

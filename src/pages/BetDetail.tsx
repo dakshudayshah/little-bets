@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { fetchBetByCodeName, fetchParticipants, resolveBet, updateBetVisibility, deletePrediction } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useToast } from '../context/ToastContext';
 import type { Bet, BetParticipant } from '../types';
 import BetStats from '../components/BetStats';
 import PredictionForm from '../components/PredictionForm';
@@ -30,6 +31,7 @@ function BetDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { toast } = useToast();
   const [bet, setBet] = useState<Bet | null>(null);
   const [participants, setParticipants] = useState<BetParticipant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,7 +81,7 @@ function BetDetail() {
       });
     } else {
       navigator.clipboard.writeText(url);
-      alert('Link copied to clipboard!');
+      toast('Link copied to clipboard!');
     }
   }
 
@@ -130,7 +132,7 @@ function BetDetail() {
         });
       } else {
         navigator.clipboard.writeText(`${shareText} ${betUrl}`);
-        alert('Results copied to clipboard!');
+        toast('Results copied to clipboard!');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to resolve bet');
