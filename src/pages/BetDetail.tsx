@@ -4,6 +4,7 @@ import { fetchBetByCodeName, fetchParticipants, resolveBet, updateBetVisibility,
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
+import { track } from '../lib/analytics';
 import type { Bet, BetParticipant } from '../types';
 import BetStats from '../components/BetStats';
 import PredictionForm from '../components/PredictionForm';
@@ -66,7 +67,10 @@ function BetDetail() {
 
   useEffect(() => {
     document.title = bet ? `${bet.question} - Little Bets` : 'Little Bets';
-  }, [bet]);
+    if (bet) {
+      track('bet_viewed', { bet_id: bet.id, bet_type: bet.bet_type, referrer: document.referrer });
+    }
+  }, [bet?.id]);
 
   function getShareUrl() {
     const base = `${window.location.origin}/bet/${id}`;
@@ -76,10 +80,12 @@ function BetDetail() {
   function handleShare() {
     const url = getShareUrl();
     if (navigator.share) {
+      track('bet_shared', { bet_id: bet?.id, method: 'native_share' });
       navigator.share({ title: bet?.question, url }).catch(() => {
         navigator.clipboard.writeText(url);
       });
     } else {
+      track('bet_shared', { bet_id: bet?.id, method: 'clipboard' });
       navigator.clipboard.writeText(url);
       toast('Link copied to clipboard!');
     }
@@ -105,6 +111,7 @@ function BetDetail() {
     setResolving(true);
     try {
       const updated = await resolveBet(bet.id, winningOptionIndex);
+      track('bet_resolved', { bet_id: bet.id, prediction_count: bet.total_predictions });
       setBet(updated);
 
       // Fire confetti
@@ -127,10 +134,12 @@ function BetDetail() {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       if (navigator.share) {
+        track('results_shared', { bet_id: bet.id, method: 'native_share' });
         navigator.share({ title: shareText, url: betUrl }).catch(() => {
           navigator.clipboard.writeText(`${shareText} ${betUrl}`);
         });
       } else {
+        track('results_shared', { bet_id: bet.id, method: 'clipboard' });
         navigator.clipboard.writeText(`${shareText} ${betUrl}`);
         toast('Results copied to clipboard!');
       }
@@ -156,6 +165,7 @@ function BetDetail() {
     const newVisibility = bet.visibility === 'open' ? 'link_only' : 'open';
     try {
       const updated = await updateBetVisibility(bet.id, newVisibility);
+      track('visibility_changed', { bet_id: bet.id, new_visibility: newVisibility });
       setBet(updated);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update visibility');

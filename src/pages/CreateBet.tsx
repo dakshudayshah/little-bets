@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { track } from '../lib/analytics';
 import CreateBetForm from '../components/CreateBetForm';
 
 interface CreateBetProps {
@@ -11,6 +12,7 @@ function CreateBet({ onSignInClick }: CreateBetProps) {
 
   useEffect(() => {
     document.title = 'Create a Bet - Little Bets';
+    track('page_viewed', { page: 'create' });
   }, []);
 
   if (loading) return <div className="page"><p>Loading...</p></div>;

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { track } from '../lib/analytics';
 
 interface AuthContextType {
   user: User | null;
@@ -22,14 +23,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      if (event === 'SIGNED_IN') {
+        track('auth_completed', { method: session?.user?.app_metadata?.provider ?? 'unknown' });
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   async function signInWithGoogle() {
+    track('auth_started', { method: 'google' });
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -39,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signInWithEmail(email: string) {
+    track('auth_started', { method: 'email' });
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {

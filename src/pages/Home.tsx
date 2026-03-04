@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchBets, createBet } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { track } from '../lib/analytics';
 import type { Bet, BetType } from '../types';
 import { timeAgo } from '../lib/time';
 import '../styles/Home.css';
@@ -49,6 +50,7 @@ function Home({ onSignInClick }: HomeProps) {
 
   useEffect(() => {
     document.title = 'Little Bets';
+    track('page_viewed', { page: 'home' });
   }, []);
 
   useEffect(() => {
@@ -125,6 +127,7 @@ function Home({ onSignInClick }: HomeProps) {
         navigator.clipboard.writeText(betUrl);
       }
 
+      track('bet_created', { source: 'quick', bet_type: betType, visibility: 'open', bet_id: bet.id });
       navigate(`/bet/${bet.code_name}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create bet');

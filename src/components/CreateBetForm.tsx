@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { createBet } from '../lib/supabase';
+import { track } from '../lib/analytics';
 import type { BetType, BetVisibility } from '../types';
 import '../styles/CreateBet.css';
 
@@ -77,6 +78,7 @@ function CreateBetForm() {
       } else {
         navigator.clipboard.writeText(betUrl);
       }
+      track('bet_created', { source: 'full', bet_type: betType, visibility, bet_id: bet.id });
       navigate(`/bet/${bet.code_name}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create bet');

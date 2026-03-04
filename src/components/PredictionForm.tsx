@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { submitPrediction } from '../lib/supabase';
+import { track } from '../lib/analytics';
 import type { Bet } from '../types';
 import '../styles/PredictionForm.css';
 
@@ -35,6 +36,7 @@ function PredictionForm({ bet, onPredictionSubmitted }: PredictionFormProps) {
       const label = bet.bet_type === 'yesno'
         ? (prediction ? 'Yes' : 'No')
         : bet.options[optionIndex]?.text ?? '';
+      track('prediction_submitted', { bet_id: bet.id, bet_type: bet.bet_type });
       setSubmittedLabel(label);
       setSubmitted(true);
       onPredictionSubmitted();

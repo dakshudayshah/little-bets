@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { track } from '../lib/analytics';
 import { fetchBetsByCreator, fetchUserPredictions } from '../lib/supabase';
 import type { Bet, BetParticipant } from '../types';
 import { timeAgo } from '../lib/time';
@@ -25,6 +26,7 @@ function Profile() {
 
   useEffect(() => {
     document.title = 'Profile - Little Bets';
+    track('page_viewed', { page: 'profile' });
   }, []);
 
   useEffect(() => {

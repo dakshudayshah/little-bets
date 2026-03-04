@@ -145,3 +145,29 @@ CREATE POLICY "Anyone can submit predictions"
 CREATE INDEX idx_bets_code_name ON bets(code_name);
 CREATE INDEX idx_bets_creator_id ON bets(creator_id);
 CREATE INDEX idx_participants_bet_id ON bet_participants(bet_id);
+
+-- ============================================
+-- Table: events (lightweight analytics)
+-- ============================================
+CREATE TABLE events (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  event_name TEXT NOT NULL,
+  properties JSONB DEFAULT '{}'::jsonb,
+  user_id UUID REFERENCES auth.users(id),
+  session_id TEXT,
+  page_url TEXT
+);
+
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can insert events"
+  ON events FOR INSERT
+  WITH CHECK (true);
+
+CREATE POLICY "Only service role can read events"
+  ON events FOR SELECT
+  USING (false);
+
+CREATE INDEX idx_events_name ON events(event_name);
+CREATE INDEX idx_events_created ON events(created_at);
