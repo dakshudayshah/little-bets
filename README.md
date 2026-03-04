@@ -51,6 +51,8 @@ Make casual predictions a social activity that lives where friends already talk 
 | Return creators | Do instigators come back and make more bets? |
 | Resolution rate | Are bets being closed, or abandoned? |
 
+Measured via lightweight event tracking into a Supabase `events` table — no third-party analytics. See `src/lib/analytics.ts`.
+
 ## Product approach
 
 Built with the **little bets** philosophy — small, concrete experiments over big plans.
