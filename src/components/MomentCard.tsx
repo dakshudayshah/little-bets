@@ -134,10 +134,10 @@ function MomentCard({ bet, participants, photos }: Props) {
     const allParticipants = [...winners, ...losers];
 
     // Avatar circles
-    const avatarR = 28;
-    const avatarSpacing = 68;
-    const maxAvatars = Math.min(allParticipants.length, 12);
-    const avatarY = Math.max(cursorY + 30, 320);
+    const avatarR = 44;
+    const avatarSpacing = 104;
+    const maxAvatars = Math.min(allParticipants.length, 8);
+    const avatarY = Math.max(cursorY + 24, 300);
     const avatarStartX = 60;
 
     // Load all photos
@@ -181,7 +181,7 @@ function MomentCard({ bet, participants, photos }: Props) {
       }
 
       // Name label
-      ctx.font = `500 13px ${FONT}`;
+      ctx.font = `500 15px ${FONT}`;
       ctx.fillStyle = isWinner ? WHITE : MUTED;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';

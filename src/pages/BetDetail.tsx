@@ -30,7 +30,14 @@ function BetDetail() {
   const [hasPredicted, setHasPredicted] = useState(false);
   const [isAnonCreator, setIsAnonCreator] = useState(false);
   const [showPTP, setShowPTP] = useState(false);
-  const [ptpPhotos, setPtpPhotos] = useState<Map<string, string>>(new Map());
+  const [ptpPhotos, setPtpPhotos] = useState<Map<string, string>>(() => {
+    // Restore photos from sessionStorage
+    try {
+      const stored = sessionStorage.getItem(`ptp_photos_${id}`);
+      if (stored) return new Map(JSON.parse(stored));
+    } catch { /* ignore */ }
+    return new Map();
+  });
 
   // On mount: persist hash token to storage, then strip it
   useEffect(() => {
@@ -132,32 +139,12 @@ function BetDetail() {
       // Fire confetti
       setShowConfetti(true);
 
-      // Build share message with winners
+      // Refresh participants (reveals sealed predictions)
       const parts = await fetchParticipants(bet.id);
       setParticipants(parts);
-      const winLabel = getWinningLabel(updated);
-      const winners = parts
-        .filter(p => didParticipantWin(updated, p))
-        .map(p => p.participant_name);
-      const winnersText = winners.length > 0
-        ? `${winners.join(', ')} called it!`
-        : 'No one got it right!';
-      const shareText = `The results are in! "${bet.question}" — ${winLabel}! ${winnersText}`;
-      const betUrl = getShareUrl();
 
-      // Delay share prompt so confetti can be enjoyed
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      if (navigator.share) {
-        track('results_shared', { bet_id: bet.id, method: 'native_share' });
-        navigator.share({ title: shareText, url: betUrl }).catch(() => {
-          navigator.clipboard.writeText(`${shareText} ${betUrl}`);
-        });
-      } else {
-        track('results_shared', { bet_id: bet.id, method: 'clipboard' });
-        navigator.clipboard.writeText(`${shareText} ${betUrl}`);
-        toast('Results copied to clipboard!');
-      }
+      // Toast instead of auto-share — moment card handles sharing
+      toast('Bet resolved! Scroll down to share the moment.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to resolve bet');
     } finally {
@@ -189,10 +176,13 @@ function BetDetail() {
 
   async function handlePTPExit(photos: Map<string, string>) {
     setShowPTP(false);
-    // Merge photos from this PTP session
+    // Merge photos from this PTP session and persist
     setPtpPhotos(prev => {
       const merged = new Map(prev);
       photos.forEach((v, k) => merged.set(k, v));
+      try {
+        sessionStorage.setItem(`ptp_photos_${id}`, JSON.stringify([...merged]));
+      } catch { /* storage full, ignore */ }
       return merged;
     });
     // Refresh data after pass-the-phone session
