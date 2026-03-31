@@ -26,3 +26,10 @@ Deferred work from reviews. Each item has context so someone picking it up in 3 
 **Effort:** S (CC: ~5 min) — ~15 lines in BetStats sealed rendering.
 **Depends on:** PR 3 (sealed predictions) shipped.
 **Notes:** sealed_bet_participants view already returns names. Truncate at 3 names + "and N others" for lists > 3.
+
+### P1: Moment Card Share Not Working
+**What:** The "Share Card" button on the moment card after resolution doesn't reliably share the PNG. `navigator.share({files})` fails silently on some devices, and the `<a download>` fallback doesn't trigger on iOS Safari. Need a working share chain.
+**Why:** The moment card is the primary share mechanism after resolution (auto-text-share was removed). If sharing doesn't work, the whole feature is dead.
+**Effort:** S (CC: ~15 min) — debug the share fallback chain, test on iOS Safari + Android Chrome. May need to show the image inline with a long-press hint as fallback.
+**Depends on:** PR 3b (moment card) shipped.
+**Notes:** Fallback chain should be: `navigator.share({files})` → `navigator.share({url})` with card as `<img>` for long-press-to-save → `<a download>` → clipboard URL. Also verify `canvas.toBlob()` isn't returning null on any browsers.
