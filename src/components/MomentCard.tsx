@@ -82,7 +82,7 @@ function MomentCard({ bet, participants, photos }: Props) {
 
   useEffect(() => {
     renderCard();
-  }, [bet.id]);
+  }, [bet.id, bet.winning_option_index, participants]);
 
   async function renderCard() {
     const canvas = canvasRef.current;
