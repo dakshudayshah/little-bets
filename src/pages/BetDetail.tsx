@@ -10,6 +10,7 @@ import type { Bet, BetParticipant } from '../types';
 import { getWinningLabel, didParticipantWin } from '../lib/bet-utils';
 import BetStats from '../components/BetStats';
 import PredictionForm from '../components/PredictionForm';
+import PassThePhoneMode from '../components/PassThePhoneMode';
 import Confetti from '../components/Confetti';
 import { timeAgo } from '../lib/time';
 import '../styles/BetDetail.css';
@@ -27,6 +28,7 @@ function BetDetail() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [hasPredicted, setHasPredicted] = useState(false);
   const [isAnonCreator, setIsAnonCreator] = useState(false);
+  const [showPTP, setShowPTP] = useState(false);
 
   // On mount: persist hash token to storage, then strip it
   useEffect(() => {
@@ -183,12 +185,35 @@ function BetDetail() {
     }
   }
 
+  async function handlePTPExit() {
+    setShowPTP(false);
+    // Refresh data after pass-the-phone session
+    if (id) {
+      const betData = await fetchBetByCodeName(id);
+      if (betData) {
+        setBet(betData);
+        const parts = await fetchParticipants(betData.id);
+        setParticipants(parts);
+      }
+    }
+  }
+
   if (loading) return <div className="page"><p>Loading...</p></div>;
   if (error || !bet) return <div className="page"><p className="error-text">{error || 'Bet not found'}</p></div>;
 
   const isCreator = (user?.id && user.id === bet.creator_id) || isAnonCreator;
   const winners = bet.resolved ? participants.filter(p => didParticipantWin(bet, p)) : [];
   const losers = bet.resolved ? participants.filter(p => !didParticipantWin(bet, p)) : [];
+
+  if (showPTP) {
+    return (
+      <PassThePhoneMode
+        bet={bet}
+        onExit={handlePTPExit}
+        predictionCount={bet.total_predictions}
+      />
+    );
+  }
 
   return (
     <div className="page">
@@ -213,6 +238,11 @@ function BetDetail() {
           <button className="share-btn" onClick={handleShare}>
             Share
           </button>
+          {!bet.resolved && (
+            <button className="ptp-launch-btn" onClick={() => setShowPTP(true)}>
+              Pass the Phone
+            </button>
+          )}
           {isCreator && (
             <button className="visibility-toggle-btn" onClick={handleToggleVisibility}>
               {bet.visibility === 'open' ? 'Make Link Only' : 'Make Open'}
