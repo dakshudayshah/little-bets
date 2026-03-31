@@ -253,3 +253,38 @@ BEGIN
   );
 END;
 $$;
+
+-- ============================================
+-- Migration: Sealed predictions (PR 3a)
+-- Run these statements in Supabase SQL Editor
+-- BEFORE deploying the new code.
+-- ============================================
+
+-- Add sealed column (new bets default to sealed)
+ALTER TABLE bets ADD COLUMN IF NOT EXISTS sealed BOOLEAN DEFAULT true NOT NULL;
+
+-- Existing bets should not be sealed
+UPDATE bets SET sealed = false WHERE sealed = true;
+
+-- View: sealed_bet_participants
+-- When bet is sealed + unresolved, hide prediction values.
+-- When resolved or not sealed, show full data.
+CREATE OR REPLACE VIEW sealed_bet_participants AS
+SELECT
+  bp.id,
+  bp.created_at,
+  bp.bet_id,
+  bp.participant_name,
+  CASE
+    WHEN b.sealed = true AND b.resolved = false THEN NULL
+    ELSE bp.prediction
+  END AS prediction,
+  CASE
+    WHEN b.sealed = true AND b.resolved = false THEN NULL
+    ELSE bp.option_index
+  END AS option_index
+FROM bet_participants bp
+JOIN bets b ON b.id = bp.bet_id;
+
+-- Grant view access to Supabase roles
+GRANT SELECT ON sealed_bet_participants TO anon, authenticated;

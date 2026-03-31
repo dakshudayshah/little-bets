@@ -106,9 +106,10 @@ function Profile() {
           <div className="profile-bet-list">
             {predictions.map(p => {
               const bet = p.bets;
-              const predLabel = bet.bet_type === 'yesno'
-                ? (p.prediction ? 'Yes' : 'No')
-                : bet.options[p.option_index]?.text ?? 'Unknown';
+              const predLabel = p.prediction === null ? 'Sealed'
+                : bet.bet_type === 'yesno'
+                  ? (p.prediction ? 'Yes' : 'No')
+                  : bet.options[p.option_index ?? 0]?.text ?? 'Unknown';
 
               return (
                 <Link key={p.id} to={`/bet/${bet.code_name}`} className="profile-bet-item">

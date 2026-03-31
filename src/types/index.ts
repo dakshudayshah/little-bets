@@ -19,6 +19,7 @@ export interface Bet {
   creator_name: string | null;
   creator_token: string | null;
   total_predictions: number;
+  sealed: boolean;
   resolved: boolean;
   resolved_at: string | null;
   winning_option_index: number | null;
@@ -30,6 +31,6 @@ export interface BetParticipant {
   created_at: string;
   bet_id: string;
   participant_name: string;
-  prediction: boolean;
-  option_index: number;
+  prediction: boolean | null;
+  option_index: number | null;
 }

@@ -18,6 +18,7 @@ function makeBet(overrides: Partial<Bet> = {}): Bet {
     creator_name: null,
     creator_token: null,
     total_predictions: 2,
+    sealed: false,
     resolved: true,
     resolved_at: '2024-01-02',
     winning_option_index: 0,
@@ -103,5 +104,10 @@ describe('didParticipantWin', () => {
   it('multiple choice: wrong option loses', () => {
     const bet = makeBet({ bet_type: 'multiple_choice', winning_option_index: 2 });
     expect(didParticipantWin(bet, makeParticipant({ option_index: 0 }))).toBe(false);
+  });
+
+  it('returns false when prediction is sealed (null)', () => {
+    const bet = makeBet({ winning_option_index: 0 });
+    expect(didParticipantWin(bet, makeParticipant({ prediction: null }))).toBe(false);
   });
 });

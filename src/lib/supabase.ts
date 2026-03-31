@@ -124,7 +124,7 @@ export async function updateBetVisibility(betId: string, visibility: string): Pr
 
 export async function fetchParticipants(betId: string): Promise<BetParticipant[]> {
   const { data, error } = await supabase
-    .from('bet_participants')
+    .from('sealed_bet_participants')
     .select('*')
     .eq('bet_id', betId)
     .order('created_at', { ascending: false });

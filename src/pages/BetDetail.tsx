@@ -306,7 +306,7 @@ function BetDetail() {
                     <span className="winner-prediction">
                       {bet.bet_type === 'yesno'
                         ? (p.prediction ? 'Yes' : 'No')
-                        : bet.options[p.option_index]?.text ?? 'Unknown'
+                        : bet.options[p.option_index ?? 0]?.text ?? 'Unknown'
                       }
                     </span>
                   </li>
@@ -325,7 +325,7 @@ function BetDetail() {
                       <span className={`participant-prediction ${p.prediction ? 'yes' : 'no'}`}>
                         {bet.bet_type === 'yesno'
                           ? (p.prediction ? 'Yes' : 'No')
-                          : bet.options[p.option_index]?.text ?? 'Unknown'
+                          : bet.options[p.option_index ?? 0]?.text ?? 'Unknown'
                         }
                       </span>
                       {isCreator && (
@@ -348,18 +348,22 @@ function BetDetail() {
 
       {!bet.resolved && participants.length > 0 && (
         <div className={`participants-section ${!hasPredicted && !isCreator ? 'section-hidden' : ''}`}>
-          <h3>Recent Predictions</h3>
+          <h3>{bet.sealed ? 'Who\'s In' : 'Recent Predictions'}</h3>
           <ul className="participants-list">
             {participants.map(p => (
               <li key={p.id} className="participant-item">
                 <span className="participant-name">{p.participant_name}</span>
                 <span className="participant-right">
-                  <span className={`participant-prediction ${p.prediction ? 'yes' : 'no'}`}>
-                    {bet.bet_type === 'yesno'
-                      ? (p.prediction ? 'Yes' : 'No')
-                      : bet.options[p.option_index]?.text ?? 'Unknown'
-                    }
-                  </span>
+                  {p.prediction !== null ? (
+                    <span className={`participant-prediction ${p.prediction ? 'yes' : 'no'}`}>
+                      {bet.bet_type === 'yesno'
+                        ? (p.prediction ? 'Yes' : 'No')
+                        : bet.options[p.option_index ?? 0]?.text ?? 'Unknown'
+                      }
+                    </span>
+                  ) : (
+                    <span className="participant-prediction sealed">&#128274;</span>
+                  )}
                   {isCreator && (
                     <button
                       className="remove-prediction-btn"

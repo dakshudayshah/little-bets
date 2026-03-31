@@ -30,6 +30,7 @@ function makeBet(overrides: Partial<Bet> = {}): Bet {
     creator_name: null,
     creator_token: null,
     total_predictions: 3,
+    sealed: true,
     resolved: false,
     resolved_at: null,
     winning_option_index: null,

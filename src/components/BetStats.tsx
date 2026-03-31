@@ -7,6 +7,18 @@ interface BetStatsProps {
 }
 
 function BetStats({ bet, hidden }: BetStatsProps) {
+  // Sealed + unresolved: show sealed badge, no stats
+  if (bet.sealed && !bet.resolved) {
+    return (
+      <div className="bet-stats sealed-stats">
+        <div className="sealed-badge">
+          <span className="sealed-icon">&#128274;</span>
+          <span>{bet.total_predictions} prediction{bet.total_predictions !== 1 ? 's' : ''} sealed</span>
+        </div>
+        <p className="sealed-hint">Results revealed when the bet is resolved</p>
+      </div>
+    );
+  }
   if (bet.bet_type === 'yesno') {
     const yesCount = bet.options[0]?.yes_count ?? 0;
     const noCount = bet.options[0]?.no_count ?? 0;

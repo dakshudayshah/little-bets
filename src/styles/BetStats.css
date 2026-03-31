@@ -94,3 +94,33 @@
   color: var(--color-text-secondary);
   z-index: 1;
 }
+
+/* Sealed state */
+
+.sealed-stats {
+  text-align: center;
+  padding: 24px 16px;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.sealed-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sealed-icon {
+  font-size: 1.2rem;
+}
+
+.sealed-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin: 8px 0 0;
+}
