@@ -14,6 +14,11 @@ vi.mock('../../lib/analytics', () => ({
   track: vi.fn(),
 }));
 
+// Mock image-utils
+vi.mock('../../lib/image-utils', () => ({
+  resizeImage: vi.fn().mockResolvedValue('data:image/jpeg;base64,fake'),
+}));
+
 function makeBet(overrides: Partial<Bet> = {}): Bet {
   return {
     id: 'bet-1',
@@ -143,10 +148,29 @@ describe('PassThePhoneMode', () => {
     });
   });
 
-  it('calls onExit when Done is clicked', () => {
+  it('calls onExit with photos map when Done is clicked', () => {
     render(<PassThePhoneMode bet={makeBet()} onExit={onExit} predictionCount={0} />);
     fireEvent.click(screen.getByText('Done? Show Results'));
-    expect(onExit).toHaveBeenCalled();
+    expect(onExit).toHaveBeenCalledWith(expect.any(Map));
+  });
+
+  it('shows photo step after lock-in', async () => {
+    const user = userEvent.setup();
+    render(<PassThePhoneMode bet={makeBet()} onExit={onExit} predictionCount={0} />);
+
+    fireEvent.click(screen.getByText('Start'));
+    await user.type(screen.getByPlaceholderText('Your name'), 'Alice');
+    fireEvent.click(screen.getByText('Next'));
+    fireEvent.click(screen.getByText('Yes'));
+    fireEvent.click(screen.getByText('LOCK IT IN'));
+
+    // Wait for locked → photo transition (0.7s)
+    await waitFor(() => {
+      expect(screen.getByText('Snap a selfie?')).toBeTruthy();
+    }, { timeout: 2000 });
+
+    expect(screen.getByText('Skip')).toBeTruthy();
+    expect(screen.getByText('Take Photo')).toBeTruthy();
   });
 
   it('shows description when bet has one', () => {

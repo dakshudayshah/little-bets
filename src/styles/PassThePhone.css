@@ -192,6 +192,34 @@
   cursor: not-allowed;
 }
 
+/* Photo step */
+
+.ptp-photo-step {
+  gap: 20px;
+}
+
+.ptp-file-input {
+  display: none;
+}
+
+.ptp-camera-btn {
+  padding: 16px 48px;
+}
+
+.ptp-skip-btn {
+  background: none;
+  border: none;
+  color: #888888;
+  font-size: 14px;
+  font-weight: 400;
+  font-family: inherit;
+  padding: 8px 16px;
+}
+
+.ptp-skip-btn:hover {
+  color: #aaaaaa;
+}
+
 /* Locked confirmation */
 
 .ptp-locked-step {

@@ -11,6 +11,7 @@ import { getWinningLabel, didParticipantWin } from '../lib/bet-utils';
 import BetStats from '../components/BetStats';
 import PredictionForm from '../components/PredictionForm';
 import PassThePhoneMode from '../components/PassThePhoneMode';
+import MomentCard from '../components/MomentCard';
 import Confetti from '../components/Confetti';
 import { timeAgo } from '../lib/time';
 import '../styles/BetDetail.css';
@@ -29,6 +30,7 @@ function BetDetail() {
   const [hasPredicted, setHasPredicted] = useState(false);
   const [isAnonCreator, setIsAnonCreator] = useState(false);
   const [showPTP, setShowPTP] = useState(false);
+  const [ptpPhotos, setPtpPhotos] = useState<Map<string, string>>(new Map());
 
   // On mount: persist hash token to storage, then strip it
   useEffect(() => {
@@ -185,8 +187,14 @@ function BetDetail() {
     }
   }
 
-  async function handlePTPExit() {
+  async function handlePTPExit(photos: Map<string, string>) {
     setShowPTP(false);
+    // Merge photos from this PTP session
+    setPtpPhotos(prev => {
+      const merged = new Map(prev);
+      photos.forEach((v, k) => merged.set(k, v));
+      return merged;
+    });
     // Refresh data after pass-the-phone session
     if (id) {
       const betData = await fetchBetByCodeName(id);
@@ -343,6 +351,8 @@ function BetDetail() {
               </ul>
             </div>
           )}
+
+          <MomentCard bet={bet} participants={participants} photos={ptpPhotos} />
         </>
       )}
 

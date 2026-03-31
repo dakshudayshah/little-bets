@@ -1,14 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { submitPrediction } from '../lib/supabase';
 import { track } from '../lib/analytics';
+import { resizeImage } from '../lib/image-utils';
 import type { Bet } from '../types';
 import '../styles/PassThePhone.css';
 
-type Step = 'intro' | 'name' | 'pick' | 'locked' | 'handoff';
+type Step = 'intro' | 'name' | 'pick' | 'locked' | 'photo' | 'handoff';
 
 interface Props {
   bet: Bet;
-  onExit: () => void;
+  onExit: (photos: Map<string, string>) => void;
   predictionCount: number;
 }
 
@@ -22,6 +23,8 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
   const [tapLocked, setTapLocked] = useState(false);
   const [localCount, setLocalCount] = useState(predictionCount);
   const [confirmLabel, setConfirmLabel] = useState('');
+  const [photos] = useState(() => new Map<string, string>());
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync external count
   useEffect(() => {
@@ -88,13 +91,8 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
 
       setStep('locked');
 
-      // Auto-advance to handoff after 1s
-      setTimeout(() => {
-        setStep('handoff');
-        setTapLocked(true);
-        // Unlock taps after 1.5s
-        setTimeout(() => setTapLocked(false), 1500);
-      }, 1000);
+      // Auto-advance to photo step after 0.7s
+      setTimeout(() => setStep('photo'), 700);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to submit';
       if (message.includes('duplicate') || message.includes('unique')) {
@@ -107,6 +105,25 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
     }
   }
 
+  function goToHandoff() {
+    setStep('handoff');
+    setTapLocked(true);
+    setTimeout(() => setTapLocked(false), 1500);
+  }
+
+  async function handlePhotoCapture(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await resizeImage(file, 200);
+      photos.set(name.trim(), dataUrl);
+      track('ptp_photo_taken', { bet_id: bet.id });
+    } catch {
+      // Photo failed, no big deal
+    }
+    goToHandoff();
+  }
+
   function handleReady() {
     if (tapLocked) return;
     reset();
@@ -115,7 +132,7 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
 
   function handleDone() {
     track('ptp_done', { bet_id: bet.id, predictions_collected: localCount });
-    onExit();
+    onExit(photos);
   }
 
   const reducedMotion = typeof window !== 'undefined'
@@ -237,6 +254,30 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
             <p className="ptp-locked-name">{name}</p>
             <h1 className="ptp-locked-label">{confirmLabel}</h1>
             <p className="ptp-locked-text">Locked in!</p>
+          </div>
+        )}
+
+        {/* STEP: Photo */}
+        {step === 'photo' && (
+          <div className="ptp-step ptp-photo-step">
+            <p className="ptp-subtitle">Snap a selfie?</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="user"
+              className="ptp-file-input"
+              onChange={handlePhotoCapture}
+            />
+            <button
+              className="ptp-cta ptp-camera-btn"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Take Photo
+            </button>
+            <button className="ptp-skip-btn" onClick={goToHandoff}>
+              Skip
+            </button>
           </div>
         )}
 
