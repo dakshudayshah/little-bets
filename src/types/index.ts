@@ -17,6 +17,7 @@ export interface Bet {
   code_name: string;
   creator_id: string | null;
   creator_name: string | null;
+  creator_token: string | null;
   total_predictions: number;
   resolved: boolean;
   resolved_at: string | null;

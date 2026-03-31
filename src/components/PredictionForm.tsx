@@ -71,6 +71,7 @@ function PredictionForm({ bet, onPredictionSubmitted }: PredictionFormProps) {
           placeholder="Your name"
           value={name}
           onChange={e => setName(e.target.value)}
+          maxLength={50}
         />
       </div>
 

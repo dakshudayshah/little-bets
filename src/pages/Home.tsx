@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { fetchBets, createBet } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { track } from '../lib/analytics';
+import { saveCreatorToken, getShareUrl, setHashToken, isStorageAvailable } from '../lib/creator-token';
 import type { Bet, BetType } from '../types';
 import { timeAgo } from '../lib/time';
 import '../styles/Home.css';
@@ -30,11 +31,7 @@ const PLACEHOLDERS = [
   'Will someone suggest karaoke tonight?',
 ];
 
-interface HomeProps {
-  onSignInClick: () => void;
-}
-
-function Home({ onSignInClick }: HomeProps) {
+function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [bets, setBets] = useState<Bet[]>([]);
@@ -83,11 +80,6 @@ function Home({ onSignInClick }: HomeProps) {
     const trimmed = question.trim();
     if (!trimmed) return;
 
-    if (!user) {
-      onSignInClick();
-      return;
-    }
-
     if (betType === 'multiple_choice') {
       const validOptions = options.map(o => o.trim()).filter(o => o.length > 0);
       if (validOptions.length < 2) {
@@ -109,16 +101,29 @@ function Home({ onSignInClick }: HomeProps) {
             .filter(o => o.length > 0)
             .map(text => ({ text, yes_count: 0, no_count: 0 }));
 
+      const token = user ? undefined : crypto.randomUUID();
+      const name = user
+        ? (user.user_metadata?.full_name ?? user.email ?? null)
+        : null;
+
       const bet = await createBet({
         question: trimmed,
         description: null,
         bet_type: betType,
         options: betOptions,
-        creator_id: user.id,
-        creator_name: user.user_metadata?.full_name ?? user.email ?? null,
+        creator_id: user?.id ?? null,
+        creator_name: name,
+        creator_token: token,
       });
 
-      const betUrl = `${window.location.origin}/bet/${bet.code_name}`;
+      if (token) {
+        saveCreatorToken(bet.id, token);
+        if (!isStorageAvailable()) {
+          track('creator_token_lost', { reason: 'storage_unavailable' });
+        }
+      }
+
+      const betUrl = getShareUrl(bet.code_name);
       if (navigator.share) {
         navigator.share({ title: bet.question, url: betUrl }).catch(() => {
           navigator.clipboard.writeText(betUrl);
@@ -127,8 +132,14 @@ function Home({ onSignInClick }: HomeProps) {
         navigator.clipboard.writeText(betUrl);
       }
 
-      track('bet_created', { source: 'quick', bet_type: betType, visibility: 'open', bet_id: bet.id });
-      navigate(`/bet/${bet.code_name}`);
+      track('bet_created', { source: 'quick', bet_type: betType, visibility: 'open', bet_id: bet.id, anonymous: !user });
+
+      if (token) {
+        navigate(`/bet/${bet.code_name}`);
+        setTimeout(() => setHashToken(token), 0);
+      } else {
+        navigate(`/bet/${bet.code_name}`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create bet');
       setCreating(false);

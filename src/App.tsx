@@ -17,9 +17,9 @@ function App() {
       <ScrollToTop />
       <Header onSignInClick={() => setShowAuthModal(true)} />
       <Routes>
-        <Route path="/" element={<Home onSignInClick={() => setShowAuthModal(true)} />} />
+        <Route path="/" element={<Home />} />
         <Route path="/bet/:id" element={<BetDetail />} />
-        <Route path="/create" element={<CreateBet onSignInClick={() => setShowAuthModal(true)} />} />
+        <Route path="/create" element={<CreateBet />} />
 
         <Route path="/profile" element={<Profile />} />
       </Routes>

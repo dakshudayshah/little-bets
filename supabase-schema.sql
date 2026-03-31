@@ -171,3 +171,85 @@ CREATE POLICY "Only service role can read events"
 
 CREATE INDEX idx_events_name ON events(event_name);
 CREATE INDEX idx_events_created ON events(created_at);
+
+-- ============================================
+-- Migration: Anonymous bet creation (PR 1)
+-- Run these statements in Supabase SQL Editor
+-- BEFORE deploying the new code.
+-- ============================================
+
+-- Add columns for anonymous creation
+ALTER TABLE bets ADD COLUMN IF NOT EXISTS creator_token TEXT;
+ALTER TABLE bets ADD COLUMN IF NOT EXISTS visibility TEXT DEFAULT 'open' CHECK (visibility IN ('open', 'link_only'));
+ALTER TABLE bets ADD COLUMN IF NOT EXISTS resolved BOOLEAN DEFAULT false NOT NULL;
+ALTER TABLE bets ADD COLUMN IF NOT EXISTS resolved_at TIMESTAMPTZ;
+ALTER TABLE bets ADD COLUMN IF NOT EXISTS winning_option_index INTEGER;
+CREATE INDEX IF NOT EXISTS idx_bets_creator_token ON bets(creator_token);
+
+-- Allow anonymous inserts on bets (replace auth-only policy)
+DROP POLICY IF EXISTS "Authenticated users can create bets" ON bets;
+CREATE POLICY "Anyone can create bets"
+  ON bets FOR INSERT
+  WITH CHECK (true);
+
+-- Allow creators to update their own bets (authenticated)
+CREATE POLICY "Creators can update their bets" ON bets
+  FOR UPDATE USING (auth.uid() = creator_id);
+
+-- Allow anonymous resolution via RPC (handled by RPC function security)
+-- The RPC function runs as SECURITY DEFINER and validates the token.
+
+-- ============================================
+-- RPC: resolve_bet (anonymous resolution)
+-- ============================================
+CREATE OR REPLACE FUNCTION resolve_bet(
+  p_bet_id UUID,
+  p_winning_option INTEGER,
+  p_token TEXT
+)
+RETURNS SETOF bets
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  -- Validate token matches the bet
+  IF NOT EXISTS (
+    SELECT 1 FROM bets
+    WHERE id = p_bet_id
+      AND creator_token = p_token
+      AND resolved = false
+  ) THEN
+    RAISE EXCEPTION 'Invalid token or bet already resolved';
+  END IF;
+
+  RETURN QUERY
+  UPDATE bets
+  SET resolved = true,
+      resolved_at = now(),
+      winning_option_index = p_winning_option
+  WHERE id = p_bet_id
+    AND creator_token = p_token
+    AND resolved = false
+  RETURNING *;
+END;
+$$;
+
+-- ============================================
+-- RPC: check_creator (anonymous creator check)
+-- ============================================
+CREATE OR REPLACE FUNCTION check_creator(
+  p_bet_id UUID,
+  p_token TEXT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM bets
+    WHERE id = p_bet_id
+      AND creator_token = p_token
+  );
+END;
+$$;

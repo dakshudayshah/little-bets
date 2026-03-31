@@ -3,19 +3,12 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { track } from '../lib/analytics';
 import { fetchBetsByCreator, fetchUserPredictions } from '../lib/supabase';
+import { didParticipantWin } from '../lib/bet-utils';
 import type { Bet, BetParticipant } from '../types';
 import { timeAgo } from '../lib/time';
 import '../styles/Profile.css';
 
 type PredictionWithBet = BetParticipant & { bets: Bet };
-
-function didWin(bet: Bet, p: BetParticipant): boolean {
-  if (bet.winning_option_index === null) return false;
-  if (bet.bet_type === 'yesno') {
-    return bet.winning_option_index === 0 ? p.prediction : !p.prediction;
-  }
-  return p.option_index === bet.winning_option_index;
-}
 
 function Profile() {
   const { user, loading: authLoading } = useAuth();
@@ -59,7 +52,7 @@ function Profile() {
   }
 
   const resolvedPredictions = predictions.filter(p => p.bets.resolved);
-  const correct = resolvedPredictions.filter(p => didWin(p.bets, p)).length;
+  const correct = resolvedPredictions.filter(p => didParticipantWin(p.bets, p)).length;
   const unresolvedBets = bets.filter(b => !b.resolved && b.total_predictions > 0);
 
   return (
@@ -127,7 +120,7 @@ function Profile() {
                   </div>
                   <span className="profile-bet-meta">
                     {bet.resolved ? (
-                      didWin(bet, p)
+                      didParticipantWin(bet, p)
                         ? <span className="profile-result-tag correct">Correct</span>
                         : <span className="profile-result-tag wrong">Wrong</span>
                     ) : (

@@ -49,8 +49,9 @@ export async function createBet(bet: {
   description: string | null;
   bet_type: string;
   options: { text: string; yes_count: number; no_count: number }[];
-  creator_id: string;
+  creator_id: string | null;
   creator_name: string | null;
+  creator_token?: string;
   visibility?: string;
 }): Promise<Bet> {
   const { data, error } = await supabase
@@ -77,6 +78,32 @@ export async function resolveBet(betId: string, winningOptionIndex: number): Pro
 
   if (error) throw error;
   return data as Bet;
+}
+
+export async function resolveBetAnonymous(
+  betId: string,
+  winningOptionIndex: number,
+  token: string
+): Promise<Bet> {
+  const { data, error } = await supabase.rpc('resolve_bet', {
+    p_bet_id: betId,
+    p_winning_option: winningOptionIndex,
+    p_token: token,
+  });
+
+  if (error) throw error;
+  // RPC returns the updated bet row
+  return data as Bet;
+}
+
+export async function checkCreator(betId: string, token: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('check_creator', {
+    p_bet_id: betId,
+    p_token: token,
+  });
+
+  if (error) return false;
+  return data === true;
 }
 
 export async function updateBetVisibility(betId: string, visibility: string): Promise<Bet> {

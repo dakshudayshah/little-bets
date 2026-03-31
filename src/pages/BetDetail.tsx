@@ -1,32 +1,18 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchBetByCodeName, fetchParticipants, resolveBet, updateBetVisibility, deletePrediction } from '../lib/supabase';
+import { fetchBetByCodeName, fetchParticipants, resolveBet, resolveBetAnonymous, checkCreator, updateBetVisibility, deletePrediction } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { track } from '../lib/analytics';
+import { getCreatorToken, getTokenFromHash, saveCreatorToken, stripHashToken } from '../lib/creator-token';
 import type { Bet, BetParticipant } from '../types';
+import { getWinningLabel, didParticipantWin } from '../lib/bet-utils';
 import BetStats from '../components/BetStats';
 import PredictionForm from '../components/PredictionForm';
 import Confetti from '../components/Confetti';
 import { timeAgo } from '../lib/time';
 import '../styles/BetDetail.css';
-
-function getWinningLabel(bet: Bet): string {
-  if (bet.winning_option_index === null) return '';
-  if (bet.bet_type === 'yesno') {
-    return bet.winning_option_index === 0 ? 'Yes' : 'No';
-  }
-  return bet.options[bet.winning_option_index]?.text ?? 'Unknown';
-}
-
-function didParticipantWin(bet: Bet, p: BetParticipant): boolean {
-  if (bet.winning_option_index === null) return false;
-  if (bet.bet_type === 'yesno') {
-    return bet.winning_option_index === 0 ? p.prediction : !p.prediction;
-  }
-  return p.option_index === bet.winning_option_index;
-}
 
 function BetDetail() {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +26,16 @@ function BetDetail() {
   const [resolving, setResolving] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [hasPredicted, setHasPredicted] = useState(false);
+  const [isAnonCreator, setIsAnonCreator] = useState(false);
+
+  // On mount: persist hash token to storage, then strip it
+  useEffect(() => {
+    const hashToken = getTokenFromHash();
+    if (hashToken && bet) {
+      saveCreatorToken(bet.id, hashToken);
+      stripHashToken();
+    }
+  }, [bet?.id]);
 
   const loadBet = useCallback(async () => {
     if (!id) return;
@@ -64,6 +60,15 @@ function BetDetail() {
     const interval = setInterval(loadBet, 5000);
     return () => clearInterval(interval);
   }, [loadBet]);
+
+  // Check anonymous creator status once bet loads
+  useEffect(() => {
+    if (!bet || user) return;
+    const token = getCreatorToken(bet.id);
+    if (token) {
+      checkCreator(bet.id, token).then(setIsAnonCreator);
+    }
+  }, [bet?.id, user]);
 
   useEffect(() => {
     document.title = bet ? `${bet.question} - Little Bets` : 'Little Bets';
@@ -110,7 +115,13 @@ function BetDetail() {
     if (!confirm(`Resolve this bet with "${label}" as the winner? This cannot be undone.`)) return;
     setResolving(true);
     try {
-      const updated = await resolveBet(bet.id, winningOptionIndex);
+      let updated: Bet;
+      const anonToken = getCreatorToken(bet.id);
+      if (!user && anonToken) {
+        updated = await resolveBetAnonymous(bet.id, winningOptionIndex, anonToken);
+      } else {
+        updated = await resolveBet(bet.id, winningOptionIndex);
+      }
       track('bet_resolved', { bet_id: bet.id, prediction_count: bet.total_predictions });
       setBet(updated);
 
@@ -175,7 +186,7 @@ function BetDetail() {
   if (loading) return <div className="page"><p>Loading...</p></div>;
   if (error || !bet) return <div className="page"><p className="error-text">{error || 'Bet not found'}</p></div>;
 
-  const isCreator = user?.id === bet.creator_id;
+  const isCreator = (user?.id && user.id === bet.creator_id) || isAnonCreator;
   const winners = bet.resolved ? participants.filter(p => didParticipantWin(bet, p)) : [];
   const losers = bet.resolved ? participants.filter(p => !didParticipantWin(bet, p)) : [];
 

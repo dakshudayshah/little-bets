@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { createBet } from '../lib/supabase';
 import { track } from '../lib/analytics';
+import { saveCreatorToken, getShareUrl, setHashToken, isStorageAvailable } from '../lib/creator-token';
 import type { BetType, BetVisibility } from '../types';
 import '../styles/CreateBet.css';
 
@@ -12,6 +13,7 @@ function CreateBetForm() {
   const [betType, setBetType] = useState<BetType>('yesno');
   const [question, setQuestion] = useState('');
   const [description, setDescription] = useState('');
+  const [creatorName, setCreatorName] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [visibility, setVisibility] = useState<BetVisibility>('open');
   const [submitting, setSubmitting] = useState(false);
@@ -37,11 +39,16 @@ function CreateBetForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) return;
 
     const trimmedQuestion = question.trim();
     if (!trimmedQuestion) {
       setError('Question is required');
+      return;
+    }
+
+    // Anonymous creators need a name
+    if (!user && !creatorName.trim()) {
+      setError('Please enter your name');
       return;
     }
 
@@ -61,16 +68,32 @@ function CreateBetForm() {
     setError(null);
 
     try {
+      const token = user ? undefined : crypto.randomUUID();
+      const name = user
+        ? (user.user_metadata?.full_name ?? user.email ?? null)
+        : creatorName.trim();
+
       const bet = await createBet({
         question: trimmedQuestion,
         description: description.trim() || null,
         bet_type: betType,
         options: betOptions,
-        creator_id: user.id,
-        creator_name: user.user_metadata?.full_name ?? user.email ?? null,
+        creator_id: user?.id ?? null,
+        creator_name: name,
+        creator_token: token,
         visibility,
       });
-      const betUrl = `${window.location.origin}/bet/${bet.code_name}`;
+
+      // Save token for anonymous creators
+      if (token) {
+        saveCreatorToken(bet.id, token);
+        if (!isStorageAvailable()) {
+          track('creator_token_lost', { reason: 'storage_unavailable' });
+        }
+      }
+
+      // Share the clean URL (no token)
+      const betUrl = getShareUrl(bet.code_name);
       if (navigator.share) {
         navigator.share({ title: bet.question, url: betUrl }).catch(() => {
           navigator.clipboard.writeText(betUrl);
@@ -78,10 +101,27 @@ function CreateBetForm() {
       } else {
         navigator.clipboard.writeText(betUrl);
       }
-      track('bet_created', { source: 'full', bet_type: betType, visibility, bet_id: bet.id });
-      navigate(`/bet/${bet.code_name}`);
+
+      track('bet_created', {
+        source: 'full',
+        bet_type: betType,
+        visibility,
+        bet_id: bet.id,
+        anonymous: !user,
+      });
+
+      // Navigate with hash token for anonymous creators
+      if (token) {
+        navigate(`/bet/${bet.code_name}`);
+        // Set hash after navigation
+        setTimeout(() => setHashToken(token), 0);
+      } else {
+        navigate(`/bet/${bet.code_name}`);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create bet');
+      const message = err instanceof Error ? err.message : 'Failed to create bet';
+      setError(message);
+      track('bet_create_failed', { error: message, bet_type: betType, visibility });
       setSubmitting(false);
     }
   }
@@ -126,6 +166,21 @@ function CreateBetForm() {
           </span>
         )}
       </div>
+
+      {!user && (
+        <div className="form-group">
+          <label className="form-label" htmlFor="creator-name">Your Name</label>
+          <input
+            id="creator-name"
+            className="form-input"
+            type="text"
+            placeholder="Enter your name"
+            value={creatorName}
+            onChange={e => setCreatorName(e.target.value)}
+            maxLength={50}
+          />
+        </div>
+      )}
 
       {betType === 'multiple_choice' && (
         <div className="form-group">
@@ -200,6 +255,8 @@ function CreateBetForm() {
       </div>
 
       {error && <p className="form-error">{error}</p>}
+
+      <p className="form-hint">No account required. Anyone can create a bet.</p>
 
       <button type="submit" className="form-submit-btn" disabled={submitting}>
         {submitting ? 'Creating...' : 'Create Bet'}
