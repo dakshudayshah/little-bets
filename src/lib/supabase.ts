@@ -92,8 +92,10 @@ export async function resolveBetAnonymous(
   });
 
   if (error) throw error;
-  // RPC returns the updated bet row
-  return data as Bet;
+  // RPC RETURNS SETOF → data is an array
+  const rows = data as Bet[];
+  if (!rows || rows.length === 0) throw new Error('Bet not found or already resolved');
+  return rows[0];
 }
 
 export async function checkCreator(betId: string, token: string): Promise<boolean> {
