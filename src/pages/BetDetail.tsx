@@ -5,9 +5,9 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { track } from '../lib/analytics';
-import { getCreatorToken, getTokenFromHash, saveCreatorToken, stripHashToken } from '../lib/creator-token';
+import { getCreatorToken, getTokenFromHash, saveCreatorToken, stripHashToken, getShareUrl } from '../lib/creator-token';
 import type { Bet, BetParticipant } from '../types';
-import { getWinningLabel, didParticipantWin } from '../lib/bet-utils';
+import { getWinningLabel, didParticipantWin, getParticipantLabel } from '../lib/bet-utils';
 import BetStats from '../components/BetStats';
 import PredictionForm from '../components/PredictionForm';
 import PassThePhoneMode from '../components/PassThePhoneMode';
@@ -68,9 +68,10 @@ function BetDetail() {
 
   useEffect(() => {
     loadBet();
+    if (bet?.resolved) return;
     const interval = setInterval(loadBet, 5000);
     return () => clearInterval(interval);
-  }, [loadBet]);
+  }, [loadBet, bet?.resolved]);
 
   // Check anonymous creator status once bet loads
   useEffect(() => {
@@ -88,13 +89,8 @@ function BetDetail() {
     }
   }, [bet?.id]);
 
-  function getShareUrl() {
-    const base = `${window.location.origin}/bet/${id}`;
-    return theme !== 'neo' ? `${base}?theme=${theme}` : base;
-  }
-
   function handleShare() {
-    const url = getShareUrl();
+    const url = getShareUrl(id!, theme);
     if (navigator.share) {
       track('bet_shared', { bet_id: bet?.id, method: 'native_share' });
       navigator.share({ title: bet?.question, url }).catch(() => {
@@ -186,13 +182,13 @@ function BetDetail() {
       return merged;
     });
     // Refresh data after pass-the-phone session
-    if (id) {
-      const betData = await fetchBetByCodeName(id);
-      if (betData) {
-        setBet(betData);
-        const parts = await fetchParticipants(betData.id);
-        setParticipants(parts);
-      }
+    if (id && bet) {
+      const [betData, parts] = await Promise.all([
+        fetchBetByCodeName(id),
+        fetchParticipants(bet.id),
+      ]);
+      if (betData) setBet(betData);
+      setParticipants(parts);
     }
   }
 
@@ -302,10 +298,7 @@ function BetDetail() {
                   <li key={p.id} className="winner-item">
                     <span className="winner-name">{p.participant_name}</span>
                     <span className="winner-prediction">
-                      {bet.bet_type === 'yesno'
-                        ? (p.prediction ? 'Yes' : 'No')
-                        : bet.options[p.option_index ?? 0]?.text ?? 'Unknown'
-                      }
+                      {getParticipantLabel(bet, p)}
                     </span>
                   </li>
                 ))}
@@ -321,10 +314,7 @@ function BetDetail() {
                     <span className="participant-name">{p.participant_name}</span>
                     <span className="participant-right">
                       <span className={`participant-prediction ${p.prediction ? 'yes' : 'no'}`}>
-                        {bet.bet_type === 'yesno'
-                          ? (p.prediction ? 'Yes' : 'No')
-                          : bet.options[p.option_index ?? 0]?.text ?? 'Unknown'
-                        }
+                        {getParticipantLabel(bet, p)}
                       </span>
                       {isCreator && (
                         <button
@@ -356,10 +346,7 @@ function BetDetail() {
                 <span className="participant-right">
                   {p.prediction !== null ? (
                     <span className={`participant-prediction ${p.prediction ? 'yes' : 'no'}`}>
-                      {bet.bet_type === 'yesno'
-                        ? (p.prediction ? 'Yes' : 'No')
-                        : bet.options[p.option_index ?? 0]?.text ?? 'Unknown'
-                      }
+                      {getParticipantLabel(bet, p)}
                     </span>
                   ) : (
                     <span className="participant-prediction sealed">&#128274;</span>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { submitPrediction } from '../lib/supabase';
 import { track } from '../lib/analytics';
 import { resizeImage } from '../lib/image-utils';
@@ -25,6 +25,8 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
   const [confirmLabel, setConfirmLabel] = useState('');
   const [photos] = useState(() => new Map<string, string>());
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lockTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const photoTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Sync external count
   useEffect(() => {
@@ -42,6 +44,8 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
       if (document.fullscreenElement) {
         document.exitFullscreen().catch(() => {});
       }
+      clearTimeout(photoTimerRef.current);
+      clearTimeout(lockTimerRef.current);
     };
   }, [bet.id]);
 
@@ -92,7 +96,7 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
       setStep('locked');
 
       // Auto-advance to photo step after 0.7s
-      setTimeout(() => setStep('photo'), 700);
+      photoTimerRef.current = setTimeout(() => setStep('photo'), 700);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to submit';
       if (message.includes('duplicate') || message.includes('unique')) {
@@ -108,7 +112,7 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
   function goToHandoff() {
     setStep('handoff');
     setTapLocked(true);
-    setTimeout(() => setTapLocked(false), 1500);
+    lockTimerRef.current = setTimeout(() => setTapLocked(false), 1500);
   }
 
   async function handlePhotoCapture(e: React.ChangeEvent<HTMLInputElement>) {
@@ -135,8 +139,10 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
     onExit(photos);
   }
 
-  const reducedMotion = typeof window !== 'undefined'
-    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reducedMotion = useMemo(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    []
+  );
 
   return (
     <div className="ptp-overlay">

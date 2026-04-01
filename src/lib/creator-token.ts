@@ -6,15 +6,18 @@
  * on bet creation, then stripped via history.replaceState.
  */
 
+const storageCache: Partial<Record<'localStorage' | 'sessionStorage', boolean>> = {};
+
 function storageAvailable(type: 'localStorage' | 'sessionStorage'): boolean {
+  if (type in storageCache) return storageCache[type]!;
   try {
     const storage = window[type];
     const key = '__storage_test__';
     storage.setItem(key, 'test');
     storage.removeItem(key);
-    return true;
+    return (storageCache[type] = true);
   } catch {
-    return false;
+    return (storageCache[type] = false);
   }
 }
 

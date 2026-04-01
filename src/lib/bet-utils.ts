@@ -15,3 +15,10 @@ export function didParticipantWin(bet: Bet, p: BetParticipant): boolean {
   }
   return p.option_index === bet.winning_option_index;
 }
+
+export function getParticipantLabel(bet: Bet, p: BetParticipant): string {
+  if (bet.bet_type === 'yesno') {
+    return p.prediction ? 'Yes' : 'No';
+  }
+  return bet.options[p.option_index ?? 0]?.text ?? 'Unknown';
+}

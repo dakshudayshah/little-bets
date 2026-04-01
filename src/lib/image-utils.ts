@@ -5,7 +5,9 @@
 export function resizeImage(file: File, size: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    const url = URL.createObjectURL(file);
     img.onload = () => {
+      URL.revokeObjectURL(url);
       const canvas = document.createElement('canvas');
       canvas.width = size;
       canvas.height = size;
@@ -23,8 +25,11 @@ export function resizeImage(file: File, size: number): Promise<string> {
 
       resolve(canvas.toDataURL('image/jpeg', 0.85));
     };
-    img.onerror = () => reject(new Error('Failed to load image'));
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image'));
+    };
+    img.src = url;
   });
 }
 

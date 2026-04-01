@@ -77,7 +77,6 @@ function drawInitial(
 
 function MomentCard({ bet, participants, photos }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [rendered, setRendered] = useState(false);
   const [imgSrc, setImgSrc] = useState<string | null>(null);
 
   useEffect(() => {
@@ -215,7 +214,6 @@ function MomentCard({ bet, participants, photos }: Props) {
     ctx.font = `400 14px ${FONT}`;
     ctx.fillText('littlebets.netlify.app', W - 60, H - 40);
 
-    setRendered(true);
     setImgSrc(canvas.toDataURL('image/png'));
   }
 
@@ -246,7 +244,7 @@ function MomentCard({ bet, participants, photos }: Props) {
     try {
       const link = document.createElement('a');
       link.download = 'little-bets-moment.png';
-      link.href = canvas.toDataURL('image/png');
+      link.href = imgSrc || canvas.toDataURL('image/png');
       link.click();
     } catch {
       // Nothing we can do
@@ -269,7 +267,7 @@ function MomentCard({ bet, participants, photos }: Props) {
           className="moment-card-preview"
         />
       )}
-      {rendered && (
+      {imgSrc && (
         <button className="moment-card-share-btn" onClick={handleShare}>
           Share Card
         </button>

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { track } from '../lib/analytics';
 import { fetchBetsByCreator, fetchUserPredictions } from '../lib/supabase';
-import { didParticipantWin } from '../lib/bet-utils';
+import { didParticipantWin, getParticipantLabel } from '../lib/bet-utils';
 import type { Bet, BetParticipant } from '../types';
 import { timeAgo } from '../lib/time';
 import '../styles/Profile.css';
@@ -107,9 +107,7 @@ function Profile() {
             {predictions.map(p => {
               const bet = p.bets;
               const predLabel = p.prediction === null ? 'Sealed'
-                : bet.bet_type === 'yesno'
-                  ? (p.prediction ? 'Yes' : 'No')
-                  : bet.options[p.option_index ?? 0]?.text ?? 'Unknown';
+                : getParticipantLabel(bet, p);
 
               return (
                 <Link key={p.id} to={`/bet/${bet.code_name}`} className="profile-bet-item">
