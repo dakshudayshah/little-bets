@@ -38,7 +38,7 @@ Turn a gathering into a memory. Create a bet, pass the phone around the table, r
 | Anonymous predictions | Removes friction. Sign-up only to *create* bets. |
 | Link = distribution | No feed, no algorithm. The group chat is the channel. |
 | No real money | Keeps it casual. The fun is the bragging, not the stakes. |
-| Auto-copy link on creation | The first action after creating a bet is sharing it. Remove that step. |
+| Pass the phone on creation | After creating a bet, auto-launch pass-the-phone (`?ptp=1`) so the first prediction happens immediately at the table. |
 | OG image previews | The link preview in chat is a feature. It drives clicks. |
 | Mobile-first | Group chats live on phones. |
 | Two themes (Neo / Retro) | People share things that feel like *theirs*. |

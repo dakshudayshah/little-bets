@@ -27,9 +27,6 @@ Deferred work from reviews. Each item has context so someone picking it up in 3 
 **Depends on:** PR 3 (sealed predictions) shipped.
 **Notes:** sealed_bet_participants view already returns names. Truncate at 3 names + "and N others" for lists > 3.
 
-### P1: Moment Card Share Not Working
-**What:** The "Share Card" button on the moment card after resolution doesn't reliably share the PNG. `navigator.share({files})` fails silently on some devices, and the `<a download>` fallback doesn't trigger on iOS Safari. Need a working share chain.
-**Why:** The moment card is the primary share mechanism after resolution (auto-text-share was removed). If sharing doesn't work, the whole feature is dead.
-**Effort:** S (CC: ~15 min) — debug the share fallback chain, test on iOS Safari + Android Chrome. May need to show the image inline with a long-press hint as fallback.
-**Depends on:** PR 3b (moment card) shipped.
-**Notes:** Fallback chain should be: `navigator.share({files})` → `navigator.share({url})` with card as `<img>` for long-press-to-save → `<a download>` → clipboard URL. Also verify `canvas.toBlob()` isn't returning null on any browsers.
+### ~~P1: Moment Card Share Not Working~~ ✓ COMPLETED v0.1 (2026-04-03)
+**What:** Implemented 4-step share fallback chain in `MomentCard.tsx`: (1) `navigator.canShare({files})` → native share with PNG, (2) show long-press hint with inline `<img>` for save-to-photos, (3) `<a download>` click, (4) `navigator.clipboard.writeText(betUrl)`.
+**Result:** Share works across iOS Safari, Android Chrome, and desktop browsers.

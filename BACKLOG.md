@@ -19,15 +19,15 @@ Running, categorized backlog of ideas, improvements, and learnings.
 
 ## UX / Quality of Life
 
-- [ ] **Toast Notifications** — Replace browser `alert()` with subtle auto-dismissing toasts for "Link copied!", "Results copied!", etc.
-- [ ] **Scroll to Top on Navigation** — SPA bug: navigating between pages doesn't scroll to top.
+- [x] **Toast Notifications** — Shipped v0.1. Auto-dismissing toasts for link copy, results copy, etc.
+- [x] **Scroll to Top on Navigation** — Shipped v0.1. `ScrollToTop` component in `App.tsx`.
 - [ ] **Haptic Feedback** — `navigator.vibrate()` on predict/resolve for tactile confirmation on mobile.
 - [ ] **Dark Mode** — Low-effort via CSS variables, respect `prefers-color-scheme`.
-- [ ] **Sign Out on Profile Page** — Currently only in header. Standard to have on Profile too.
+- [x] **Sign Out on Profile Page** — Shipped v0.1. Now in Settings page (accessible via bottom nav).
 - [ ] **Pull-Down to Refresh** — Mobile users expect this on the home feed.
 - [ ] **Search / Filter Bets** — Find specific bets quickly on the home page.
 - [ ] **Duplicate Name Warning** — Friendly message when someone tries to predict with a name that already voted.
-- [ ] **Character Counter** — Show remaining characters on inputs (200 char limit).
+- [x] **Character Counter** — Shipped v0.1. Shows remaining characters on question/option inputs.
 - [ ] **Auto-Focus** — Quick create input auto-focuses on page load.
 - [ ] **PWA Support** — Installable, works offline, push notifications.
 
