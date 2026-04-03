@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { createBet } from '../lib/supabase';
 import { track } from '../lib/analytics';
-import { saveCreatorToken, getShareUrl, setHashToken, isStorageAvailable } from '../lib/creator-token';
+import { saveCreatorToken, setHashToken, isStorageAvailable } from '../lib/creator-token';
 import type { BetType, BetVisibility } from '../types';
 import '../styles/CreateBet.css';
 
@@ -92,16 +92,6 @@ function CreateBetForm() {
         }
       }
 
-      // Share the clean URL (no token)
-      const betUrl = getShareUrl(bet.code_name);
-      if (navigator.share) {
-        navigator.share({ title: bet.question, url: betUrl }).catch(() => {
-          navigator.clipboard.writeText(betUrl);
-        });
-      } else {
-        navigator.clipboard.writeText(betUrl);
-      }
-
       track('bet_created', {
         source: 'full',
         bet_type: betType,
@@ -110,13 +100,11 @@ function CreateBetForm() {
         anonymous: !user,
       });
 
-      // Navigate with hash token for anonymous creators
       if (token) {
-        navigate(`/bet/${bet.code_name}`);
-        // Set hash after navigation
+        navigate(`/bet/${bet.code_name}?ptp=1`);
         setTimeout(() => setHashToken(token), 0);
       } else {
-        navigate(`/bet/${bet.code_name}`);
+        navigate(`/bet/${bet.code_name}?ptp=1`);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create bet';

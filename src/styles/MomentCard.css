@@ -35,3 +35,9 @@
 .moment-card-share-btn:hover {
   background: var(--color-primary-hover);
 }
+
+.moment-card-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin: 8px 0 0;
+}

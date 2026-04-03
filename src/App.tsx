@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import BetDetail from './pages/BetDetail';
 import CreateBet from './pages/CreateBet';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 
 function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -22,6 +23,8 @@ function App() {
         <Route path="/create" element={<CreateBet />} />
 
         <Route path="/profile" element={<Profile />} />
+        <Route path="/my-bets" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
       </Routes>
       <BottomNav />
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}

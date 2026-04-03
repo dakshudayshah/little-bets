@@ -80,7 +80,7 @@ function Profile() {
       {loading && <p>Loading...</p>}
       {error && <p className="error-text">{error}</p>}
       {!loading && bets.length === 0 && (
-        <p className="profile-empty">You haven't created any bets yet. <Link to="/create">Create your first bet</Link></p>
+        <p className="profile-empty">You haven't created any bets yet. <Link to="/">Create your first bet</Link></p>
       )}
       {bets.length > 0 && (
         <div className="profile-bet-list">
@@ -98,7 +98,7 @@ function Profile() {
 
       <h2 className="profile-section-title">Your Predictions</h2>
       {!loading && predictions.length === 0 && (
-        <p className="profile-empty">No predictions yet. <Link to="/">Browse open bets</Link></p>
+        <p className="profile-empty">No predictions yet. Join a bet to start predicting.</p>
       )}
       {predictions.length > 0 && (
         <>

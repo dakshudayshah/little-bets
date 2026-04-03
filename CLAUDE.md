@@ -1,6 +1,6 @@
 # Little Bets
 
-Casual prediction app for friend groups. React + TypeScript + Vite + Supabase + Netlify.
+A memory-creation tool that uses bets, predictions and polls as a social prompt. React + TypeScript + Vite + Supabase + Netlify.
 
 ## Design System
 Always read DESIGN.md before making any visual or UI decisions.

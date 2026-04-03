@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { fetchBets, createBet } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import { createBet } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { track } from '../lib/analytics';
-import { saveCreatorToken, getShareUrl, setHashToken, isStorageAvailable } from '../lib/creator-token';
-import type { Bet, BetType } from '../types';
-import { timeAgo } from '../lib/time';
+import { saveCreatorToken, setHashToken, isStorageAvailable } from '../lib/creator-token';
+import type { BetType } from '../types';
+import { ALL_EXAMPLES } from '../lib/example-bets';
 import '../styles/Home.css';
 
 const PLACEHOLDERS = [
@@ -31,16 +31,22 @@ const PLACEHOLDERS = [
   'Will someone suggest karaoke tonight?',
 ];
 
+function sampleN<T>(arr: T[], n: number): T[] {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
+
+// Compute at module load — examples must not reshuffle when the user types
+const FEATURED = sampleN(ALL_EXAMPLES, 4);
+
 function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [bets, setBets] = useState<Bet[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [question, setQuestion] = useState('');
   const [betType, setBetType] = useState<BetType>('yesno');
   const [options, setOptions] = useState(['', '']);
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [placeholder] = useState(
     () => PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]
   );
@@ -48,13 +54,6 @@ function Home() {
   useEffect(() => {
     document.title = 'Little Bets';
     track('page_viewed', { page: 'home' });
-  }, []);
-
-  useEffect(() => {
-    fetchBets()
-      .then(setBets)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
   }, []);
 
   function updateOption(index: number, value: string) {
@@ -73,6 +72,10 @@ function Home() {
     if (options.length > 2) {
       setOptions(options.filter((_, i) => i !== index));
     }
+  }
+
+  function handleExampleClick(exampleQuestion: string) {
+    setQuestion(exampleQuestion);
   }
 
   async function handleQuickCreate(e: React.FormEvent) {
@@ -123,22 +126,13 @@ function Home() {
         }
       }
 
-      const betUrl = getShareUrl(bet.code_name);
-      if (navigator.share) {
-        navigator.share({ title: bet.question, url: betUrl }).catch(() => {
-          navigator.clipboard.writeText(betUrl);
-        });
-      } else {
-        navigator.clipboard.writeText(betUrl);
-      }
-
       track('bet_created', { source: 'quick', bet_type: betType, visibility: 'open', bet_id: bet.id, anonymous: !user });
 
       if (token) {
-        navigate(`/bet/${bet.code_name}`);
+        navigate(`/bet/${bet.code_name}?ptp=1`);
         setTimeout(() => setHashToken(token), 0);
       } else {
-        navigate(`/bet/${bet.code_name}`);
+        navigate(`/bet/${bet.code_name}?ptp=1`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create bet');
@@ -148,6 +142,8 @@ function Home() {
 
   return (
     <div className="page">
+      <p className="home-subtitle">Capture a group moment. No sign-up needed.</p>
+
       <form className="quick-create" onSubmit={handleQuickCreate}>
         <div className="quick-create-top">
           <input
@@ -161,7 +157,7 @@ function Home() {
           />
           <button
             type="submit"
-            className="quick-create-btn"
+            className="quick-create-btn btn-primary-cta"
             disabled={creating || !question.trim()}
           >
             {creating ? '...' : 'Bet!'}
@@ -216,52 +212,32 @@ function Home() {
           </div>
         )}
       </form>
-      <div className="quick-create-meta">
-        <p className="quick-create-hint">
-          Type a question and hit Bet! to create instantly.
-          {' '}<Link to="/create">More options</Link>
-        </p>
-        {question.length > 0 && (
+
+      {question.length > 0 && (
+        <div className="quick-create-meta">
           <span className={`char-count ${question.length >= 180 ? 'warn' : ''}`}>
             {question.length}/200
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
       {error && <p className="error-text">{error}</p>}
 
-      <h2 className="home-title">All Bets</h2>
-      {loading ? (
-        <p>Loading...</p>
-      ) : bets.length === 0 ? (
-        <p className="home-empty">No bets yet. Be the first to create one!</p>
-      ) : (
-        <div className="bet-grid">
-          {bets.map(bet => (
-            <Link key={bet.id} to={`/bet/${bet.code_name}`} className={`bet-card ${bet.resolved ? 'resolved' : ''}`}>
-              <div className="bet-card-type">
-                {bet.bet_type === 'yesno' ? 'Yes / No' : 'Multiple Choice'}
-                {bet.resolved && bet.winning_option_index !== null && (
-                  <span className="bet-card-result">
-                    {bet.bet_type === 'yesno'
-                      ? (bet.winning_option_index === 0 ? 'Yes' : 'No')
-                      : bet.options[bet.winning_option_index]?.text ?? 'Resolved'
-                    }
-                  </span>
-                )}
-              </div>
-              <h2 className="bet-card-question">{bet.question}</h2>
-              {bet.creator_name && (
-                <p className="bet-card-creator">by {bet.creator_name}</p>
-              )}
-              <div className="bet-card-footer">
-                <span>{bet.total_predictions} prediction{bet.total_predictions !== 1 ? 's' : ''}</span>
-                <span>{timeAgo(bet.created_at)}</span>
-              </div>
-            </Link>
+      <div className="example-bets">
+        <p className="example-bets-label">Need inspiration?</p>
+        <div className="example-bets-grid">
+          {FEATURED.map((example, i) => (
+            <button
+              key={i}
+              className="example-bet-card"
+              onClick={() => handleExampleClick(example.question)}
+              type="button"
+            >
+              {example.question}
+            </button>
           ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }

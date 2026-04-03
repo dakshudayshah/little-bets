@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { fetchBetByCodeName, fetchParticipants, resolveBet, resolveBetAnonymous, checkCreator, updateBetVisibility, deletePrediction } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -18,6 +18,8 @@ import '../styles/BetDetail.css';
 
 function BetDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { theme } = useTheme();
   const { toast } = useToast();
@@ -45,6 +47,16 @@ function BetDetail() {
     if (hashToken && bet) {
       saveCreatorToken(bet.id, hashToken);
       stripHashToken();
+    }
+  }, [bet?.id]);
+
+  // Auto-launch pass-the-phone when navigated with ?ptp=1
+  useEffect(() => {
+    if (!bet) return;
+    const params = new URLSearchParams(location.search);
+    if (params.get('ptp') === '1') {
+      navigate(location.pathname, { replace: true });
+      setShowPTP(true);
     }
   }, [bet?.id]);
 
@@ -213,6 +225,13 @@ function BetDetail() {
     <div className="page">
       {showConfetti && <Confetti onComplete={() => setShowConfetti(false)} />}
 
+      {/* Hero CTA — full-width Pass the Phone for all unresolved bets */}
+      {!bet.resolved && (
+        <button className="ptp-hero-btn btn-primary-cta" onClick={() => setShowPTP(true)}>
+          Pass the Phone
+        </button>
+      )}
+
       <div className="bet-detail-header">
         <div className="bet-detail-type">
           {bet.bet_type === 'yesno' ? 'Yes / No' : 'Multiple Choice'}
@@ -232,11 +251,6 @@ function BetDetail() {
           <button className="share-btn" onClick={handleShare}>
             Share
           </button>
-          {!bet.resolved && (
-            <button className="ptp-launch-btn" onClick={() => setShowPTP(true)}>
-              Pass the Phone
-            </button>
-          )}
           {isCreator && (
             <button className="visibility-toggle-btn" onClick={handleToggleVisibility}>
               {bet.visibility === 'open' ? 'Make Link Only' : 'Make Open'}
@@ -254,17 +268,53 @@ function BetDetail() {
 
       <BetStats bet={bet} hidden={!bet.resolved && !hasPredicted && !isCreator} />
 
+      {!bet.resolved && (
+        <PredictionForm bet={bet} onPredictionSubmitted={handlePredictionSubmitted} />
+      )}
+
+      {!bet.resolved && participants.length > 0 && (
+        <div className={`participants-section ${!hasPredicted && !isCreator ? 'section-hidden' : ''}`}>
+          <h3>{bet.sealed ? 'Who\'s In' : 'Recent Predictions'}</h3>
+          <ul className="participants-list">
+            {participants.map(p => (
+              <li key={p.id} className="participant-item">
+                <span className="participant-name">{p.participant_name}</span>
+                <span className="participant-right">
+                  {p.prediction !== null ? (
+                    <span className={`participant-prediction ${p.prediction ? 'yes' : 'no'}`}>
+                      {getParticipantLabel(bet, p)}
+                    </span>
+                  ) : (
+                    <span className="participant-prediction sealed">&#128274;</span>
+                  )}
+                  {isCreator && (
+                    <button
+                      className="remove-prediction-btn"
+                      onClick={() => handleRemovePrediction(p.id, p.participant_name)}
+                      title="Remove prediction"
+                    >
+                      X
+                    </button>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Dark resolve panel — creator only, after predictions are in */}
       {!bet.resolved && isCreator && participants.length > 0 && (
-        <div className="resolve-section">
-          <h3>Resolve This Bet</h3>
-          <p className="resolve-hint">Select the winning outcome:</p>
+        <div className="resolve-section-dark">
+          <h3>Time to Resolve</h3>
+          <p className="resolve-hint-dark">Select the winning outcome:</p>
           {bet.bet_type === 'yesno' ? (
             <div className="resolve-buttons">
-              <button className="resolve-btn yes" onClick={() => handleResolve(0)} disabled={resolving}>
-                Yes wins
+              <button className="resolve-btn-dark yes" onClick={() => handleResolve(0)} disabled={resolving}>
+                {resolving ? 'Resolving...' : 'Yes wins'}
               </button>
-              <button className="resolve-btn no" onClick={() => handleResolve(1)} disabled={resolving}>
-                No wins
+              <button className="resolve-btn-dark no" onClick={() => handleResolve(1)} disabled={resolving}>
+                {resolving ? 'Resolving...' : 'No wins'}
               </button>
             </div>
           ) : (
@@ -272,20 +322,16 @@ function BetDetail() {
               {bet.options.map((option, index) => (
                 <button
                   key={index}
-                  className="resolve-option-btn"
+                  className="resolve-option-btn-dark"
                   onClick={() => handleResolve(index)}
                   disabled={resolving}
                 >
-                  {option.text} wins
+                  {resolving ? 'Resolving...' : `${option.text} wins`}
                 </button>
               ))}
             </div>
           )}
         </div>
-      )}
-
-      {!bet.resolved && (
-        <PredictionForm bet={bet} onPredictionSubmitted={handlePredictionSubmitted} />
       )}
 
       {bet.resolved && participants.length > 0 && (
@@ -332,39 +378,8 @@ function BetDetail() {
             </div>
           )}
 
-          <MomentCard bet={bet} participants={participants} photos={ptpPhotos} />
+          <MomentCard bet={bet} participants={participants} photos={ptpPhotos} codeName={bet.code_name} />
         </>
-      )}
-
-      {!bet.resolved && participants.length > 0 && (
-        <div className={`participants-section ${!hasPredicted && !isCreator ? 'section-hidden' : ''}`}>
-          <h3>{bet.sealed ? 'Who\'s In' : 'Recent Predictions'}</h3>
-          <ul className="participants-list">
-            {participants.map(p => (
-              <li key={p.id} className="participant-item">
-                <span className="participant-name">{p.participant_name}</span>
-                <span className="participant-right">
-                  {p.prediction !== null ? (
-                    <span className={`participant-prediction ${p.prediction ? 'yes' : 'no'}`}>
-                      {getParticipantLabel(bet, p)}
-                    </span>
-                  ) : (
-                    <span className="participant-prediction sealed">&#128274;</span>
-                  )}
-                  {isCreator && (
-                    <button
-                      className="remove-prediction-btn"
-                      onClick={() => handleRemovePrediction(p.id, p.participant_name)}
-                      title="Remove prediction"
-                    >
-                      X
-                    </button>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
       )}
     </div>
   );

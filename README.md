@@ -1,6 +1,6 @@
 # Little Bets
 
-Make predictions with friends. Bragging rights, no real money.
+Capture group moments through predictions. The bet is the excuse. The gathering is the product.
 
 **Live:** [littlebets.netlify.app](https://littlebets.netlify.app)
 
@@ -8,27 +8,28 @@ Make predictions with friends. Bragging rights, no real money.
 
 ## Mission
 
-Make casual predictions a social activity that lives where friends already talk — group chats.
+Turn a gathering into a memory. Create a bet, pass the phone around the table, resolve it together. The moment card drops into the group chat. The next morning someone sees it and remembers the whole evening.
 
 ## Users
 
 | Segment | Behavior | What they want |
 |---------|----------|----------------|
-| **The Instigator** | Creates bets, drops links in group chats, stirs debate | To be right and be *seen* being right |
-| **The Voter** | Taps a link, picks a side, moves on | Zero friction — no sign-up, no commitment |
-| **The Scorekeeper** | Checks results, tracks records, shares wins | Proof. Bragging receipts. |
+| **The Host** | Creates bets at the table, passes the phone, resolves live | The moment on record. A shareable artifact of the gathering. |
+| **The Participant** | Gets handed a phone, locks in a prediction, watches the reveal | Zero friction — no sign-up, no app install needed |
+| **The Nostalgic** | Opens the moment card in the group chat the next day | A trigger. The whole evening comes back. |
 
 ## Pain points this solves
 
-- Predictions in group chats disappear in scroll. No one remembers who said what.
+- Gatherings are ephemeral. You argue, you laugh, you predict — and by morning it's all gone.
 - Prediction markets (Polymarket, Kalshi) are too serious — real money, complex UX, strangers.
-- There's no lightweight way to say "I called it" with proof.
+- There's no lightweight way to capture "we were all there" with proof.
 
 ## How it works
 
-1. Create a bet (yes/no or multiple choice)
-2. Share the link — anyone can predict, no sign-up needed
-3. Creator resolves it — confetti, winners, bragging rights
+1. Type a question, hit Bet — your phone is now a party trick
+2. Pass the phone around — everyone locks in a sealed prediction, no sign-up needed
+3. Creator resolves it live — confetti, winners, moment card
+4. Drop the moment card in the group chat — the memory lives on
 
 ## Key product decisions
 

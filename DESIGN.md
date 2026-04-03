@@ -1,8 +1,8 @@
 # Design System — Little Bets
 
 ## Product Context
-- **What this is:** Casual prediction app for friend groups. "Polymarket for friends and family."
-- **Who it's for:** Social instigators who drop prediction links in group chats, voters who tap a link and pick a side, scorekeepers who want proof they called it.
+- **What this is:** A group moment capture tool that uses predictions as the social prompt. The bet is the excuse. The gathering is the product.
+- **Who it's for:** Hosts who want to capture a live moment (create, pass the phone, resolve together), participants who get handed a phone and lock in a prediction, nostalgics who open the moment card in the group chat the next morning and remember the whole evening.
 - **Space/industry:** Consumer social / casual group games. Neighbors: Polymarket (serious predictions), Heads Up (party games), Bump (physical-device social). Little Bets sits at the intersection: prediction mechanics with party game energy.
 - **Project type:** Mobile-first web app (React + TypeScript + Vite + Supabase + Netlify)
 
@@ -82,6 +82,8 @@ Restrained. Each theme has 1 strong identity color + neutrals + semantic colors.
 | Border | `#444444` | Unselected option borders |
 | Input bg | `#111111` | Name input background |
 
+**Inline usage (resolve panel):** Same palette, `z-index: auto`. The dark resolve panel on BetDetail reuses this vocabulary inline — same background (#111111), white text, yellow buttons — but renders in the normal page flow rather than as a fullscreen takeover. Border-radius is always 0px regardless of active theme.
+
 ### Semantic Colors (shared across themes)
 | Token | Neo | Retro | Usage |
 |-------|-----|-------|-------|
@@ -154,6 +156,22 @@ Restrained. Each theme has 1 strong identity color + neutrals + semantic colors.
 
 ### Reduced Motion
 Respect `prefers-reduced-motion: reduce`. Replace all scale/flash animations with instant state changes. Disable haptic vibration. Keep opacity transitions (they're less disorienting).
+
+## Button Hierarchy
+
+### Primary CTA (`.btn-primary-cta`)
+The highest-priority action on any screen. Used for "Pass the Phone", "Bet!" (create), "Start Collecting".
+
+| Theme | Background | Text | Border | Shadow |
+|-------|-----------|------|--------|--------|
+| Neo | `#f5f020` | `#000000` | `3px solid #000` | `4px 4px 0px #000` (existing hard shadow token) |
+| Retro | `#b45309` | `#ffffff` | none | `0 2px 4px rgba(120,113,108,0.12)` (existing soft shadow token) |
+
+### Navigation Active/Inactive Colors
+| State | Neo | Retro |
+|-------|-----|-------|
+| Active (icon + label) | `#f5f020` background with `#000` text (uses `--color-bg`) — or icon+label in `#000` on yellow bg | icon+label in `#b45309` |
+| Inactive (icon + label) | `#666666` | `#78716c` |
 
 ## Z-Index Hierarchy
 | Layer | z-index | Component |

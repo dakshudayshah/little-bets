@@ -125,3 +125,29 @@ a {
   --font-heading: "DM Serif Display", Georgia, "Times New Roman", serif;
 }
 
+/* Primary CTA button — highest priority action on any screen */
+.btn-primary-cta {
+  background: #f5f020;
+  color: #000000;
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-primary-cta:hover {
+  opacity: 0.9;
+}
+
+.btn-primary-cta:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-theme="retro"] .btn-primary-cta {
+  background: #b45309;
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 4px rgba(120, 113, 108, 0.12);
+}
+

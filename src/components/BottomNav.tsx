@@ -5,27 +5,30 @@ function BottomNav() {
   const location = useLocation();
 
   return (
-    <nav className="bottom-nav">
+    <nav className="bottom-nav" role="navigation" aria-label="Main navigation">
       <Link
         to="/"
         className={`bottom-nav-item ${location.pathname === '/' ? 'active' : ''}`}
+        aria-current={location.pathname === '/' ? 'page' : undefined}
       >
         <span className="bottom-nav-icon">&#9750;</span>
         <span className="bottom-nav-label">Home</span>
       </Link>
       <Link
-        to="/create"
-        className={`bottom-nav-item ${location.pathname === '/create' ? 'active' : ''}`}
+        to="/my-bets"
+        className={`bottom-nav-item ${location.pathname === '/my-bets' ? 'active' : ''}`}
+        aria-current={location.pathname === '/my-bets' ? 'page' : undefined}
       >
-        <span className="bottom-nav-icon">+</span>
-        <span className="bottom-nav-label">Create</span>
+        <span className="bottom-nav-icon">&#9788;</span>
+        <span className="bottom-nav-label">My Bets</span>
       </Link>
       <Link
-        to="/profile"
-        className={`bottom-nav-item ${location.pathname === '/profile' ? 'active' : ''}`}
+        to="/settings"
+        className={`bottom-nav-item ${location.pathname === '/settings' ? 'active' : ''}`}
+        aria-current={location.pathname === '/settings' ? 'page' : undefined}
       >
-        <span className="bottom-nav-icon">&#9787;</span>
-        <span className="bottom-nav-label">Profile</span>
+        <span className="bottom-nav-icon">&#9881;</span>
+        <span className="bottom-nav-label">Settings</span>
       </Link>
     </nav>
   );

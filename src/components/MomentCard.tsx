@@ -2,6 +2,8 @@ import { useRef, useEffect, useState } from 'react';
 import { track } from '../lib/analytics';
 import { loadImage } from '../lib/image-utils';
 import { getWinningLabel, didParticipantWin } from '../lib/bet-utils';
+import { getShareUrl } from '../lib/creator-token';
+import { useToast } from '../context/ToastContext';
 import type { Bet, BetParticipant } from '../types';
 import '../styles/MomentCard.css';
 
@@ -9,6 +11,7 @@ interface Props {
   bet: Bet;
   participants: BetParticipant[];
   photos: Map<string, string>;
+  codeName: string;
 }
 
 const W = 1200;
@@ -75,9 +78,11 @@ function drawInitial(
   ctx.fillText(name.charAt(0).toUpperCase(), cx, cy + 2);
 }
 
-function MomentCard({ bet, participants, photos }: Props) {
+function MomentCard({ bet, participants, photos, codeName }: Props) {
+  const { toast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imgSrc, setImgSrc] = useState<string | null>(null);
+  const [showLongPressHint, setShowLongPressHint] = useState(false);
 
   useEffect(() => {
     renderCard();
@@ -219,35 +224,47 @@ function MomentCard({ bet, participants, photos }: Props) {
 
   async function handleShare() {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !imgSrc) return;
 
     track('moment_card_shared', { bet_id: bet.id });
 
-    // Try sharing as file first
+    // Step 1: native file share (mobile, supports files)
     try {
       const blob = await new Promise<Blob | null>(resolve =>
         canvas.toBlob(resolve, 'image/png')
       );
-      if (blob && navigator.share) {
+      if (blob) {
         const file = new File([blob], 'little-bets-moment.png', { type: 'image/png' });
-        await navigator.share({
-          files: [file],
-          title: bet.question,
-        });
-        return;
+        if (navigator.canShare?.({ files: [file] })) {
+          await navigator.share({ files: [file], title: bet.question });
+          return;
+        }
       }
     } catch {
-      // Share cancelled or unsupported, fall through
+      // Share cancelled or failed, fall through
     }
 
-    // Fallback: download
+    // Step 2: show long press hint for mobile image save
+    setShowLongPressHint(true);
+
+    // Step 3: try programmatic download (desktop)
     try {
       const link = document.createElement('a');
       link.download = 'little-bets-moment.png';
-      link.href = imgSrc || canvas.toDataURL('image/png');
+      link.href = imgSrc;
       link.click();
+      return;
     } catch {
-      // Nothing we can do
+      // fall through
+    }
+
+    // Step 4: copy bet URL to clipboard
+    try {
+      const betUrl = getShareUrl(codeName);
+      await navigator.clipboard.writeText(betUrl);
+      toast('Link copied to clipboard!');
+    } catch {
+      // nothing more to do
     }
   }
 
@@ -266,6 +283,9 @@ function MomentCard({ bet, participants, photos }: Props) {
           alt="Moment card"
           className="moment-card-preview"
         />
+      )}
+      {showLongPressHint && (
+        <p className="moment-card-hint">Long press the image to save it</p>
       )}
       {imgSrc && (
         <button className="moment-card-share-btn" onClick={handleShare}>

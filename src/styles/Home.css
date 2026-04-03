@@ -31,21 +31,9 @@
 
 .quick-create-btn {
   padding: 14px 24px;
-  background: var(--color-primary);
-  color: white;
   border-radius: var(--radius);
   font-size: 1rem;
-  font-weight: 700;
   white-space: nowrap;
-}
-
-.quick-create-btn:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-}
-
-.quick-create-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 /* Bet type toggle row */
@@ -150,9 +138,10 @@
   color: var(--color-primary);
 }
 
-.home-title {
-  font-size: 1.25rem;
-  margin: 0 0 12px;
+.home-subtitle {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  margin: 0 0 16px;
 }
 
 .home-empty {
@@ -165,102 +154,40 @@
   color: var(--color-danger);
 }
 
-.bet-grid {
+/* Example bets inspiration section */
+.example-bets {
+  margin-top: 24px;
+}
+
+.example-bets-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin: 0 0 8px;
+}
+
+.example-bets-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
-@media (min-width: 600px) {
-  .bet-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.bet-card {
+.example-bet-card {
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius);
-  padding: 16px;
-  text-decoration: none;
+  padding: 12px;
+  min-height: 48px;
+  text-align: left;
+  font-size: 0.85rem;
   color: var(--color-text);
+  line-height: 1.3;
   box-shadow: var(--shadow);
   transition: box-shadow 0.15s;
 }
 
-.bet-card:hover {
+.example-bet-card:hover {
   box-shadow: var(--shadow-md);
-}
-
-.bet-card.resolved {
-  border-left: 3px solid var(--color-success);
-}
-
-@keyframes card-enter {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.bet-card {
-  animation: card-enter 0.3s ease both;
-}
-
-.bet-card:nth-child(1) { animation-delay: 0s; }
-.bet-card:nth-child(2) { animation-delay: 0.05s; }
-.bet-card:nth-child(3) { animation-delay: 0.1s; }
-.bet-card:nth-child(4) { animation-delay: 0.15s; }
-.bet-card:nth-child(5) { animation-delay: 0.2s; }
-.bet-card:nth-child(6) { animation-delay: 0.25s; }
-
-.bet-card-type {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-primary);
-  margin-bottom: 6px;
-}
-
-.bet-card-result {
-  display: inline-block;
-  background: var(--color-success-light);
-  color: var(--color-success-dark);
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 10px;
-  margin-left: 6px;
-  text-transform: none;
-  letter-spacing: 0;
-  vertical-align: middle;
-}
-
-.bet-card-question {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 8px;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.bet-card-creator {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-  margin: 0 0 12px;
-}
-
-.bet-card-footer {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
 }
