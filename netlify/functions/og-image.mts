@@ -8,7 +8,7 @@ let fontData: ArrayBuffer | null = null;
 async function loadFont(): Promise<ArrayBuffer> {
   if (fontData) return fontData;
   const res = await fetch(
-    "https://fonts.gstatic.com/s/spacegrotesk/v16/V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.ttf"
+    "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj4PVksj.ttf"
   );
   fontData = await res.arrayBuffer();
   return fontData;
