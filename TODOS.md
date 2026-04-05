@@ -30,3 +30,32 @@ Deferred work from reviews. Each item has context so someone picking it up in 3 
 ### ~~P1: Moment Card Share Not Working~~ ✓ COMPLETED v0.1 (2026-04-03)
 **What:** Implemented 4-step share fallback chain in `MomentCard.tsx`: (1) `navigator.canShare({files})` → native share with PNG, (2) show long-press hint with inline `<img>` for save-to-photos, (3) `<a download>` click, (4) `navigator.clipboard.writeText(betUrl)`.
 **Result:** Share works across iOS Safari, Android Chrome, and desktop browsers.
+
+---
+
+## From CEO Review (2026-04-04) — Persistent Photos
+
+### P3: Admin Delete Script with Storage Photo Cleanup
+**What:** A script (or SQL + Storage CLI commands) to delete old bets and their associated photos from Supabase Storage. Currently, deleting a bet row leaves orphaned photos in `ptp-photos/{bet_id}/`.
+**Why:** User needs to clean up test bets and old data. Manual dashboard deletion works for rows but misses Storage files.
+**Effort:** S (CC: ~10 min) — SQL delete + `supabase storage rm` for the bet folder.
+**Depends on:** Persistent photos feature shipped (ptp-photos bucket exists).
+**Notes:** Could be a simple bash script or a Supabase edge function. Consider a cascade trigger on `bets` table delete, but manual is fine for now.
+
+### P3: Participant Photo Self-Deletion Mechanism
+**What:** Allow a participant to request deletion of their photo from a bet. No auth system exists, so this would need some form of verification (e.g., a unique link sent during PTP, or admin-only action).
+**Why:** Privacy. Someone might not want their photo on a shared card after the fact.
+**Effort:** M (CC: ~20 min) — needs UX design for the request flow since there's no auth.
+**Depends on:** Persistent photos feature shipped.
+**Notes:** Not urgent for v1 (small friend groups, high trust). Revisit if the app scales beyond close social circles.
+
+---
+
+## From Design Review (2026-04-04) — Persistent Photos
+
+### P2: Update DESIGN.md with Moment Card Photo-Hero Elements
+**What:** After implementing the photo-hero moment card, update DESIGN.md to document: winner ring spec (3px solid #f5f020 stroke, no shadowBlur), checkmark badge (24px yellow circle), photo avatar sizing (68px radius, 120px spacing, centered), prediction labels (14px, yellow/muted), unresolved card state, and the #666→#888 subtle color alignment.
+**Why:** DESIGN.md is the design system source of truth. New visual elements should be documented so future changes stay consistent.
+**Effort:** S (CC: ~5 min) — add a "Moment Card" section to DESIGN.md.
+**Depends on:** Photo-hero moment card implementation shipped.
+**Notes:** Also document the OG image redesign (dark bg, matching moment card layout).

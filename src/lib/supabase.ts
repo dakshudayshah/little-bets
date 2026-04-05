@@ -168,3 +168,79 @@ export async function fetchUserPredictions(participantName: string): Promise<(Be
   if (error) throw error;
   return data as (BetParticipant & { bets: Bet })[];
 }
+
+// --- Photo Storage ---
+
+function dataUrlToBlob(dataUrl: string): Blob {
+  const parts = dataUrl.split(',');
+  const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+  const bytes = atob(parts[1]);
+  const arr = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
+/**
+ * Upload a photo to Supabase Storage with exponential backoff retry.
+ * Standalone function — survives React component unmount.
+ * sessionStorage is cleared only after confirmed upload.
+ */
+export async function uploadPhoto(
+  betId: string,
+  participantName: string,
+  dataUrl: string
+): Promise<boolean> {
+  let blob: Blob;
+  try {
+    blob = dataUrlToBlob(dataUrl);
+  } catch {
+    return false;
+  }
+
+  const path = `${betId}/${encodeURIComponent(participantName.trim())}.jpg`;
+  const delays = [1000, 2000, 4000];
+
+  for (let attempt = 0; attempt <= delays.length; attempt++) {
+    const { error } = await supabase.storage
+      .from('ptp-photos')
+      .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+
+    if (!error) return true;
+
+    if (attempt < delays.length) {
+      await new Promise(r => setTimeout(r, delays[attempt]));
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Fetch all photo URLs for a bet from Supabase Storage.
+ * Returns a Map of participantName → public URL.
+ */
+export async function fetchBetPhotos(betId: string): Promise<Map<string, string>> {
+  const photos = new Map<string, string>();
+
+  try {
+    const { data, error } = await supabase.storage
+      .from('ptp-photos')
+      .list(betId);
+
+    if (error || !data) return photos;
+
+    for (const file of data) {
+      const name = decodeURIComponent(file.name.replace(/\.jpg$/, ''));
+      const { data: urlData } = supabase.storage
+        .from('ptp-photos')
+        .getPublicUrl(`${betId}/${file.name}`);
+      if (urlData?.publicUrl) {
+        photos.set(name, urlData.publicUrl);
+      }
+    }
+  } catch {
+    // Storage unavailable, return empty map (silent fallback to initials)
+  }
+
+  return photos;
+}

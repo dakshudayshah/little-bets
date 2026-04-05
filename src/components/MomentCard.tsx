@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { track } from '../lib/analytics';
 import { loadImage } from '../lib/image-utils';
-import { getWinningLabel, didParticipantWin } from '../lib/bet-utils';
+import { getWinningLabel, didParticipantWin, getParticipantLabel } from '../lib/bet-utils';
 import { getShareUrl } from '../lib/creator-token';
 import { useToast } from '../context/ToastContext';
 import type { Bet, BetParticipant } from '../types';
@@ -12,6 +12,7 @@ interface Props {
   participants: BetParticipant[];
   photos: Map<string, string>;
   codeName: string;
+  photosLoading?: boolean;
 }
 
 const W = 1200;
@@ -20,7 +21,7 @@ const BG = '#111111';
 const WHITE = '#ffffff';
 const YELLOW = '#f5f020';
 const MUTED = '#aaaaaa';
-const SUBTLE = '#666666';
+const SUBTLE = '#888888';
 const FONT = '"Space Grotesk", "Helvetica Neue", Arial, sans-serif';
 
 function wrapText(
@@ -64,11 +65,12 @@ function drawInitial(
   cx: number,
   cy: number,
   r: number,
-  isWinner: boolean
+  isWinner: boolean,
+  resolved: boolean
 ) {
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fillStyle = isWinner ? YELLOW : SUBTLE;
+  ctx.fillStyle = resolved ? (isWinner ? YELLOW : SUBTLE) : SUBTLE;
   ctx.fill();
 
   ctx.font = `600 ${r}px ${FONT}`;
@@ -78,21 +80,46 @@ function drawInitial(
   ctx.fillText(name.charAt(0).toUpperCase(), cx, cy + 2);
 }
 
-function MomentCard({ bet, participants, photos, codeName }: Props) {
+function drawCheckmark(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
+  const badgeR = 12;
+  const bx = cx + r * 0.7;
+  const by = cy + r * 0.7;
+
+  // Yellow circle badge
+  ctx.beginPath();
+  ctx.arc(bx, by, badgeR, 0, Math.PI * 2);
+  ctx.fillStyle = YELLOW;
+  ctx.fill();
+
+  // White checkmark
+  ctx.beginPath();
+  ctx.moveTo(bx - 5, by);
+  ctx.lineTo(bx - 1, by + 4);
+  ctx.lineTo(bx + 6, by - 4);
+  ctx.strokeStyle = BG;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+}
+
+function MomentCard({ bet, participants, photos, codeName, photosLoading }: Props) {
   const { toast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [showLongPressHint, setShowLongPressHint] = useState(false);
 
   useEffect(() => {
-    renderCard();
-  }, [bet.id, bet.winning_option_index, participants]);
+    if (!photosLoading) renderCard();
+  }, [bet.id, bet.winning_option_index, participants, photos, photosLoading]);
 
   async function renderCard() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    const resolved = bet.resolved;
 
     // Background
     ctx.fillStyle = BG;
@@ -122,35 +149,43 @@ function MomentCard({ bet, participants, photos, codeName }: Props) {
     ctx.fillStyle = WHITE;
     let cursorY = wrapText(ctx, bet.question, 60, 100, W - 120, 44, 2);
 
-    // Winning answer
-    const winLabel = getWinningLabel(bet);
-    if (winLabel) {
-      cursorY += 12;
-      ctx.font = `800 48px ${FONT}`;
-      ctx.fillStyle = YELLOW;
-      ctx.fillText(winLabel, 60, cursorY);
-      cursorY += 60;
+    // Winning answer (only when resolved)
+    if (resolved) {
+      const winLabel = getWinningLabel(bet);
+      if (winLabel) {
+        cursorY += 12;
+        ctx.font = `800 48px ${FONT}`;
+        ctx.fillStyle = YELLOW;
+        ctx.fillText(winLabel, 60, cursorY);
+        cursorY += 60;
+      }
     }
 
     // Participants section
-    const winners = participants.filter(p => didParticipantWin(bet, p));
-    const losers = participants.filter(p => !didParticipantWin(bet, p));
-    const allParticipants = [...winners, ...losers];
+    const winners = resolved ? participants.filter(p => didParticipantWin(bet, p)) : [];
+    const losers = resolved ? participants.filter(p => !didParticipantWin(bet, p)) : [];
+    const allParticipants = resolved ? [...winners, ...losers] : [...participants];
 
-    // Avatar circles
-    const avatarR = 44;
-    const avatarSpacing = 104;
+    // Avatar layout
+    const avatarR = 68;
+    const avatarSpacing = 120;
     const maxAvatars = Math.min(allParticipants.length, 8);
-    const avatarY = Math.max(cursorY + 24, 300);
-    const avatarStartX = 60;
+    const avatarY = Math.max(cursorY + 24, 280);
+    // Center avatars horizontally
+    const totalAvatarWidth = maxAvatars * avatarSpacing;
+    const avatarStartX = (W - totalAvatarWidth) / 2 + avatarSpacing / 2 - avatarR;
 
     // Load all photos
     const photoImages = new Map<string, HTMLImageElement>();
     const loadPromises = allParticipants.slice(0, maxAvatars).map(async p => {
       const src = photos.get(p.participant_name);
       if (src) {
-        const img = await loadImage(src);
-        if (img) photoImages.set(p.participant_name, img);
+        try {
+          const img = await loadImage(src);
+          if (img) photoImages.set(p.participant_name, img);
+        } catch {
+          // Silent fallback to initials
+        }
       }
     });
     await Promise.all(loadPromises);
@@ -160,7 +195,7 @@ function MomentCard({ bet, participants, photos, codeName }: Props) {
       const p = allParticipants[i];
       const cx = avatarStartX + i * avatarSpacing + avatarR;
       const cy = avatarY + avatarR;
-      const isWinner = didParticipantWin(bet, p);
+      const isWinner = resolved && didParticipantWin(bet, p);
 
       const photoImg = photoImages.get(p.participant_name);
       if (photoImg) {
@@ -172,7 +207,7 @@ function MomentCard({ bet, participants, photos, codeName }: Props) {
         ctx.drawImage(photoImg, cx - avatarR, cy - avatarR, avatarR * 2, avatarR * 2);
         ctx.restore();
 
-        // Winner ring
+        // Winner ring: solid 3px yellow stroke
         if (isWinner) {
           ctx.beginPath();
           ctx.arc(cx, cy, avatarR + 3, 0, Math.PI * 2);
@@ -181,18 +216,31 @@ function MomentCard({ bet, participants, photos, codeName }: Props) {
           ctx.stroke();
         }
       } else {
-        drawInitial(ctx, p.participant_name, cx, cy, avatarR, isWinner);
+        drawInitial(ctx, p.participant_name, cx, cy, avatarR, isWinner, resolved);
+      }
+
+      // Winner checkmark badge
+      if (isWinner) {
+        drawCheckmark(ctx, cx, cy, avatarR);
       }
 
       // Name label
       ctx.font = `500 15px ${FONT}`;
-      ctx.fillStyle = isWinner ? WHITE : MUTED;
+      ctx.fillStyle = resolved ? (isWinner ? WHITE : SUBTLE) : WHITE;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
       const displayName = p.participant_name.length > 8
         ? p.participant_name.slice(0, 7) + '...'
         : p.participant_name;
       ctx.fillText(displayName, cx, cy + avatarR + 8);
+
+      // Prediction label (only when resolved and predictions are visible)
+      if (resolved && p.prediction !== null && p.prediction !== undefined) {
+        ctx.font = `500 14px ${FONT}`;
+        ctx.fillStyle = isWinner ? YELLOW : SUBTLE;
+        const label = getParticipantLabel(bet, p);
+        ctx.fillText(label, cx, cy + avatarR + 26);
+      }
     }
 
     if (allParticipants.length > maxAvatars) {
@@ -210,7 +258,9 @@ function MomentCard({ bet, participants, photos, codeName }: Props) {
     ctx.textBaseline = 'bottom';
     ctx.font = `400 16px ${FONT}`;
     ctx.fillStyle = MUTED;
-    const statsText = `${winners.length} called it · ${losers.length} missed · ${participants.length} total`;
+    const statsText = resolved
+      ? `${winners.length} called it · ${losers.length} missed · ${participants.length} total`
+      : `${participants.length} locked in`;
     ctx.fillText(statsText, 60, H - 40);
 
     // Branding bottom right
@@ -268,6 +318,11 @@ function MomentCard({ bet, participants, photos, codeName }: Props) {
     }
   }
 
+  // Dynamic alt text
+  const altText = bet.resolved
+    ? `Moment card: ${bet.question}. ${getWinningLabel(bet) || 'Resolved'}. ${participants.filter(p => didParticipantWin(bet, p)).map(p => p.participant_name).join(', ')} got it right.`
+    : `Moment card: ${bet.question}. ${participants.length} locked in.`;
+
   return (
     <div className="moment-card-section">
       <h3 className="moment-card-title">Share the Moment</h3>
@@ -277,17 +332,24 @@ function MomentCard({ bet, participants, photos, codeName }: Props) {
         height={H}
         className="moment-card-canvas"
       />
-      {imgSrc && (
+      {photosLoading && (
+        <div className="moment-card-skeleton">
+          <div className="skeleton-circle" />
+          <div className="skeleton-circle" />
+          <div className="skeleton-circle" />
+        </div>
+      )}
+      {imgSrc && !photosLoading && (
         <img
           src={imgSrc}
-          alt="Moment card"
+          alt={altText}
           className="moment-card-preview"
         />
       )}
       {showLongPressHint && (
         <p className="moment-card-hint">Long press the image to save it</p>
       )}
-      {imgSrc && (
+      {imgSrc && !photosLoading && (
         <button className="moment-card-share-btn" onClick={handleShare}>
           Share Card
         </button>

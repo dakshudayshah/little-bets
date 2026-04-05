@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { submitPrediction } from '../lib/supabase';
+import { submitPrediction, uploadPhoto } from '../lib/supabase';
 import { track } from '../lib/analytics';
 import { resizeImage } from '../lib/image-utils';
 import type { Bet } from '../types';
@@ -119,9 +119,25 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const dataUrl = await resizeImage(file, 200);
-      photos.set(name.trim(), dataUrl);
+      const dataUrl = await resizeImage(file, 400);
+      const trimmedName = name.trim();
+      photos.set(trimmedName, dataUrl);
       track('ptp_photo_taken', { bet_id: bet.id });
+
+      // Write-through to sessionStorage (survives tab close while upload is in-flight)
+      const cacheKey = `ptp_photos_${bet.id}`;
+      const cached = JSON.parse(sessionStorage.getItem(cacheKey) || '{}');
+      cached[trimmedName] = dataUrl;
+      sessionStorage.setItem(cacheKey, JSON.stringify(cached));
+
+      // Fire-and-forget upload to Supabase Storage (standalone, survives unmount)
+      uploadPhoto(bet.id, trimmedName, dataUrl).then((ok) => {
+        if (ok) {
+          track('ptp_photo_uploaded', { bet_id: bet.id });
+        } else {
+          track('ptp_photo_upload_failed', { bet_id: bet.id });
+        }
+      });
     } catch {
       // Photo failed, no big deal
     }

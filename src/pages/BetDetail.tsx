@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { fetchBetByCodeName, fetchParticipants, resolveBet, resolveBetAnonymous, checkCreator, updateBetVisibility, deletePrediction } from '../lib/supabase';
+import { fetchBetByCodeName, fetchParticipants, resolveBet, resolveBetAnonymous, checkCreator, updateBetVisibility, deletePrediction, fetchBetPhotos, uploadPhoto } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
@@ -32,14 +32,8 @@ function BetDetail() {
   const [hasPredicted, setHasPredicted] = useState(false);
   const [isAnonCreator, setIsAnonCreator] = useState(false);
   const [showPTP, setShowPTP] = useState(false);
-  const [ptpPhotos, setPtpPhotos] = useState<Map<string, string>>(() => {
-    // Restore photos from sessionStorage
-    try {
-      const stored = sessionStorage.getItem(`ptp_photos_${id}`);
-      if (stored) return new Map(JSON.parse(stored));
-    } catch { /* ignore */ }
-    return new Map();
-  });
+  const [ptpPhotos, setPtpPhotos] = useState<Map<string, string>>(new Map());
+  const [photosLoading, setPhotosLoading] = useState(true);
 
   // On mount: persist hash token to storage, then strip it
   useEffect(() => {
@@ -93,6 +87,44 @@ function BetDetail() {
       checkCreator(bet.id, token).then(setIsAnonCreator);
     }
   }, [bet?.id, user]);
+
+  // Fetch photos from Supabase Storage; fall back to sessionStorage if empty
+  useEffect(() => {
+    if (!bet) return;
+    let cancelled = false;
+    (async () => {
+      setPhotosLoading(true);
+      const storagePhotos = await fetchBetPhotos(bet.id);
+      if (cancelled) return;
+
+      if (storagePhotos.size > 0) {
+        setPtpPhotos(storagePhotos);
+        track('ptp_photos_loaded', { bet_id: bet.id, count: storagePhotos.size });
+      } else {
+        // Fallback: sessionStorage may have photos from in-flight uploads
+        try {
+          const cached = sessionStorage.getItem(`ptp_photos_${bet.id}`);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            // Support both Map entries array and plain object formats
+            const fallback: Map<string, string> = Array.isArray(parsed)
+              ? new Map(parsed as [string, string][])
+              : new Map(Object.entries(parsed) as [string, string][]);
+            if (fallback.size > 0) {
+              setPtpPhotos(fallback);
+              track('ptp_photos_fallback', { bet_id: bet.id, count: fallback.size });
+              // Re-trigger uploads for cached photos
+              fallback.forEach((dataUrl, name) => {
+                uploadPhoto(bet.id, name, dataUrl);
+              });
+            }
+          }
+        } catch { /* ignore corrupt cache */ }
+      }
+      setPhotosLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [bet?.id]);
 
   useEffect(() => {
     document.title = bet ? `${bet.question} - Little Bets` : 'Little Bets';
@@ -378,7 +410,7 @@ function BetDetail() {
             </div>
           )}
 
-          <MomentCard bet={bet} participants={participants} photos={ptpPhotos} codeName={bet.code_name} />
+          <MomentCard bet={bet} participants={participants} photos={ptpPhotos} codeName={bet.code_name} photosLoading={photosLoading} />
         </>
       )}
     </div>

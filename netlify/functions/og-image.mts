@@ -8,11 +8,57 @@ let fontData: ArrayBuffer | null = null;
 async function loadFont(): Promise<ArrayBuffer> {
   if (fontData) return fontData;
   const res = await fetch(
-    "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hjQ.ttf"
+    "https://fonts.gstatic.com/s/spacegrotesk/v16/V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.ttf"
   );
   fontData = await res.arrayBuffer();
   return fontData;
 }
+
+interface Bet {
+  id: string;
+  question: string;
+  bet_type: string;
+  total_predictions: number;
+  creator_name: string | null;
+  resolved: boolean;
+  winning_option_index: number | null;
+  options: { text: string }[];
+}
+
+interface Participant {
+  participant_name: string;
+  prediction: boolean | null;
+  option_index: number | null;
+}
+
+function didWin(bet: Bet, p: Participant): boolean {
+  if (!bet.resolved || bet.winning_option_index === null) return false;
+  if (bet.bet_type === "yesno") {
+    return p.prediction === (bet.winning_option_index === 0);
+  }
+  return p.option_index === bet.winning_option_index;
+}
+
+function getWinLabel(bet: Bet): string {
+  if (!bet.resolved || bet.winning_option_index === null) return "";
+  if (bet.bet_type === "yesno") {
+    return bet.winning_option_index === 0 ? "Yes" : "No";
+  }
+  return bet.options?.[bet.winning_option_index]?.text ?? "Unknown";
+}
+
+function getPredictionLabel(bet: Bet, p: Participant): string {
+  if (bet.bet_type === "yesno") {
+    return p.prediction ? "Yes" : "No";
+  }
+  return bet.options?.[p.option_index ?? 0]?.text ?? "";
+}
+
+const BG = "#111111";
+const WHITE = "#ffffff";
+const YELLOW = "#f5f020";
+const MUTED = "#aaaaaa";
+const SUBTLE = "#888888";
 
 export default async function handler(req: Request, _context: Context) {
   const url = new URL(req.url);
@@ -29,128 +75,215 @@ export default async function handler(req: Request, _context: Context) {
     return new Response("Missing env vars", { status: 500 });
   }
 
-  let question = "Make predictions with friends";
-  let typeLabel = "";
-  let statsText = "Bragging rights, no real money";
-  let isResolved = false;
-  let winLabel = "";
+  const headers = {
+    apikey: supabaseKey,
+    Authorization: `Bearer ${supabaseKey}`,
+  };
+
+  let bet: Bet | null = null;
+  let participants: Participant[] = [];
+  let photoMap = new Map<string, string>(); // name → base64 data URL
 
   try {
-    const res = await fetch(
-      `${supabaseUrl}/rest/v1/bets?code_name=eq.${encodeURIComponent(code)}&select=question,bet_type,total_predictions,creator_name,resolved,winning_option_index,options`,
-      {
-        headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-      }
+    // Fetch bet
+    const betRes = await fetch(
+      `${supabaseUrl}/rest/v1/bets?code_name=eq.${encodeURIComponent(code)}&select=id,question,bet_type,total_predictions,creator_name,resolved,winning_option_index,options`,
+      { headers }
     );
 
-    if (res.ok) {
-      const bets = await res.json();
-      if (bets && bets.length > 0) {
-        const bet = bets[0];
-        question = bet.question;
-        typeLabel = bet.bet_type === "yesno" ? "YES / NO" : "MULTIPLE CHOICE";
-        isResolved = bet.resolved && bet.winning_option_index !== null;
+    if (betRes.ok) {
+      const bets = await betRes.json();
+      if (bets?.length > 0) bet = bets[0];
+    }
 
-        if (isResolved) {
-          if (bet.bet_type === "yesno") {
-            winLabel = bet.winning_option_index === 0 ? "Yes" : "No";
-          } else {
-            const options = bet.options || [];
-            winLabel = options[bet.winning_option_index]?.text ?? "Unknown";
-          }
-          statsText = `${bet.total_predictions} prediction${bet.total_predictions !== 1 ? "s" : ""}${bet.creator_name ? ` · by ${bet.creator_name}` : ""}`;
-        } else {
-          statsText = `${bet.total_predictions} prediction${bet.total_predictions !== 1 ? "s" : ""}${bet.creator_name ? ` · by ${bet.creator_name}` : ""}`;
-        }
+    if (bet) {
+      // Fetch participants and photos in parallel
+      const [partsRes, photosRes] = await Promise.all([
+        fetch(
+          `${supabaseUrl}/rest/v1/sealed_bet_participants?bet_id=eq.${bet.id}&select=participant_name,prediction,option_index&order=created_at.desc`,
+          { headers }
+        ).catch(() => null),
+        fetch(
+          `${supabaseUrl}/storage/v1/object/list/ptp-photos/${bet.id}`,
+          { headers }
+        ).catch(() => null),
+      ]);
+
+      if (partsRes?.ok) {
+        try { participants = await partsRes.json(); } catch { /* ignore */ }
+      }
+
+      // Fetch actual photo files
+      if (photosRes?.ok) {
+        try {
+          const files: { name: string }[] = await photosRes.json();
+          const photoFetches = files.slice(0, 8).map(async (file) => {
+            try {
+              const photoRes = await fetch(
+                `${supabaseUrl}/storage/v1/object/public/ptp-photos/${bet!.id}/${file.name}`,
+              );
+              if (photoRes.ok) {
+                const buf = await photoRes.arrayBuffer();
+                const b64 = Buffer.from(buf).toString("base64");
+                const name = decodeURIComponent(file.name.replace(/\.jpg$/, ""));
+                photoMap.set(name, `data:image/jpeg;base64,${b64}`);
+              }
+            } catch { /* skip this photo */ }
+          });
+          await Promise.all(photoFetches);
+        } catch { /* ignore */ }
       }
     }
   } catch {
-    // Use defaults
+    // Fall through to text-only card
   }
 
   const font = await loadFont();
 
-  const theme = url.searchParams.get("theme") || "neo";
+  const question = bet?.question || "Make predictions with friends";
+  const isResolved = bet?.resolved === true && bet?.winning_option_index !== null;
+  const winLabel = bet ? getWinLabel(bet) : "";
 
-  type ThemeStyle = { bg: string; resolvedBg: string; textColor: string; badgeBg: string };
-  const themeStyles: Record<string, ThemeStyle> = {
-    retro: {
-      bg: "linear-gradient(135deg, #92400e 0%, #b45309 50%, #d97706 100%)",
-      resolvedBg: "linear-gradient(135deg, #14532d 0%, #15803d 50%, #22c55e 100%)",
-      textColor: "white",
-      badgeBg: "rgba(255,255,255,0.2)",
-    },
-    neo: {
-      bg: "#f5f020",
-      resolvedBg: "#22c55e",
-      textColor: "#000000",
-      badgeBg: "rgba(0,0,0,0.12)",
-    },
-  };
+  // Sort: winners first, then losers
+  const winners = isResolved ? participants.filter((p) => didWin(bet!, p)) : [];
+  const losers = isResolved ? participants.filter((p) => !didWin(bet!, p)) : [];
+  const allParticipants = isResolved ? [...winners, ...losers] : [...participants];
+  const maxAvatars = Math.min(allParticipants.length, 8);
 
-  const style = themeStyles[theme] || themeStyles.neo;
-  const background = isResolved ? style.resolvedBg : style.bg;
-  const textColor = style.textColor;
+  // Date
+  const dateStr = bet
+    ? new Date(bet.resolved ? Date.now() : Date.now()).toLocaleDateString("en-US", {
+        month: "short", day: "numeric", year: "numeric",
+      })
+    : "";
 
-  const headerText = isResolved ? "The results are in!" : "Little Bets";
+  // Stats
+  const statsText = isResolved
+    ? `${winners.length} called it · ${losers.length} missed · ${participants.length} total`
+    : `${participants.length} locked in`;
 
-  const mainContent = isResolved
-    ? [
-        {
-          type: "div",
+  // Build avatar elements
+  const avatarR = 68;
+  const avatarSpacing = 120;
+  const avatarElements = allParticipants.slice(0, maxAvatars).map((p, _i) => {
+    const isWinner = isResolved && didWin(bet!, p);
+    const photoSrc = photoMap.get(p.participant_name);
+    const initial = p.participant_name.charAt(0).toUpperCase();
+    const displayName = p.participant_name.length > 8
+      ? p.participant_name.slice(0, 7) + "..."
+      : p.participant_name;
+
+    const avatarContent = photoSrc
+      ? {
+          type: "img",
           props: {
+            src: photoSrc,
+            width: avatarR * 2,
+            height: avatarR * 2,
             style: {
-              fontSize: question.length > 80 ? "28px" : "34px",
-              fontWeight: 700,
-              lineHeight: 1.3,
-              maxWidth: "900px",
-              opacity: 0.9,
+              borderRadius: "50%",
+              objectFit: "cover" as const,
+              border: isWinner ? `3px solid ${YELLOW}` : "none",
             },
-            children: `"${question}"`,
           },
-        },
-        {
+        }
+      : {
           type: "div",
           props: {
             style: {
+              width: `${avatarR * 2}px`,
+              height: `${avatarR * 2}px`,
+              borderRadius: "50%",
+              background: isResolved ? (isWinner ? YELLOW : SUBTLE) : SUBTLE,
               display: "flex",
               alignItems: "center",
-              gap: "16px",
-              marginTop: "12px",
+              justifyContent: "center",
+              fontSize: `${avatarR}px`,
+              fontWeight: 600,
+              color: BG,
             },
-            children: [
-              {
-                type: "div",
-                props: {
-                  style: {
-                    fontSize: "64px",
-                    fontWeight: 700,
-                    lineHeight: 1.1,
-                  },
-                  children: winLabel,
-                },
-              },
-            ],
+            children: initial,
           },
-        },
-      ]
-    : [
-        {
+        };
+
+    const predLabel = isResolved && p.prediction !== null && p.prediction !== undefined
+      ? {
           type: "div",
           props: {
             style: {
-              fontSize: question.length > 60 ? "42px" : "52px",
-              fontWeight: 700,
-              lineHeight: 1.2,
-              maxWidth: "900px",
+              fontSize: "14px",
+              fontWeight: 500,
+              color: isWinner ? YELLOW : SUBTLE,
+              textAlign: "center" as const,
             },
-            children: question,
+            children: getPredictionLabel(bet!, p),
           },
+        }
+      : null;
+
+    return {
+      type: "div",
+      props: {
+        style: {
+          display: "flex",
+          flexDirection: "column" as const,
+          alignItems: "center",
+          gap: "4px",
+          width: `${avatarSpacing}px`,
         },
-      ];
+        children: [
+          avatarContent,
+          {
+            type: "div",
+            props: {
+              style: {
+                fontSize: "15px",
+                fontWeight: 500,
+                color: isResolved ? (isWinner ? WHITE : SUBTLE) : WHITE,
+                textAlign: "center" as const,
+              },
+              children: displayName,
+            },
+          },
+          predLabel,
+        ].filter(Boolean),
+      },
+    };
+  });
+
+  // Overflow indicator
+  if (allParticipants.length > maxAvatars) {
+    avatarElements.push({
+      type: "div",
+      props: {
+        style: {
+          display: "flex",
+          flexDirection: "column" as const,
+          alignItems: "center",
+          gap: "4px",
+          width: `${avatarSpacing}px`,
+        },
+        children: [
+          {
+            type: "div",
+            props: {
+              style: {
+                width: `${avatarR * 2}px`,
+                height: `${avatarR * 2}px`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "16px",
+                fontWeight: 600,
+                color: MUTED,
+              },
+              children: `+${allParticipants.length - maxAvatars}`,
+            },
+          },
+        ],
+      },
+    });
+  }
 
   const svg = await satori(
     {
@@ -162,78 +295,97 @@ export default async function handler(req: Request, _context: Context) {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          padding: "60px 70px",
-          background,
-          fontFamily: "Inter",
-          color: textColor,
+          padding: "40px 60px",
+          backgroundColor: BG,
+          fontFamily: "Space Grotesk",
+          color: WHITE,
         },
         children: [
+          // Top section: brand + date
+          {
+            type: "div",
+            props: {
+              style: {
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              },
+              children: [
+                {
+                  type: "div",
+                  props: {
+                    style: { fontSize: "18px", fontWeight: 700, color: YELLOW },
+                    children: "Little Bets",
+                  },
+                },
+                dateStr
+                  ? {
+                      type: "div",
+                      props: {
+                        style: { fontSize: "16px", color: MUTED },
+                        children: dateStr,
+                      },
+                    }
+                  : null,
+              ].filter(Boolean),
+            },
+          },
+          // Middle section: question + answer + avatars
           {
             type: "div",
             props: {
               style: {
                 display: "flex",
                 flexDirection: "column",
-                gap: "20px",
+                gap: "12px",
+                flex: 1,
+                justifyContent: "center",
               },
               children: [
                 {
                   type: "div",
                   props: {
                     style: {
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "16px",
+                      fontSize: question.length > 80 ? "28px" : "36px",
+                      fontWeight: 700,
+                      lineHeight: 1.3,
+                      color: WHITE,
                     },
-                    children: [
-                      {
-                        type: "div",
-                        props: {
-                          style: {
-                            fontSize: "24px",
-                            fontWeight: 700,
-                            opacity: 0.9,
-                          },
-                          children: headerText,
-                        },
-                      },
-                      typeLabel && !isResolved
-                        ? {
-                            type: "div",
-                            props: {
-                              style: {
-                                fontSize: "14px",
-                                fontWeight: 600,
-                                background: style.badgeBg,
-                                padding: "4px 12px",
-                                borderRadius: theme === "neo" ? "0px" : "20px",
-                              },
-                              children: typeLabel,
-                            },
-                          }
-                        : null,
-                      isResolved
-                        ? {
-                            type: "div",
-                            props: {
-                              style: {
-                                fontSize: "14px",
-                                fontWeight: 600,
-                                background: style.badgeBg,
-                                padding: "4px 12px",
-                                borderRadius: theme === "neo" ? "0px" : "20px",
-                              },
-                              children: "RESOLVED",
-                            },
-                          }
-                        : null,
-                    ].filter(Boolean),
+                    children: question,
                   },
                 },
-                ...mainContent,
-              ],
+                isResolved && winLabel
+                  ? {
+                      type: "div",
+                      props: {
+                        style: {
+                          fontSize: "48px",
+                          fontWeight: 800,
+                          color: YELLOW,
+                          marginTop: "4px",
+                        },
+                        children: winLabel,
+                      },
+                    }
+                  : null,
+                avatarElements.length > 0
+                  ? {
+                      type: "div",
+                      props: {
+                        style: {
+                          display: "flex",
+                          justifyContent: "center",
+                          gap: "0px",
+                          marginTop: "16px",
+                        },
+                        children: avatarElements,
+                      },
+                    }
+                  : null,
+              ].filter(Boolean),
             },
           },
+          // Bottom section: stats + branding
           {
             type: "div",
             props: {
@@ -246,20 +398,14 @@ export default async function handler(req: Request, _context: Context) {
                 {
                   type: "div",
                   props: {
-                    style: {
-                      fontSize: "20px",
-                      opacity: 0.8,
-                    },
+                    style: { fontSize: "16px", color: MUTED },
                     children: statsText,
                   },
                 },
                 {
                   type: "div",
                   props: {
-                    style: {
-                      fontSize: "18px",
-                      opacity: 0.6,
-                    },
+                    style: { fontSize: "14px", color: SUBTLE },
                     children: "littlebets.netlify.app",
                   },
                 },
@@ -274,7 +420,7 @@ export default async function handler(req: Request, _context: Context) {
       height: 630,
       fonts: [
         {
-          name: "Inter",
+          name: "Space Grotesk",
           data: font,
           weight: 700,
           style: "normal",

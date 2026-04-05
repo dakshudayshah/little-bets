@@ -288,3 +288,25 @@ JOIN bets b ON b.id = bp.bet_id;
 
 -- Grant view access to Supabase roles
 GRANT SELECT ON sealed_bet_participants TO anon, authenticated;
+
+-- ============================================
+-- Storage: ptp-photos bucket
+-- Run these in Supabase SQL Editor.
+-- Also create the bucket via Dashboard:
+--   Storage → New Bucket → "ptp-photos" → Public
+-- ============================================
+
+-- Allow anyone to read photos (photos appear in shareable cards + OG images)
+CREATE POLICY "Public read ptp-photos"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'ptp-photos');
+
+-- Allow anyone to upload photos (anonymous participants, same pattern as predictions)
+CREATE POLICY "Anyone can upload ptp-photos"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'ptp-photos');
+
+-- Allow upsert (retakes overwrite). Supabase upsert: true requires UPDATE permission.
+CREATE POLICY "Anyone can update ptp-photos"
+  ON storage.objects FOR UPDATE
+  USING (bucket_id = 'ptp-photos');
