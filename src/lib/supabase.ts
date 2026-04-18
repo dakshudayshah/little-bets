@@ -244,3 +244,15 @@ export async function fetchBetPhotos(betId: string): Promise<Map<string, string>
 
   return photos;
 }
+
+/**
+ * Upload a pre-rendered OG image PNG to Supabase Storage.
+ * Fire-and-forget from the client after bet resolution.
+ */
+export async function uploadOgImage(codeName: string, blob: Blob): Promise<boolean> {
+  const path = `${codeName}.png`;
+  const { error } = await supabase.storage
+    .from('og-images')
+    .upload(path, blob, { upsert: true, contentType: 'image/png' });
+  return !error;
+}

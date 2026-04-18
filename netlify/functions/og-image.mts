@@ -117,7 +117,7 @@ export default async function handler(req: Request, _context: Context) {
       if (photosRes?.ok) {
         try {
           const files: { name: string }[] = await photosRes.json();
-          const photoFetches = files.slice(0, 8).map(async (file) => {
+          const photoFetches = files.slice(0, 20).map(async (file) => {
             try {
               const photoRes = await fetch(
                 `${supabaseUrl}/storage/v1/object/public/ptp-photos/${bet!.id}/${file.name}`,
@@ -148,7 +148,16 @@ export default async function handler(req: Request, _context: Context) {
   const winners = isResolved ? participants.filter((p) => didWin(bet!, p)) : [];
   const losers = isResolved ? participants.filter((p) => !didWin(bet!, p)) : [];
   const allParticipants = isResolved ? [...winners, ...losers] : [...participants];
-  const maxAvatars = Math.min(allParticipants.length, 8);
+  const maxAvatars = Math.min(allParticipants.length, 20);
+  const overflow = allParticipants.length > 20 ? allParticipants.length - 20 : 0;
+
+  // Adaptive sizing: shrink avatars as count grows
+  const avatarR = maxAvatars <= 5 ? 56 : maxAvatars <= 10 ? 40 : 28;
+  const avatarSpacing = maxAvatars <= 5 ? 120 : maxAvatars <= 10 ? 100 : 80;
+  const nameFontSize = maxAvatars <= 10 ? "14px" : "11px";
+  const nameMaxLen = maxAvatars <= 10 ? 8 : 6;
+  const useRows = maxAvatars > 10;
+  const perRow = useRows ? Math.ceil(maxAvatars / 2) : maxAvatars;
 
   // Date
   const dateStr = bet
@@ -162,15 +171,12 @@ export default async function handler(req: Request, _context: Context) {
     ? `${winners.length} called it · ${losers.length} missed · ${participants.length} total`
     : `${participants.length} locked in`;
 
-  // Build avatar elements
-  const avatarR = 68;
-  const avatarSpacing = 120;
-  const avatarElements = allParticipants.slice(0, maxAvatars).map((p, _i) => {
+  function buildAvatar(p: Participant) {
     const isWinner = isResolved && didWin(bet!, p);
     const photoSrc = photoMap.get(p.participant_name);
     const initial = p.participant_name.charAt(0).toUpperCase();
-    const displayName = p.participant_name.length > 8
-      ? p.participant_name.slice(0, 7) + "..."
+    const displayName = p.participant_name.length > nameMaxLen
+      ? p.participant_name.slice(0, nameMaxLen - 1) + "..."
       : p.participant_name;
 
     const avatarContent = photoSrc
@@ -211,7 +217,7 @@ export default async function handler(req: Request, _context: Context) {
           type: "div",
           props: {
             style: {
-              fontSize: "14px",
+              fontSize: maxAvatars <= 10 ? "13px" : "10px",
               fontWeight: 500,
               color: isWinner ? YELLOW : SUBTLE,
               textAlign: "center" as const,
@@ -228,7 +234,7 @@ export default async function handler(req: Request, _context: Context) {
           display: "flex",
           flexDirection: "column" as const,
           alignItems: "center",
-          gap: "4px",
+          gap: "2px",
           width: `${avatarSpacing}px`,
         },
         children: [
@@ -237,7 +243,7 @@ export default async function handler(req: Request, _context: Context) {
             type: "div",
             props: {
               style: {
-                fontSize: "15px",
+                fontSize: nameFontSize,
                 fontWeight: 500,
                 color: isResolved ? (isWinner ? WHITE : SUBTLE) : WHITE,
                 textAlign: "center" as const,
@@ -249,18 +255,21 @@ export default async function handler(req: Request, _context: Context) {
         ].filter(Boolean),
       },
     };
-  });
+  }
+
+  const displayed = allParticipants.slice(0, maxAvatars);
+  const avatarItems = displayed.map(buildAvatar);
 
   // Overflow indicator
-  if (allParticipants.length > maxAvatars) {
-    avatarElements.push({
+  if (overflow > 0) {
+    avatarItems.push({
       type: "div",
       props: {
         style: {
           display: "flex",
           flexDirection: "column" as const,
           alignItems: "center",
-          gap: "4px",
+          gap: "2px",
           width: `${avatarSpacing}px`,
         },
         children: [
@@ -277,13 +286,34 @@ export default async function handler(req: Request, _context: Context) {
                 fontWeight: 600,
                 color: MUTED,
               },
-              children: `+${allParticipants.length - maxAvatars}`,
+              children: `+${overflow}`,
             },
           },
         ],
       },
     });
   }
+
+  // Build rows (1 row if ≤10, 2 rows if >10)
+  const avatarRows: typeof avatarItems[] = [];
+  if (useRows) {
+    avatarRows.push(avatarItems.slice(0, perRow));
+    avatarRows.push(avatarItems.slice(perRow));
+  } else {
+    avatarRows.push(avatarItems);
+  }
+
+  const avatarElements = avatarRows.map((row) => ({
+    type: "div",
+    props: {
+      style: {
+        display: "flex",
+        justifyContent: "center",
+        gap: "0px",
+      },
+      children: row,
+    },
+  }));
 
   const svg = await satori(
     {
@@ -374,8 +404,8 @@ export default async function handler(req: Request, _context: Context) {
                       props: {
                         style: {
                           display: "flex",
-                          justifyContent: "center",
-                          gap: "0px",
+                          flexDirection: "column" as const,
+                          gap: "8px",
                           marginTop: "16px",
                         },
                         children: avatarElements,

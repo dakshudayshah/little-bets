@@ -101,10 +101,10 @@ function CreateBetForm() {
       });
 
       if (token) {
-        navigate(`/bet/${bet.code_name}?ptp=1`);
+        navigate(`/bet/${bet.code_name}/ptp/start`);
         setTimeout(() => setHashToken(token), 0);
       } else {
-        navigate(`/bet/${bet.code_name}?ptp=1`);
+        navigate(`/bet/${bet.code_name}/ptp/start`);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create bet';

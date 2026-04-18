@@ -9,6 +9,22 @@ import BetDetail from './pages/BetDetail';
 import CreateBet from './pages/CreateBet';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import PTPStart from './pages/PTPStart';
+import PTPReveal from './pages/PTPReveal';
+import PassThePhoneMode from './components/PassThePhoneMode';
+import { PTPProvider } from './context/PTPContext';
+
+function PTPLayout() {
+  return (
+    <PTPProvider>
+      <Routes>
+        <Route path="start" element={<PTPStart />} />
+        <Route index element={<PassThePhoneMode />} />
+        <Route path="reveal" element={<PTPReveal />} />
+      </Routes>
+    </PTPProvider>
+  );
+}
 
 function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -20,6 +36,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/bet/:id" element={<BetDetail />} />
+        <Route path="/bet/:id/ptp/*" element={<PTPLayout />} />
         <Route path="/create" element={<CreateBet />} />
 
         <Route path="/profile" element={<Profile />} />

@@ -21,19 +21,47 @@
   border-radius: var(--radius);
 }
 
-.moment-card-share-btn {
+.moment-card-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   margin-top: 12px;
-  padding: 12px 32px;
+}
+
+.moment-card-share-btn {
+  width: 100%;
+  max-width: 320px;
+  padding: 14px 32px;
   background: var(--color-primary);
   color: white;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius);
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
+  cursor: pointer;
 }
 
 .moment-card-share-btn:hover {
   background: var(--color-primary-hover);
+}
+
+.moment-card-instagram-btn {
+  width: 100%;
+  max-width: 320px;
+  padding: 10px 24px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.moment-card-instagram-btn:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-secondary);
 }
 
 .moment-card-hint {

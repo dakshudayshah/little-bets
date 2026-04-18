@@ -10,7 +10,6 @@ import type { Bet, BetParticipant } from '../types';
 import { getWinningLabel, didParticipantWin, getParticipantLabel } from '../lib/bet-utils';
 import BetStats from '../components/BetStats';
 import PredictionForm from '../components/PredictionForm';
-import PassThePhoneMode from '../components/PassThePhoneMode';
 import MomentCard from '../components/MomentCard';
 import Confetti from '../components/Confetti';
 import { timeAgo } from '../lib/time';
@@ -31,7 +30,6 @@ function BetDetail() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [hasPredicted, setHasPredicted] = useState(false);
   const [isAnonCreator, setIsAnonCreator] = useState(false);
-  const [showPTP, setShowPTP] = useState(false);
   const [ptpPhotos, setPtpPhotos] = useState<Map<string, string>>(new Map());
   const [photosLoading, setPhotosLoading] = useState(true);
 
@@ -49,8 +47,7 @@ function BetDetail() {
     if (!bet) return;
     const params = new URLSearchParams(location.search);
     if (params.get('ptp') === '1') {
-      navigate(location.pathname, { replace: true });
-      setShowPTP(true);
+      navigate(`/bet/${id}/ptp/start`, { replace: true });
     }
   }, [bet?.id]);
 
@@ -97,29 +94,28 @@ function BetDetail() {
       const storagePhotos = await fetchBetPhotos(bet.id);
       if (cancelled) return;
 
-      if (storagePhotos.size > 0) {
-        setPtpPhotos(storagePhotos);
-        track('ptp_photos_loaded', { bet_id: bet.id, count: storagePhotos.size });
-      } else {
-        // Fallback: sessionStorage may have photos from in-flight uploads
-        try {
-          const cached = sessionStorage.getItem(`ptp_photos_${bet.id}`);
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            // Support both Map entries array and plain object formats
-            const fallback: Map<string, string> = Array.isArray(parsed)
-              ? new Map(parsed as [string, string][])
-              : new Map(Object.entries(parsed) as [string, string][]);
-            if (fallback.size > 0) {
-              setPtpPhotos(fallback);
-              track('ptp_photos_fallback', { bet_id: bet.id, count: fallback.size });
-              // Re-trigger uploads for cached photos
-              fallback.forEach((dataUrl, name) => {
-                uploadPhoto(bet.id, name, dataUrl);
-              });
+      const merged = new Map(storagePhotos);
+
+      // Merge sessionStorage photos for any participants missing from Storage
+      try {
+        const cached = sessionStorage.getItem(`ptp_photos_${bet.id}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          const fallback: Map<string, string> = Array.isArray(parsed)
+            ? new Map(parsed as [string, string][])
+            : new Map(Object.entries(parsed) as [string, string][]);
+          fallback.forEach((dataUrl, name) => {
+            if (!merged.has(name)) {
+              merged.set(name, dataUrl);
+              uploadPhoto(bet.id, name, dataUrl);
             }
-          }
-        } catch { /* ignore corrupt cache */ }
+          });
+        }
+      } catch { /* ignore corrupt cache */ }
+
+      if (merged.size > 0) {
+        setPtpPhotos(merged);
+        track('ptp_photos_loaded', { bet_id: bet.id, from_storage: storagePhotos.size, from_cache: merged.size - storagePhotos.size });
       }
       setPhotosLoading(false);
     })();
@@ -214,28 +210,6 @@ function BetDetail() {
     }
   }
 
-  async function handlePTPExit(photos: Map<string, string>) {
-    setShowPTP(false);
-    // Merge photos from this PTP session and persist
-    setPtpPhotos(prev => {
-      const merged = new Map(prev);
-      photos.forEach((v, k) => merged.set(k, v));
-      try {
-        sessionStorage.setItem(`ptp_photos_${id}`, JSON.stringify([...merged]));
-      } catch { /* storage full, ignore */ }
-      return merged;
-    });
-    // Refresh data after pass-the-phone session
-    if (id && bet) {
-      const [betData, parts] = await Promise.all([
-        fetchBetByCodeName(id),
-        fetchParticipants(bet.id),
-      ]);
-      if (betData) setBet(betData);
-      setParticipants(parts);
-    }
-  }
-
   if (loading) return <div className="page"><p>Loading...</p></div>;
   if (error || !bet) return <div className="page"><p className="error-text">{error || 'Bet not found'}</p></div>;
 
@@ -243,23 +217,13 @@ function BetDetail() {
   const winners = bet.resolved ? participants.filter(p => didParticipantWin(bet, p)) : [];
   const losers = bet.resolved ? participants.filter(p => !didParticipantWin(bet, p)) : [];
 
-  if (showPTP) {
-    return (
-      <PassThePhoneMode
-        bet={bet}
-        onExit={handlePTPExit}
-        predictionCount={bet.total_predictions}
-      />
-    );
-  }
-
   return (
     <div className="page">
       {showConfetti && <Confetti onComplete={() => setShowConfetti(false)} />}
 
       {/* Hero CTA — full-width Pass the Phone for all unresolved bets */}
       {!bet.resolved && (
-        <button className="ptp-hero-btn btn-primary-cta" onClick={() => setShowPTP(true)}>
+        <button className="ptp-hero-btn btn-primary-cta" onClick={() => navigate(`/bet/${id}/ptp/start`)}>
           Pass the Phone
         </button>
       )}

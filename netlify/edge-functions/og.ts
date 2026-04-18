@@ -64,9 +64,18 @@ export default async function handler(request: Request, context: Context) {
     }
     const origin = url.origin;
     const ogUrl = `${origin}/bet/${codeName}`;
-    const theme = url.searchParams.get("theme") || "";
-    const themeParam = theme ? `&theme=${encodeURIComponent(theme)}` : "";
-    const ogImage = `${origin}/.netlify/functions/og-image?code=${encodeURIComponent(codeName)}${themeParam}`;
+
+    // Use pre-rendered image from Storage if available (uploaded at resolve time)
+    let ogImage: string;
+    const preRendered = `${supabaseUrl}/storage/v1/object/public/og-images/${encodeURIComponent(codeName)}.png`;
+    const headCheck = await fetch(preRendered, { method: "HEAD" }).catch(() => null);
+    if (headCheck?.ok) {
+      ogImage = preRendered;
+    } else {
+      const theme = url.searchParams.get("theme") || "";
+      const themeParam = theme ? `&theme=${encodeURIComponent(theme)}` : "";
+      ogImage = `${origin}/.netlify/functions/og-image?code=${encodeURIComponent(codeName)}${themeParam}`;
+    }
 
     const response = await context.next();
     const html = await response.text();

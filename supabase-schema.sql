@@ -310,3 +310,20 @@ CREATE POLICY "Anyone can upload ptp-photos"
 CREATE POLICY "Anyone can update ptp-photos"
   ON storage.objects FOR UPDATE
   USING (bucket_id = 'ptp-photos');
+
+-- ============================================
+-- Storage: og-images bucket (pre-rendered OG images)
+-- Create via Dashboard: Storage → New Bucket → "og-images" → Public
+-- ============================================
+
+CREATE POLICY "Public read og-images"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'og-images');
+
+CREATE POLICY "Anyone can upload og-images"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'og-images');
+
+CREATE POLICY "Anyone can update og-images"
+  ON storage.objects FOR UPDATE
+  USING (bucket_id = 'og-images');

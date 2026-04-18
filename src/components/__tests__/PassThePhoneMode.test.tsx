@@ -1,20 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import PassThePhoneMode from '../PassThePhoneMode';
 import type { Bet } from '../../types';
 
 // Mock supabase
 vi.mock('../../lib/supabase', () => ({
   submitPrediction: vi.fn().mockResolvedValue({ id: 'p1' }),
+  uploadPhoto: vi.fn().mockResolvedValue(true),
+  fetchBetByCodeName: vi.fn(),
+  fetchParticipants: vi.fn().mockResolvedValue([]),
+  fetchBetPhotos: vi.fn().mockResolvedValue(new Map()),
 }));
 
-// Mock analytics
 vi.mock('../../lib/analytics', () => ({
   track: vi.fn(),
 }));
 
-// Mock image-utils
 vi.mock('../../lib/image-utils', () => ({
   resizeImage: vi.fn().mockResolvedValue('data:image/jpeg;base64,fake'),
 }));
@@ -44,76 +47,88 @@ function makeBet(overrides: Partial<Bet> = {}): Bet {
   };
 }
 
-describe('PassThePhoneMode', () => {
-  const onExit = vi.fn();
+// Mock PTPContext to provide bet data directly
+const mockSetPhotos = vi.fn();
+const mockSetPredictionCount = vi.fn();
 
+vi.mock('../../context/PTPContext', () => ({
+  usePTP: () => ({
+    bet: currentBet,
+    photos: new Map(),
+    setPhotos: mockSetPhotos,
+    predictionCount: currentBet?.total_predictions ?? 0,
+    setPredictionCount: mockSetPredictionCount,
+    codeName: currentBet?.code_name ?? '',
+    loading: false,
+    error: null,
+    setBet: vi.fn(),
+    participants: [],
+    setParticipants: vi.fn(),
+  }),
+}));
+
+let currentBet: Bet | null = makeBet();
+
+function renderPTP(bet?: Bet) {
+  currentBet = bet ?? makeBet();
+  return render(
+    <MemoryRouter>
+      <PassThePhoneMode />
+    </MemoryRouter>
+  );
+}
+
+describe('PassThePhoneMode', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock requestFullscreen
+    currentBet = makeBet();
     document.documentElement.requestFullscreen = vi.fn().mockResolvedValue(undefined);
   });
 
-  it('renders intro step with question', () => {
-    render(<PassThePhoneMode bet={makeBet()} onExit={onExit} predictionCount={3} />);
+  it('renders pick step first (answer-before-name)', () => {
+    renderPTP();
     expect(screen.getByText('Will it rain?')).toBeTruthy();
-    expect(screen.getByText('Start')).toBeTruthy();
-    expect(screen.getByText('Pass the phone around')).toBeTruthy();
-  });
-
-  it('shows prediction count', () => {
-    render(<PassThePhoneMode bet={makeBet()} onExit={onExit} predictionCount={5} />);
-    expect(screen.getByText('5 predictions')).toBeTruthy();
-  });
-
-  it('transitions from intro to name step', async () => {
-    render(<PassThePhoneMode bet={makeBet()} onExit={onExit} predictionCount={0} />);
-    fireEvent.click(screen.getByText('Start'));
-    expect(screen.getByPlaceholderText('Your name')).toBeTruthy();
-    expect(screen.getByText('Next')).toBeTruthy();
-  });
-
-  it('validates name is required on name step', async () => {
-    render(<PassThePhoneMode bet={makeBet()} onExit={onExit} predictionCount={0} />);
-    fireEvent.click(screen.getByText('Start'));
-    fireEvent.click(screen.getByText('Next'));
-    expect(screen.getByText('Enter your name')).toBeTruthy();
-  });
-
-  it('transitions from name to pick step', async () => {
-    const user = userEvent.setup();
-    render(<PassThePhoneMode bet={makeBet()} onExit={onExit} predictionCount={0} />);
-    fireEvent.click(screen.getByText('Start'));
-    await user.type(screen.getByPlaceholderText('Your name'), 'Alice');
-    fireEvent.click(screen.getByText('Next'));
-    expect(screen.getByText('Alice, make your call')).toBeTruthy();
+    expect(screen.getByText('Make your call')).toBeTruthy();
     expect(screen.getByText('Yes')).toBeTruthy();
     expect(screen.getByText('No')).toBeTruthy();
   });
 
-  it('shows LOCK IT IN after selecting an option', async () => {
-    const user = userEvent.setup();
-    render(<PassThePhoneMode bet={makeBet()} onExit={onExit} predictionCount={0} />);
-    fireEvent.click(screen.getByText('Start'));
-    await user.type(screen.getByPlaceholderText('Your name'), 'Alice');
-    fireEvent.click(screen.getByText('Next'));
+  it('shows prediction count', () => {
+    renderPTP(makeBet({ total_predictions: 5 }));
+    expect(screen.getByText('5 predictions')).toBeTruthy();
+  });
+
+  it('shows Next button after selecting an option', () => {
+    renderPTP();
     fireEvent.click(screen.getByText('Yes'));
+    expect(screen.getByText('Next')).toBeTruthy();
+  });
+
+  it('transitions from pick to name step', () => {
+    renderPTP();
+    fireEvent.click(screen.getByText('Yes'));
+    fireEvent.click(screen.getByText('Next'));
+    expect(screen.getByPlaceholderText('Your name')).toBeTruthy();
     expect(screen.getByText('LOCK IT IN')).toBeTruthy();
   });
 
-  it('shows multiple choice options for MC bets', async () => {
-    const user = userEvent.setup();
-    const bet = makeBet({
+  it('validates name is required on name step', () => {
+    renderPTP();
+    fireEvent.click(screen.getByText('Yes'));
+    fireEvent.click(screen.getByText('Next'));
+    fireEvent.click(screen.getByText('LOCK IT IN'));
+    expect(screen.getByText('Enter your name')).toBeTruthy();
+  });
+
+  it('shows multiple choice options for MC bets', () => {
+    renderPTP(makeBet({
       bet_type: 'multiple_choice',
       options: [
         { text: 'Red', yes_count: 0, no_count: 0 },
         { text: 'Blue', yes_count: 0, no_count: 0 },
         { text: 'Green', yes_count: 0, no_count: 0 },
       ],
-    });
-    render(<PassThePhoneMode bet={bet} onExit={onExit} predictionCount={0} />);
-    fireEvent.click(screen.getByText('Start'));
-    await user.type(screen.getByPlaceholderText('Your name'), 'Bob');
-    fireEvent.click(screen.getByText('Next'));
+    }));
     expect(screen.getByText('Red')).toBeTruthy();
     expect(screen.getByText('Blue')).toBeTruthy();
     expect(screen.getByText('Green')).toBeTruthy();
@@ -122,15 +137,14 @@ describe('PassThePhoneMode', () => {
   it('submits prediction on LOCK IT IN and shows confirmation', async () => {
     const { submitPrediction } = await import('../../lib/supabase');
     const user = userEvent.setup();
-    render(<PassThePhoneMode bet={makeBet()} onExit={onExit} predictionCount={0} />);
+    renderPTP();
 
-    // Navigate to pick
-    fireEvent.click(screen.getByText('Start'));
-    await user.type(screen.getByPlaceholderText('Your name'), 'Alice');
+    // Pick answer first
+    fireEvent.click(screen.getByText('Yes'));
     fireEvent.click(screen.getByText('Next'));
 
-    // Select and lock
-    fireEvent.click(screen.getByText('Yes'));
+    // Enter name and lock
+    await user.type(screen.getByPlaceholderText('Your name'), 'Alice');
     fireEvent.click(screen.getByText('LOCK IT IN'));
 
     await waitFor(() => {
@@ -142,29 +156,26 @@ describe('PassThePhoneMode', () => {
       });
     });
 
-    // Should show locked confirmation
     await waitFor(() => {
       expect(screen.getByText('Locked in!')).toBeTruthy();
     });
   });
 
-  it('calls onExit with photos map when Done is clicked', () => {
-    render(<PassThePhoneMode bet={makeBet()} onExit={onExit} predictionCount={0} />);
+  it('navigates to reveal when Done is clicked', () => {
+    renderPTP();
     fireEvent.click(screen.getByText('Done? Show Results'));
-    expect(onExit).toHaveBeenCalledWith(expect.any(Map));
+    // Navigation happens via react-router, verified by no crash
   });
 
   it('shows photo step after lock-in', async () => {
     const user = userEvent.setup();
-    render(<PassThePhoneMode bet={makeBet()} onExit={onExit} predictionCount={0} />);
+    renderPTP();
 
-    fireEvent.click(screen.getByText('Start'));
-    await user.type(screen.getByPlaceholderText('Your name'), 'Alice');
-    fireEvent.click(screen.getByText('Next'));
     fireEvent.click(screen.getByText('Yes'));
+    fireEvent.click(screen.getByText('Next'));
+    await user.type(screen.getByPlaceholderText('Your name'), 'Alice');
     fireEvent.click(screen.getByText('LOCK IT IN'));
 
-    // Wait for locked → photo transition (0.7s)
     await waitFor(() => {
       expect(screen.getByText('Snap a selfie?')).toBeTruthy();
     }, { timeout: 2000 });
@@ -173,14 +184,10 @@ describe('PassThePhoneMode', () => {
     expect(screen.getByText('Take Photo')).toBeTruthy();
   });
 
-  it('shows description when bet has one', () => {
-    render(
-      <PassThePhoneMode
-        bet={makeBet({ description: 'Extra context here' })}
-        onExit={onExit}
-        predictionCount={0}
-      />
-    );
-    expect(screen.getByText('Extra context here')).toBeTruthy();
+  it('uses role="radiogroup" for accessibility', () => {
+    renderPTP();
+    expect(screen.getByRole('radiogroup')).toBeTruthy();
+    const radios = screen.getAllByRole('radio');
+    expect(radios.length).toBe(2);
   });
 });

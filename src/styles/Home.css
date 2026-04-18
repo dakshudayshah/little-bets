@@ -1,46 +1,157 @@
-.quick-create {
-  margin-bottom: 6px;
+.home-subtitle {
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+  margin: 0 0 20px;
 }
 
-.quick-create-top {
+.error-text {
+  color: var(--color-danger);
+}
+
+/* Gallery grid */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 600px) {
+  .gallery-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+}
+
+/* Gallery card */
+.gallery-card {
+  position: relative;
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.15s, transform 0.1s;
 }
 
-.quick-create-input {
-  flex: 1;
-  padding: 14px 16px;
+.gallery-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.gallery-card:active {
+  transform: translateY(0);
+}
+
+.gallery-card:disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.gallery-card-thumb {
+  width: 100%;
+  aspect-ratio: 1200 / 630;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery-card-content {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gallery-card-emoji {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.gallery-card-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-top: 2px;
+}
+
+.gallery-card-prompt {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  line-height: 1.3;
+}
+
+.gallery-card-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Create your own card */
+.gallery-card-custom {
+  border-style: dashed;
+}
+
+.gallery-card-custom .gallery-card-content {
+  min-height: 80px;
+  justify-content: center;
+}
+
+/* Custom create overlay */
+.custom-create-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.custom-create-form {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.custom-create-title {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.custom-create-input {
+  padding: 12px 14px;
   border: 2px solid var(--color-border);
   border-radius: var(--radius);
   font-size: 1rem;
   background: var(--color-surface);
   color: var(--color-text);
-  transition: border-color 0.15s;
 }
 
-.quick-create-input:focus {
+.custom-create-input:focus {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px var(--color-primary-focus);
 }
 
-.quick-create-input::placeholder {
-  color: var(--color-text-secondary);
-  opacity: 0.7;
-}
-
-.quick-create-btn {
-  padding: 14px 24px;
-  border-radius: var(--radius);
-  font-size: 1rem;
-  white-space: nowrap;
-}
-
-/* Bet type toggle row */
-.quick-create-type-row {
+.custom-type-row {
   display: flex;
   gap: 4px;
-  margin-top: 8px;
 }
 
 .quick-type-btn {
@@ -64,21 +175,13 @@
   background: var(--color-primary-tint);
 }
 
-/* Multiple choice options inline */
-.quick-create-options {
-  margin-top: 8px;
+.custom-options {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.quick-option-row {
-  display: flex;
-  gap: 6px;
-}
-
-.quick-option-input {
-  flex: 1;
+.custom-option-input {
   padding: 8px 12px;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius);
@@ -87,107 +190,37 @@
   color: var(--color-text);
 }
 
-.quick-option-input:focus {
+.custom-option-input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-primary-focus);
 }
 
-.quick-option-remove {
-  padding: 6px 10px;
-  background: var(--color-danger);
-  color: white;
-  border-radius: var(--radius);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.quick-add-option {
-  padding: 6px 12px;
+.custom-add-option {
+  padding: 4px 0;
   background: none;
   color: var(--color-primary);
   font-size: 0.8rem;
   font-weight: 500;
   align-self: flex-start;
+  cursor: pointer;
 }
 
-.quick-add-option:hover {
-  text-decoration: underline;
-}
-
-/* Meta row */
-.quick-create-meta {
+.custom-actions {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 24px;
-}
-
-.quick-create-hint {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
-  margin: 0;
-}
-
-.quick-create-meta .char-count {
-  margin-top: 0;
-  flex-shrink: 0;
-}
-
-.quick-create-hint a {
-  color: var(--color-primary);
-}
-
-.home-subtitle {
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
-  margin: 0 0 16px;
-}
-
-.home-empty {
-  color: var(--color-text-secondary);
-  text-align: center;
-  padding: 40px 0;
-}
-
-.error-text {
-  color: var(--color-danger);
-}
-
-/* Example bets inspiration section */
-.example-bets {
-  margin-top: 24px;
-}
-
-.example-bets-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-secondary);
-  margin: 0 0 8px;
-}
-
-.example-bets-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 8px;
+  margin-top: 4px;
 }
 
-.example-bet-card {
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
+.custom-actions .btn-primary-cta {
+  flex: 1;
+}
+
+.custom-cancel {
+  padding: 10px 16px;
+  background: none;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 12px;
-  min-height: 48px;
-  text-align: left;
   font-size: 0.85rem;
-  color: var(--color-text);
-  line-height: 1.3;
-  box-shadow: var(--shadow);
-  transition: box-shadow 0.15s;
-}
-
-.example-bet-card:hover {
-  box-shadow: var(--shadow-md);
+  cursor: pointer;
 }

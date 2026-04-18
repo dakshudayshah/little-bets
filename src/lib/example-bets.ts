@@ -1,23 +1,85 @@
+export interface OccasionPrompt {
+  emoji: string;
+  label: string;
+  question: string;
+  bet_type: 'yesno' | 'multiple_choice';
+  options?: string[];
+  sampleImage?: string;
+}
+
+export const OCCASION_PROMPTS: OccasionPrompt[] = [
+  {
+    emoji: '🎉',
+    label: 'Gender Reveal',
+    question: 'Boy or girl?',
+    bet_type: 'yesno',
+    sampleImage: '/samples/gender-reveal.png',
+  },
+  {
+    emoji: '🏈',
+    label: 'Watch Party',
+    question: 'Who wins tonight?',
+    bet_type: 'multiple_choice',
+    options: ['Home team', 'Away team'],
+    sampleImage: '/samples/watch-party.png',
+  },
+  {
+    emoji: '🍽️',
+    label: 'Team Dinner',
+    question: 'Who picks up the tab?',
+    bet_type: 'multiple_choice',
+    options: ['The host', 'We split it', 'Someone sneaks out'],
+    sampleImage: '/samples/team-dinner.png',
+  },
+  {
+    emoji: '🎂',
+    label: 'Birthday',
+    question: 'Will they cry when they see the cake?',
+    bet_type: 'yesno',
+    sampleImage: '/samples/birthday.png',
+  },
+  {
+    emoji: '🏖️',
+    label: 'Trip',
+    question: 'Will we actually leave on time?',
+    bet_type: 'yesno',
+    sampleImage: '/samples/trip.png',
+  },
+  {
+    emoji: '🎤',
+    label: 'Karaoke Night',
+    question: 'Who goes first?',
+    bet_type: 'multiple_choice',
+    options: ['The brave one', 'The one we force', 'Someone unexpected'],
+    sampleImage: '/samples/karaoke.png',
+  },
+  {
+    emoji: '👶',
+    label: 'Baby Shower',
+    question: "What's the baby's name?",
+    bet_type: 'multiple_choice',
+    options: ['Something classic', 'Something trendy', 'A total surprise'],
+    sampleImage: '/samples/baby-shower.png',
+  },
+  {
+    emoji: '🏆',
+    label: 'Game Night',
+    question: 'Who wins tonight?',
+    bet_type: 'multiple_choice',
+    options: ['The usual', 'The underdog', 'Whoever cheats best'],
+    sampleImage: '/samples/game-night.png',
+  },
+];
+
+// Legacy export for backward compat (unused after home redesign)
 export interface ExampleBet {
   question: string;
   bet_type: 'yesno' | 'multichoice';
   options?: string[];
 }
 
-export const ALL_EXAMPLES: ExampleBet[] = [
-  { question: 'Will it rain before we finish dinner?', bet_type: 'yesno' },
-  { question: 'Who will pick up the check?', bet_type: 'multichoice', options: ['The host', 'We split it', 'Someone sneaks out'] },
-  { question: 'Will the meeting end on time?', bet_type: 'yesno' },
-  { question: 'Best pizza topping?', bet_type: 'multichoice', options: ['Pepperoni', 'Mushrooms', 'Just cheese', 'Something weird'] },
-  { question: 'Will we actually leave on time?', bet_type: 'yesno' },
-  { question: 'Who finishes their food first?', bet_type: 'multichoice', options: ['The hungry one', 'The fast eater', 'No one — we\'re all too full'] },
-  { question: 'Will the game go into overtime?', bet_type: 'yesno' },
-  { question: 'First person to check their phone?', bet_type: 'multichoice', options: ['The one who said they wouldn\'t', 'The anxious one', 'It\'ll be me'] },
-  { question: 'Will we order dessert?', bet_type: 'yesno' },
-  { question: 'How does this movie end?', bet_type: 'multichoice', options: ['Happy ending', 'Twist ending', 'Depressing ending', 'Sequel bait'] },
-  { question: 'Will the traffic be bad on the way home?', bet_type: 'yesno' },
-  { question: 'Who suggests the after-party?', bet_type: 'multichoice', options: ['The night owl', 'The host', 'Nobody — we\'re all tired'] },
-  { question: 'Will anyone show up late?', bet_type: 'yesno' },
-  { question: 'What\'s for lunch tomorrow?', bet_type: 'multichoice', options: ['Leftovers', 'Something healthy', 'Whatever\'s closest'] },
-  { question: 'Will this project ship on time?', bet_type: 'yesno' },
-];
+export const ALL_EXAMPLES: ExampleBet[] = OCCASION_PROMPTS.map(p => ({
+  question: p.question,
+  bet_type: p.bet_type === 'multiple_choice' ? 'multichoice' : p.bet_type,
+  options: p.options,
+}));

@@ -1,20 +1,19 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { submitPrediction, uploadPhoto } from '../lib/supabase';
 import { track } from '../lib/analytics';
 import { resizeImage } from '../lib/image-utils';
-import type { Bet } from '../types';
+import { usePTP } from '../context/PTPContext';
 import '../styles/PassThePhone.css';
 
-type Step = 'intro' | 'name' | 'pick' | 'locked' | 'photo' | 'handoff';
+const ANSWER_FIRST = true;
 
-interface Props {
-  bet: Bet;
-  onExit: (photos: Map<string, string>) => void;
-  predictionCount: number;
-}
+type Step = 'pick' | 'name' | 'locked' | 'photo' | 'handoff';
 
-function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
-  const [step, setStep] = useState<Step>('intro');
+function PassThePhoneMode() {
+  const { bet, setPhotos, predictionCount, setPredictionCount, codeName } = usePTP();
+  const navigate = useNavigate();
+  const [step, setStep] = useState<Step>(ANSWER_FIRST ? 'pick' : 'name');
   const [name, setName] = useState('');
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [selectedPrediction, setSelectedPrediction] = useState<boolean | null>(null);
@@ -23,23 +22,19 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
   const [tapLocked, setTapLocked] = useState(false);
   const [localCount, setLocalCount] = useState(predictionCount);
   const [confirmLabel, setConfirmLabel] = useState('');
-  const [photos] = useState(() => new Map<string, string>());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const lockTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const photoTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Sync external count
   useEffect(() => {
     setLocalCount(predictionCount);
   }, [predictionCount]);
 
-  // Request fullscreen (progressive enhancement)
   useEffect(() => {
     const el = document.documentElement;
     if (el.requestFullscreen) {
       el.requestFullscreen().catch(() => {});
     }
-    track('ptp_started', { bet_id: bet.id });
     return () => {
       if (document.fullscreenElement) {
         document.exitFullscreen().catch(() => {});
@@ -47,7 +42,7 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
       clearTimeout(photoTimerRef.current);
       clearTimeout(lockTimerRef.current);
     };
-  }, [bet.id]);
+  }, []);
 
   const reset = useCallback(() => {
     setName('');
@@ -57,10 +52,34 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
     setConfirmLabel('');
   }, []);
 
+  if (!bet) return null;
+
   function handleSelectOption(optionIndex: number, prediction: boolean) {
     setSelectedOption(optionIndex);
     setSelectedPrediction(prediction);
     setError(null);
+  }
+
+  function handleNextFromPick() {
+    if (selectedOption === null) {
+      setError('Pick an answer first');
+      return;
+    }
+    setError(null);
+    setStep('name');
+  }
+
+  function handleNextFromName() {
+    if (!name.trim()) {
+      setError('Enter your name');
+      return;
+    }
+    setError(null);
+    if (ANSWER_FIRST) {
+      handleLockIn();
+    } else {
+      setStep('pick');
+    }
   }
 
   async function handleLockIn() {
@@ -75,27 +94,25 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
 
     try {
       await submitPrediction({
-        bet_id: bet.id,
+        bet_id: bet!.id,
         participant_name: name.trim(),
         prediction: selectedPrediction,
         option_index: selectedOption,
       });
 
-      const label = bet.bet_type === 'yesno'
+      const label = bet!.bet_type === 'yesno'
         ? (selectedPrediction ? 'Yes' : 'No')
-        : bet.options[selectedOption]?.text ?? '';
+        : bet!.options[selectedOption]?.text ?? '';
 
       setConfirmLabel(label);
       setLocalCount(c => c + 1);
+      setPredictionCount(c => c + 1);
 
-      // Haptic
       if (navigator.vibrate) navigator.vibrate(100);
 
-      track('ptp_prediction', { bet_id: bet.id, bet_type: bet.bet_type });
+      track('ptp_prediction_locked', { bet_id: bet!.id, bet_type: bet!.bet_type });
 
       setStep('locked');
-
-      // Auto-advance to photo step after 0.7s
       photoTimerRef.current = setTimeout(() => setStep('photo'), 700);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to submit';
@@ -121,38 +138,40 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
     try {
       const dataUrl = await resizeImage(file, 400);
       const trimmedName = name.trim();
-      photos.set(trimmedName, dataUrl);
-      track('ptp_photo_taken', { bet_id: bet.id });
 
-      // Write-through to sessionStorage (survives tab close while upload is in-flight)
-      const cacheKey = `ptp_photos_${bet.id}`;
+      setPhotos(prev => {
+        const next = new Map(prev);
+        next.set(trimmedName, dataUrl);
+        return next;
+      });
+
+      track('ptp_photo_taken', { bet_id: bet!.id });
+
+      const cacheKey = `ptp_photos_${bet!.id}`;
       const cached = JSON.parse(sessionStorage.getItem(cacheKey) || '{}');
       cached[trimmedName] = dataUrl;
       sessionStorage.setItem(cacheKey, JSON.stringify(cached));
 
-      // Fire-and-forget upload to Supabase Storage (standalone, survives unmount)
-      uploadPhoto(bet.id, trimmedName, dataUrl).then((ok) => {
+      uploadPhoto(bet!.id, trimmedName, dataUrl).then((ok) => {
         if (ok) {
-          track('ptp_photo_uploaded', { bet_id: bet.id });
+          track('ptp_photo_uploaded', { bet_id: bet!.id });
         } else {
-          track('ptp_photo_upload_failed', { bet_id: bet.id });
+          track('ptp_photo_upload_failed', { bet_id: bet!.id });
         }
       });
-    } catch {
-      // Photo failed, no big deal
-    }
+    } catch { /* photo failed */ }
     goToHandoff();
   }
 
   function handleReady() {
     if (tapLocked) return;
     reset();
-    setStep('name');
+    setStep(ANSWER_FIRST ? 'pick' : 'name');
   }
 
   function handleDone() {
-    track('ptp_done', { bet_id: bet.id, predictions_collected: localCount });
-    onExit(photos);
+    track('ptp_done', { bet_id: bet!.id, predictions_collected: localCount });
+    navigate(`/bet/${codeName}/ptp/reveal`);
   }
 
   const reducedMotion = useMemo(
@@ -163,7 +182,6 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
   return (
     <div className="ptp-overlay">
       <div className="ptp-container">
-        {/* Done button - always visible except during locked confirmation */}
         {step !== 'locked' && (
           <div className="ptp-top-bar">
             <button className="ptp-done-btn" onClick={handleDone}>
@@ -173,17 +191,66 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
           </div>
         )}
 
-        {/* STEP: Intro */}
-        {step === 'intro' && (
-          <div className="ptp-step ptp-intro">
-            <p className="ptp-subtitle">Pass the phone around</p>
+        {/* STEP: Pick option (first when ANSWER_FIRST) */}
+        {step === 'pick' && (
+          <div className="ptp-step ptp-pick-step">
             <h1 className="ptp-question">{bet.question}</h1>
-            {bet.description && (
-              <p className="ptp-description">{bet.description}</p>
+            <p className="ptp-subtitle">
+              {ANSWER_FIRST ? 'Make your call' : `${name}, make your call`}
+            </p>
+
+            {bet.bet_type === 'yesno' ? (
+              <div className="ptp-options" role="radiogroup">
+                <button
+                  className={`ptp-option ${selectedOption === 0 && selectedPrediction === true ? 'selected' : ''}`}
+                  onClick={() => handleSelectOption(0, true)}
+                  role="radio"
+                  aria-checked={selectedOption === 0 && selectedPrediction === true}
+                >
+                  Yes
+                </button>
+                <button
+                  className={`ptp-option ${selectedOption === 0 && selectedPrediction === false ? 'selected' : ''}`}
+                  onClick={() => handleSelectOption(0, false)}
+                  role="radio"
+                  aria-checked={selectedOption === 0 && selectedPrediction === false}
+                >
+                  No
+                </button>
+              </div>
+            ) : (
+              <div className="ptp-options" role="radiogroup">
+                {bet.options.map((option, index) => (
+                  <button
+                    key={index}
+                    className={`ptp-option ${selectedOption === index ? 'selected' : ''}`}
+                    onClick={() => handleSelectOption(index, true)}
+                    role="radio"
+                    aria-checked={selectedOption === index}
+                  >
+                    {option.text}
+                  </button>
+                ))}
+              </div>
             )}
-            <button className="ptp-cta" onClick={() => setStep('name')}>
-              Start
-            </button>
+
+            {error && <p className="ptp-error">{error}</p>}
+
+            {ANSWER_FIRST && selectedOption !== null && (
+              <button className="ptp-cta" onClick={handleNextFromPick}>
+                Next
+              </button>
+            )}
+
+            {!ANSWER_FIRST && selectedOption !== null && (
+              <button
+                className="ptp-lock-btn"
+                onClick={handleLockIn}
+                disabled={submitting}
+              >
+                {submitting ? 'LOCKING...' : 'LOCK IT IN'}
+              </button>
+            )}
           </div>
         )}
 
@@ -201,72 +268,17 @@ function PassThePhoneMode({ bet, onExit, predictionCount }: Props) {
               maxLength={50}
               autoFocus
               onKeyDown={e => {
-                if (e.key === 'Enter' && name.trim()) setStep('pick');
+                if (e.key === 'Enter' && name.trim()) handleNextFromName();
               }}
             />
             {error && <p className="ptp-error">{error}</p>}
             <button
-              className="ptp-cta"
-              onClick={() => {
-                if (!name.trim()) {
-                  setError('Enter your name');
-                  return;
-                }
-                setError(null);
-                setStep('pick');
-              }}
+              className="ptp-lock-btn"
+              onClick={handleNextFromName}
+              disabled={submitting}
             >
-              Next
+              {submitting ? 'LOCKING...' : 'LOCK IT IN'}
             </button>
-          </div>
-        )}
-
-        {/* STEP: Pick option */}
-        {step === 'pick' && (
-          <div className="ptp-step ptp-pick-step">
-            <h1 className="ptp-question">{bet.question}</h1>
-            <p className="ptp-subtitle">{name}, make your call</p>
-
-            {bet.bet_type === 'yesno' ? (
-              <div className="ptp-options">
-                <button
-                  className={`ptp-option ${selectedOption === 0 && selectedPrediction === true ? 'selected' : ''}`}
-                  onClick={() => handleSelectOption(0, true)}
-                >
-                  Yes
-                </button>
-                <button
-                  className={`ptp-option ${selectedOption === 0 && selectedPrediction === false ? 'selected' : ''}`}
-                  onClick={() => handleSelectOption(0, false)}
-                >
-                  No
-                </button>
-              </div>
-            ) : (
-              <div className="ptp-options">
-                {bet.options.map((option, index) => (
-                  <button
-                    key={index}
-                    className={`ptp-option ${selectedOption === index ? 'selected' : ''}`}
-                    onClick={() => handleSelectOption(index, true)}
-                  >
-                    {option.text}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {error && <p className="ptp-error">{error}</p>}
-
-            {selectedOption !== null && (
-              <button
-                className="ptp-lock-btn"
-                onClick={handleLockIn}
-                disabled={submitting}
-              >
-                {submitting ? 'LOCKING...' : 'LOCK IT IN'}
-              </button>
-            )}
           </div>
         )}
 

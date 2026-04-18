@@ -1,8 +1,10 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { track } from '../lib/analytics';
 import { loadImage } from '../lib/image-utils';
-import { getWinningLabel, didParticipantWin, getParticipantLabel } from '../lib/bet-utils';
+import { getWinningLabel, didParticipantWin } from '../lib/bet-utils';
 import { getShareUrl } from '../lib/creator-token';
+import { uploadOgImage } from '../lib/supabase';
+import { computeSlots } from '../lib/moment-card-layouts';
 import { useToast } from '../context/ToastContext';
 import type { Bet, BetParticipant } from '../types';
 import '../styles/MomentCard.css';
@@ -15,8 +17,10 @@ interface Props {
   photosLoading?: boolean;
 }
 
-const W = 1200;
-const H = 630;
+const WIDE_W = 1200;
+const WIDE_H = 630;
+const SQ_W = 1200;
+const SQ_H = 1200;
 const BG = '#111111';
 const WHITE = '#ffffff';
 const YELLOW = '#f5f020';
@@ -59,48 +63,228 @@ function wrapText(
   return y;
 }
 
-function drawInitial(
+function drawPhotoSlot(
   ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement | null,
   name: string,
-  cx: number,
-  cy: number,
-  r: number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
   isWinner: boolean,
-  resolved: boolean
+  resolved: boolean,
+  gap: number,
 ) {
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fillStyle = resolved ? (isWinner ? YELLOW : SUBTLE) : SUBTLE;
-  ctx.fill();
+  const inset = gap / 2;
+  const sx = x + inset;
+  const sy = y + inset;
+  const sw = w - gap;
+  const sh = h - gap;
 
-  ctx.font = `600 ${r}px ${FONT}`;
-  ctx.fillStyle = BG;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(name.charAt(0).toUpperCase(), cx, cy + 2);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(sx, sy, sw, sh);
+  ctx.clip();
+
+  if (img) {
+    const scale = Math.max(sw / img.width, sh / img.height);
+    const dw = img.width * scale;
+    const dh = img.height * scale;
+    ctx.drawImage(img, sx + (sw - dw) / 2, sy + (sh - dh) / 2, dw, dh);
+  } else {
+    ctx.fillStyle = resolved ? (isWinner ? '#2a2800' : '#222') : '#222';
+    ctx.fillRect(sx, sy, sw, sh);
+    const initial = name.charAt(0).toUpperCase();
+    const fontSize = Math.min(sw, sh) * 0.4;
+    ctx.font = `600 ${fontSize}px ${FONT}`;
+    ctx.fillStyle = resolved ? (isWinner ? YELLOW : SUBTLE) : SUBTLE;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(initial, sx + sw / 2, sy + sh / 2);
+  }
+
+  // Name label bottom-left
+  const labelSize = Math.max(12, Math.min(16, sw * 0.08));
+  ctx.font = `600 ${labelSize}px ${FONT}`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'bottom';
+  ctx.shadowColor = 'rgba(0,0,0,0.7)';
+  ctx.shadowBlur = 4;
+  ctx.fillStyle = WHITE;
+  const displayName = name.length > 10 ? name.slice(0, 9) + '...' : name;
+  ctx.fillText(displayName, sx + 8, sy + sh - 8);
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = 'transparent';
+
+  ctx.restore();
+
+  // Winner ring
+  if (isWinner && resolved) {
+    ctx.strokeStyle = YELLOW;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(sx, sy, sw, sh);
+  }
 }
 
-function drawCheckmark(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
-  const badgeR = 12;
-  const bx = cx + r * 0.7;
-  const by = cy + r * 0.7;
+function drawOverflowSlot(
+  ctx: CanvasRenderingContext2D,
+  overflow: number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  gap: number,
+) {
+  const inset = gap / 2;
+  const sx = x + inset;
+  const sy = y + inset;
+  const sw = w - gap;
+  const sh = h - gap;
 
-  // Yellow circle badge
-  ctx.beginPath();
-  ctx.arc(bx, by, badgeR, 0, Math.PI * 2);
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(sx, sy, sw, sh);
+
+  const fontSize = Math.min(sw, sh) * 0.3;
+  ctx.font = `600 ${fontSize}px ${FONT}`;
+  ctx.fillStyle = MUTED;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`+${overflow}`, sx + sw / 2, sy + sh / 2);
+}
+
+async function renderToCanvas(
+  canvas: HTMLCanvasElement,
+  bet: Bet,
+  participants: BetParticipant[],
+  photos: Map<string, string>,
+  variant: 'wide' | 'square',
+): Promise<string> {
+  const W = variant === 'wide' ? WIDE_W : SQ_W;
+  const H = variant === 'wide' ? WIDE_H : SQ_H;
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d')!;
+
+  const resolved = bet.resolved;
+  const PAD = 48;
+  const GAP = 4;
+
+  // Background
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, W, H);
+
+  // Collage area
+  const collageY = variant === 'wide' ? 0 : 0;
+  const collageH = variant === 'wide' ? H : H;
+
+  const winners = resolved ? participants.filter(p => didParticipantWin(bet, p)) : [];
+  const losers = resolved ? participants.filter(p => !didParticipantWin(bet, p)) : [];
+  const allParticipants = resolved ? [...winners, ...losers] : [...participants];
+  const count = allParticipants.length;
+
+  // Load photos
+  const photoImages = new Map<string, HTMLImageElement>();
+  const maxVisible = Math.min(count, 19);
+  await Promise.all(
+    allParticipants.slice(0, maxVisible).map(async p => {
+      const src = photos.get(p.participant_name);
+      if (src) {
+        try {
+          const img = await loadImage(src);
+          if (img) photoImages.set(p.participant_name, img);
+        } catch { /* fallback to initials */ }
+      }
+    })
+  );
+
+  // Draw photo collage
+  if (count > 0) {
+    const slots = computeSlots(count, W, H, collageY, collageH);
+    const overflow = count > 19 ? count - 19 : 0;
+
+    for (let i = 0; i < Math.min(slots.length, maxVisible); i++) {
+      const p = allParticipants[i];
+      const slot = slots[i];
+      const isWinner = resolved && didParticipantWin(bet, p);
+      const img = photoImages.get(p.participant_name) || null;
+      drawPhotoSlot(ctx, img, p.participant_name, slot.x, slot.y, slot.w, slot.h, isWinner, resolved, GAP);
+    }
+
+    if (overflow > 0 && slots.length > maxVisible) {
+      const lastSlot = slots[slots.length - 1];
+      drawOverflowSlot(ctx, overflow + 1, lastSlot.x, lastSlot.y, lastSlot.w, lastSlot.h, GAP);
+    }
+  }
+
+  // Gradient overlays for text legibility
+  const topGrad = ctx.createLinearGradient(0, 0, 0, variant === 'wide' ? 200 : 280);
+  topGrad.addColorStop(0, 'rgba(17,17,17,0.92)');
+  topGrad.addColorStop(1, 'rgba(17,17,17,0)');
+  ctx.fillStyle = topGrad;
+  ctx.fillRect(0, 0, W, variant === 'wide' ? 200 : 280);
+
+  const botGrad = ctx.createLinearGradient(0, H - (variant === 'wide' ? 160 : 220), 0, H);
+  botGrad.addColorStop(0, 'rgba(17,17,17,0)');
+  botGrad.addColorStop(1, 'rgba(17,17,17,0.92)');
+  ctx.fillStyle = botGrad;
+  ctx.fillRect(0, H - (variant === 'wide' ? 160 : 220), W, variant === 'wide' ? 160 : 220);
+
+  // Branding top-left
+  ctx.font = `700 18px ${FONT}`;
   ctx.fillStyle = YELLOW;
-  ctx.fill();
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText('Little Bets', PAD, PAD - 8);
 
-  // White checkmark
-  ctx.beginPath();
-  ctx.moveTo(bx - 5, by);
-  ctx.lineTo(bx - 1, by + 4);
-  ctx.lineTo(bx + 6, by - 4);
-  ctx.strokeStyle = BG;
-  ctx.lineWidth = 2.5;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.stroke();
+  // Date top-right
+  const dateStr = new Date(bet.resolved_at || bet.created_at).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+  });
+  ctx.font = `400 16px ${FONT}`;
+  ctx.fillStyle = MUTED;
+  ctx.textAlign = 'right';
+  ctx.fillText(dateStr, W - PAD, PAD - 4);
+
+  // Question
+  ctx.textAlign = 'left';
+  const qFontSize = variant === 'wide' ? 32 : 40;
+  ctx.font = `700 ${qFontSize}px ${FONT}`;
+  ctx.fillStyle = WHITE;
+  const qY = variant === 'wide' ? PAD + 36 : PAD + 40;
+  wrapText(ctx, bet.question, PAD, qY, W - PAD * 2, qFontSize * 1.25, 2);
+
+  // Result + stats at bottom
+  if (resolved) {
+    const winLabel = getWinningLabel(bet);
+    if (winLabel) {
+      const resultFontSize = variant === 'wide' ? 44 : 56;
+      ctx.font = `800 ${resultFontSize}px ${FONT}`;
+      ctx.fillStyle = YELLOW;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(winLabel, PAD, H - PAD - 30);
+    }
+  }
+
+  // Stats line
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'bottom';
+  ctx.font = `400 14px ${FONT}`;
+  ctx.fillStyle = MUTED;
+  const statsText = resolved
+    ? `${winners.length} called it · ${losers.length} missed · ${participants.length} total`
+    : `${participants.length} locked in`;
+  ctx.fillText(statsText, PAD, H - PAD);
+
+  // Watermark bottom-right
+  ctx.textAlign = 'right';
+  ctx.globalAlpha = 0.4;
+  ctx.fillStyle = WHITE;
+  ctx.font = `400 14px ${FONT}`;
+  ctx.fillText('littlebets.netlify.app', W - PAD, H - PAD);
+  ctx.globalAlpha = 1;
+
+  return canvas.toDataURL('image/png');
 }
 
 function MomentCard({ bet, participants, photos, codeName, photosLoading }: Props) {
@@ -116,209 +300,83 @@ function MomentCard({ bet, participants, photos, codeName, photosLoading }: Prop
   async function renderCard() {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
 
-    const resolved = bet.resolved;
+    const dataUrl = await renderToCanvas(canvas, bet, participants, photos, 'wide');
+    setImgSrc(dataUrl);
 
-    // Background
-    ctx.fillStyle = BG;
-    ctx.fillRect(0, 0, W, H);
-
-    // Branding
-    ctx.font = `700 18px ${FONT}`;
-    ctx.fillStyle = YELLOW;
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText('Little Bets', 60, 40);
-
-    // Date
-    const dateStr = new Date(bet.resolved_at || bet.created_at).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-    ctx.font = `400 16px ${FONT}`;
-    ctx.fillStyle = MUTED;
-    ctx.textAlign = 'right';
-    ctx.fillText(dateStr, W - 60, 44);
-
-    // Question
-    ctx.textAlign = 'left';
-    ctx.font = `700 36px ${FONT}`;
-    ctx.fillStyle = WHITE;
-    let cursorY = wrapText(ctx, bet.question, 60, 100, W - 120, 44, 2);
-
-    // Winning answer (only when resolved)
-    if (resolved) {
-      const winLabel = getWinningLabel(bet);
-      if (winLabel) {
-        cursorY += 12;
-        ctx.font = `800 48px ${FONT}`;
-        ctx.fillStyle = YELLOW;
-        ctx.fillText(winLabel, 60, cursorY);
-        cursorY += 60;
-      }
+    if (bet.resolved) {
+      canvas.toBlob((blob) => {
+        if (blob) uploadOgImage(codeName, blob).catch(() => {});
+      }, 'image/png');
     }
-
-    // Participants section
-    const winners = resolved ? participants.filter(p => didParticipantWin(bet, p)) : [];
-    const losers = resolved ? participants.filter(p => !didParticipantWin(bet, p)) : [];
-    const allParticipants = resolved ? [...winners, ...losers] : [...participants];
-
-    // Avatar layout
-    const avatarR = 68;
-    const avatarSpacing = 120;
-    const maxAvatars = Math.min(allParticipants.length, 8);
-    const avatarY = Math.max(cursorY + 24, 280);
-    // Center avatars horizontally
-    const totalAvatarWidth = maxAvatars * avatarSpacing;
-    const avatarStartX = (W - totalAvatarWidth) / 2 + avatarSpacing / 2 - avatarR;
-
-    // Load all photos
-    const photoImages = new Map<string, HTMLImageElement>();
-    const loadPromises = allParticipants.slice(0, maxAvatars).map(async p => {
-      const src = photos.get(p.participant_name);
-      if (src) {
-        try {
-          const img = await loadImage(src);
-          if (img) photoImages.set(p.participant_name, img);
-        } catch {
-          // Silent fallback to initials
-        }
-      }
-    });
-    await Promise.all(loadPromises);
-
-    // Draw avatars
-    for (let i = 0; i < maxAvatars; i++) {
-      const p = allParticipants[i];
-      const cx = avatarStartX + i * avatarSpacing + avatarR;
-      const cy = avatarY + avatarR;
-      const isWinner = resolved && didParticipantWin(bet, p);
-
-      const photoImg = photoImages.get(p.participant_name);
-      if (photoImg) {
-        // Circular photo clip
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, avatarR, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.drawImage(photoImg, cx - avatarR, cy - avatarR, avatarR * 2, avatarR * 2);
-        ctx.restore();
-
-        // Winner ring: solid 3px yellow stroke
-        if (isWinner) {
-          ctx.beginPath();
-          ctx.arc(cx, cy, avatarR + 3, 0, Math.PI * 2);
-          ctx.strokeStyle = YELLOW;
-          ctx.lineWidth = 3;
-          ctx.stroke();
-        }
-      } else {
-        drawInitial(ctx, p.participant_name, cx, cy, avatarR, isWinner, resolved);
-      }
-
-      // Winner checkmark badge
-      if (isWinner) {
-        drawCheckmark(ctx, cx, cy, avatarR);
-      }
-
-      // Name label
-      ctx.font = `500 15px ${FONT}`;
-      ctx.fillStyle = resolved ? (isWinner ? WHITE : SUBTLE) : WHITE;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      const displayName = p.participant_name.length > 8
-        ? p.participant_name.slice(0, 7) + '...'
-        : p.participant_name;
-      ctx.fillText(displayName, cx, cy + avatarR + 8);
-
-      // Prediction label (only when resolved and predictions are visible)
-      if (resolved && p.prediction !== null && p.prediction !== undefined) {
-        ctx.font = `500 14px ${FONT}`;
-        ctx.fillStyle = isWinner ? YELLOW : SUBTLE;
-        const label = getParticipantLabel(bet, p);
-        ctx.fillText(label, cx, cy + avatarR + 26);
-      }
-    }
-
-    if (allParticipants.length > maxAvatars) {
-      const cx = avatarStartX + maxAvatars * avatarSpacing + avatarR;
-      const cy = avatarY + avatarR;
-      ctx.font = `600 16px ${FONT}`;
-      ctx.fillStyle = MUTED;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(`+${allParticipants.length - maxAvatars}`, cx, cy);
-    }
-
-    // Stats line at bottom
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'bottom';
-    ctx.font = `400 16px ${FONT}`;
-    ctx.fillStyle = MUTED;
-    const statsText = resolved
-      ? `${winners.length} called it · ${losers.length} missed · ${participants.length} total`
-      : `${participants.length} locked in`;
-    ctx.fillText(statsText, 60, H - 40);
-
-    // Branding bottom right
-    ctx.textAlign = 'right';
-    ctx.fillStyle = SUBTLE;
-    ctx.font = `400 14px ${FONT}`;
-    ctx.fillText('littlebets.netlify.app', W - 60, H - 40);
-
-    setImgSrc(canvas.toDataURL('image/png'));
   }
 
-  async function handleShare() {
+  const shareOrDownload = useCallback(async (variant: 'wide' | 'square', trackEvent: string) => {
     const canvas = canvasRef.current;
-    if (!canvas || !imgSrc) return;
+    if (!canvas) return;
 
-    track('moment_card_shared', { bet_id: bet.id });
+    if (variant === 'square') {
+      await renderToCanvas(canvas, bet, participants, photos, 'square');
+    }
 
-    // Step 1: native file share (mobile, supports files)
+    track(trackEvent, { bet_id: bet.id, variant });
+
+    const blob = await new Promise<Blob | null>(resolve =>
+      canvas.toBlob(resolve, 'image/png')
+    );
+
+    // Restore wide variant on canvas after square render
+    if (variant === 'square') {
+      renderToCanvas(canvas, bet, participants, photos, 'wide').then(setImgSrc);
+    }
+
+    if (!blob) return;
+
+    const filename = variant === 'square'
+      ? 'little-bets-moment-square.png'
+      : 'little-bets-moment.png';
+    const file = new File([blob], filename, { type: 'image/png' });
+
+    // Native share (mobile)
     try {
-      const blob = await new Promise<Blob | null>(resolve =>
-        canvas.toBlob(resolve, 'image/png')
-      );
-      if (blob) {
-        const file = new File([blob], 'little-bets-moment.png', { type: 'image/png' });
-        if (navigator.canShare?.({ files: [file] })) {
-          await navigator.share({ files: [file], title: bet.question });
-          return;
-        }
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: bet.question });
+        return;
       }
-    } catch {
-      // Share cancelled or failed, fall through
-    }
+    } catch { /* cancelled or failed */ }
 
-    // Step 2: show long press hint for mobile image save
-    setShowLongPressHint(true);
-
-    // Step 3: try programmatic download (desktop)
+    // Download fallback
     try {
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.download = 'little-bets-moment.png';
-      link.href = imgSrc;
+      link.download = filename;
+      link.href = url;
       link.click();
+      URL.revokeObjectURL(url);
+      if (variant === 'square') {
+        track('moment_card_downloaded', { bet_id: bet.id, variant });
+      }
       return;
-    } catch {
-      // fall through
-    }
+    } catch { /* fall through */ }
 
-    // Step 4: copy bet URL to clipboard
+    // Copy link fallback
     try {
       const betUrl = getShareUrl(codeName);
       await navigator.clipboard.writeText(betUrl);
       toast('Link copied to clipboard!');
-    } catch {
-      // nothing more to do
-    }
+      track('moment_card_copy_link', { bet_id: bet.id });
+    } catch { /* nothing more */ }
+  }, [bet, participants, photos, codeName, toast]);
+
+  async function handleShare() {
+    await shareOrDownload('wide', 'moment_card_shared');
+    setShowLongPressHint(true);
   }
 
-  // Dynamic alt text
+  async function handleSaveForInstagram() {
+    await shareOrDownload('square', 'moment_card_downloaded');
+  }
+
   const altText = bet.resolved
     ? `Moment card: ${bet.question}. ${getWinningLabel(bet) || 'Resolved'}. ${participants.filter(p => didParticipantWin(bet, p)).map(p => p.participant_name).join(', ')} got it right.`
     : `Moment card: ${bet.question}. ${participants.length} locked in.`;
@@ -326,12 +384,7 @@ function MomentCard({ bet, participants, photos, codeName, photosLoading }: Prop
   return (
     <div className="moment-card-section">
       <h3 className="moment-card-title">Share the Moment</h3>
-      <canvas
-        ref={canvasRef}
-        width={W}
-        height={H}
-        className="moment-card-canvas"
-      />
+      <canvas ref={canvasRef} width={WIDE_W} height={WIDE_H} className="moment-card-canvas" />
       {photosLoading && (
         <div className="moment-card-skeleton">
           <div className="skeleton-circle" />
@@ -340,19 +393,20 @@ function MomentCard({ bet, participants, photos, codeName, photosLoading }: Prop
         </div>
       )}
       {imgSrc && !photosLoading && (
-        <img
-          src={imgSrc}
-          alt={altText}
-          className="moment-card-preview"
-        />
+        <img src={imgSrc} alt={altText} className="moment-card-preview" />
       )}
       {showLongPressHint && (
         <p className="moment-card-hint">Long press the image to save it</p>
       )}
       {imgSrc && !photosLoading && (
-        <button className="moment-card-share-btn" onClick={handleShare}>
-          Share Card
-        </button>
+        <div className="moment-card-actions">
+          <button className="moment-card-share-btn" onClick={handleShare}>
+            Share
+          </button>
+          <button className="moment-card-instagram-btn" onClick={handleSaveForInstagram}>
+            Save for Instagram
+          </button>
+        </div>
       )}
     </div>
   );

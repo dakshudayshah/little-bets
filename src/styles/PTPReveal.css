@@ -1,0 +1,109 @@
+/* PTP Reveal — Beat 3 */
+
+.ptp-reveal-container {
+  justify-content: center;
+}
+
+.ptp-occasion-label {
+  font-size: 14px;
+  font-weight: 400;
+  color: #aaaaaa;
+  margin-bottom: 8px;
+}
+
+.ptp-rules {
+  margin: 24px 0 32px;
+  text-align: center;
+}
+
+.ptp-rules p {
+  font-size: 16px;
+  font-weight: 400;
+  color: #aaaaaa;
+  margin: 4px 0;
+  line-height: 1.5;
+}
+
+.ptp-start-btn {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 64px);
+  max-width: 320px;
+}
+
+.ptp-resolve-options {
+  gap: 12px;
+}
+
+.ptp-resolve-option {
+  font-size: 1.1rem;
+}
+
+.ptp-empty-state {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.ptp-reveal-resolving {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.ptp-reveal-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  animation: ptp-fade-in 0.4s ease-out;
+}
+
+.ptp-result-text {
+  font-size: 48px;
+  font-weight: 800;
+  color: #f5f020;
+  text-align: center;
+  margin-top: 12px;
+}
+
+@media (min-width: 600px) {
+  .ptp-result-text {
+    font-size: 56px;
+  }
+}
+
+.ptp-reveal-card {
+  animation: ptp-slide-up 0.4s ease-out;
+  padding-bottom: 32px;
+}
+
+.ptp-back-to-detail {
+  display: block;
+  margin: 16px auto 0;
+  padding: 10px 24px;
+  background: transparent;
+  color: #aaaaaa;
+  border: 1px solid #333;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.ptp-back-to-detail:hover {
+  color: #fff;
+  border-color: #666;
+}
+
+@keyframes ptp-fade-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ptp-slide-up {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
