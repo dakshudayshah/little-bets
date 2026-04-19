@@ -301,6 +301,139 @@
   margin: 0;
 }
 
+/* Name label */
+
+.ptp-name-label {
+  font-size: 14px;
+  font-weight: 400;
+  color: #aaaaaa;
+  margin: 0;
+}
+
+/* Permission Primer */
+
+.ptp-primer-step {
+  justify-content: center;
+  padding-top: 0;
+  gap: 20px;
+}
+
+.ptp-primer-card {
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1200 / 630;
+  background: #1a1a1a;
+  border: 1px solid #333333;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ptp-primer-card-inner {
+  padding: 16px;
+  text-align: center;
+  width: 100%;
+}
+
+.ptp-primer-brand {
+  font-size: 10px;
+  font-weight: 700;
+  color: #f5f020;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ptp-primer-question {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 12px;
+  line-height: 1.3;
+}
+
+.ptp-primer-faces {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ptp-primer-face {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #333333;
+}
+
+.ptp-primer-you {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #333333;
+  border: 2px dashed #f5f020;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #f5f020;
+}
+
+.ptp-primer-copy {
+  font-size: 14px;
+  color: #aaaaaa;
+  margin: 0;
+  max-width: 280px;
+}
+
+/* Card 1 interstitial */
+
+.ptp-card1-step {
+  justify-content: flex-start;
+  padding-top: 0;
+  gap: 16px;
+}
+
+.ptp-card1-reveal {
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+  width: 100%;
+}
+
+.ptp-card1-reveal.visible {
+  opacity: 1;
+}
+
+.ptp-card1-reveal.no-motion {
+  opacity: 1;
+  transition: none;
+}
+
+.ptp-card1-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.ptp-card1-resolve {
+  padding: 14px 48px;
+  background: none;
+  border: 2px solid #f5f020;
+  color: #f5f020;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  min-height: 48px;
+}
+
+.ptp-card1-resolve:hover {
+  background: rgba(245, 240, 32, 0.1);
+}
+
 /* Reduced motion */
 
 @media (prefers-reduced-motion: reduce) {
@@ -310,6 +443,11 @@
 
   .ptp-option,
   .ptp-name-input {
+    transition: none;
+  }
+
+  .ptp-card1-reveal {
+    opacity: 1;
     transition: none;
   }
 }

@@ -3,8 +3,9 @@ import { track } from '../lib/analytics';
 import { loadImage } from '../lib/image-utils';
 import { getWinningLabel, didParticipantWin } from '../lib/bet-utils';
 import { getShareUrl } from '../lib/creator-token';
-import { uploadOgImage } from '../lib/supabase';
+import { uploadOgImage, uploadStakesOgImage } from '../lib/supabase';
 import { computeSlots } from '../lib/moment-card-layouts';
+import WTPModal, { incrementShareCount } from './WTPModal';
 import { useToast } from '../context/ToastContext';
 import type { Bet, BetParticipant } from '../types';
 import '../styles/MomentCard.css';
@@ -15,6 +16,7 @@ interface Props {
   photos: Map<string, string>;
   codeName: string;
   photosLoading?: boolean;
+  variant?: 'result' | 'stakes';
 }
 
 const WIDE_W = 1200;
@@ -63,6 +65,35 @@ function wrapText(
   return y;
 }
 
+function drawPredictionBadge(
+  ctx: CanvasRenderingContext2D,
+  label: string,
+  sx: number,
+  sy: number,
+  sw: number,
+  sh: number,
+) {
+  const fontSize = 14;
+  ctx.font = `600 ${fontSize}px ${FONT}`;
+  const textWidth = ctx.measureText(label).width;
+  const padX = 6;
+  const padY = 4;
+  const bw = textWidth + padX * 2;
+  const bh = fontSize + padY * 2;
+  const bx = sx + sw - bw - 6;
+  const by = sy + sh - bh - 6;
+
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.beginPath();
+  ctx.roundRect(bx, by, bw, bh, 4);
+  ctx.fill();
+
+  ctx.fillStyle = WHITE;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText(label, bx + padX, by + padY);
+}
+
 function drawPhotoSlot(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement | null,
@@ -74,6 +105,7 @@ function drawPhotoSlot(
   isWinner: boolean,
   resolved: boolean,
   gap: number,
+  predictionLabel?: string,
 ) {
   const inset = gap / 2;
   const sx = x + inset;
@@ -115,6 +147,10 @@ function drawPhotoSlot(
   ctx.fillText(displayName, sx + 8, sy + sh - 8);
   ctx.shadowBlur = 0;
   ctx.shadowColor = 'transparent';
+
+  if (predictionLabel) {
+    drawPredictionBadge(ctx, predictionLabel, sx, sy, sw, sh);
+  }
 
   ctx.restore();
 
@@ -158,12 +194,14 @@ async function renderToCanvas(
   participants: BetParticipant[],
   photos: Map<string, string>,
   variant: 'wide' | 'square',
+  isStakes: boolean = false,
 ): Promise<string> {
   const W = variant === 'wide' ? WIDE_W : SQ_W;
   const H = variant === 'wide' ? WIDE_H : SQ_H;
   canvas.width = W;
   canvas.height = H;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return '';
 
   const resolved = bet.resolved;
   const PAD = 48;
@@ -207,7 +245,15 @@ async function renderToCanvas(
       const slot = slots[i];
       const isWinner = resolved && didParticipantWin(bet, p);
       const img = photoImages.get(p.participant_name) || null;
-      drawPhotoSlot(ctx, img, p.participant_name, slot.x, slot.y, slot.w, slot.h, isWinner, resolved, GAP);
+      let predLabel: string | undefined;
+      if (isStakes) {
+        if (bet.bet_type === 'yesno') {
+          predLabel = p.prediction ? 'Yes' : 'No';
+        } else if (p.option_index != null) {
+          predLabel = bet.options[p.option_index]?.text;
+        }
+      }
+      drawPhotoSlot(ctx, img, p.participant_name, slot.x, slot.y, slot.w, slot.h, isWinner, resolved, GAP, predLabel);
     }
 
     if (overflow > 0 && slots.length > maxVisible) {
@@ -284,55 +330,65 @@ async function renderToCanvas(
   ctx.fillText('littlebets.netlify.app', W - PAD, H - PAD);
   ctx.globalAlpha = 1;
 
+  if (isStakes) {
+    ctx.fillStyle = 'rgba(245, 240, 32, 0.08)';
+    ctx.fillRect(0, 0, W, H);
+  }
+
   return canvas.toDataURL('image/png');
 }
 
-function MomentCard({ bet, participants, photos, codeName, photosLoading }: Props) {
+function MomentCard({ bet, participants, photos, codeName, photosLoading, variant = 'result' }: Props) {
   const { toast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [showLongPressHint, setShowLongPressHint] = useState(false);
+  const [showWTP, setShowWTP] = useState(false);
+  const isStakes = variant === 'stakes';
 
   useEffect(() => {
     if (!photosLoading) renderCard();
-  }, [bet.id, bet.winning_option_index, participants, photos, photosLoading]);
+  }, [bet.id, bet.winning_option_index, participants, photos, photosLoading, variant]);
 
   async function renderCard() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const dataUrl = await renderToCanvas(canvas, bet, participants, photos, 'wide');
+    const dataUrl = await renderToCanvas(canvas, bet, participants, photos, 'wide', isStakes);
     setImgSrc(dataUrl);
 
-    if (bet.resolved) {
+    if (isStakes) {
+      canvas.toBlob((blob) => {
+        if (blob) uploadStakesOgImage(codeName, blob).catch(() => {});
+      }, 'image/png');
+    } else if (bet.resolved) {
       canvas.toBlob((blob) => {
         if (blob) uploadOgImage(codeName, blob).catch(() => {});
       }, 'image/png');
     }
   }
 
-  const shareOrDownload = useCallback(async (variant: 'wide' | 'square', trackEvent: string) => {
+  const shareOrDownload = useCallback(async (sizeVariant: 'wide' | 'square', trackEvent: string) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    if (variant === 'square') {
-      await renderToCanvas(canvas, bet, participants, photos, 'square');
+    if (sizeVariant === 'square') {
+      await renderToCanvas(canvas, bet, participants, photos, 'square', isStakes);
     }
 
-    track(trackEvent, { bet_id: bet.id, variant });
+    track(trackEvent, { bet_id: bet.id, variant: sizeVariant, card_type: isStakes ? 'stakes' : 'result' });
 
     const blob = await new Promise<Blob | null>(resolve =>
       canvas.toBlob(resolve, 'image/png')
     );
 
-    // Restore wide variant on canvas after square render
-    if (variant === 'square') {
-      renderToCanvas(canvas, bet, participants, photos, 'wide').then(setImgSrc);
+    if (sizeVariant === 'square') {
+      renderToCanvas(canvas, bet, participants, photos, 'wide', isStakes).then(setImgSrc);
     }
 
     if (!blob) return;
 
-    const filename = variant === 'square'
+    const filename = sizeVariant === 'square'
       ? 'little-bets-moment-square.png'
       : 'little-bets-moment.png';
     const file = new File([blob], filename, { type: 'image/png' });
@@ -353,8 +409,8 @@ function MomentCard({ bet, participants, photos, codeName, photosLoading }: Prop
       link.href = url;
       link.click();
       URL.revokeObjectURL(url);
-      if (variant === 'square') {
-        track('moment_card_downloaded', { bet_id: bet.id, variant });
+      if (sizeVariant === 'square') {
+        track('moment_card_downloaded', { bet_id: bet.id, variant: sizeVariant });
       }
       return;
     } catch { /* fall through */ }
@@ -366,11 +422,15 @@ function MomentCard({ bet, participants, photos, codeName, photosLoading }: Prop
       toast('Link copied to clipboard!');
       track('moment_card_copy_link', { bet_id: bet.id });
     } catch { /* nothing more */ }
-  }, [bet, participants, photos, codeName, toast]);
+  }, [bet, participants, photos, codeName, toast, isStakes]);
 
   async function handleShare() {
-    await shareOrDownload('wide', 'moment_card_shared');
+    const event = isStakes ? 'moment_card_stakes_shared' : 'moment_card_result_shared';
+    await shareOrDownload('wide', event);
     setShowLongPressHint(true);
+    if (incrementShareCount()) {
+      setShowWTP(true);
+    }
   }
 
   async function handleSaveForInstagram() {
@@ -383,7 +443,7 @@ function MomentCard({ bet, participants, photos, codeName, photosLoading }: Prop
 
   return (
     <div className="moment-card-section">
-      <h3 className="moment-card-title">Share the Moment</h3>
+      <h3 className="moment-card-title">{isStakes ? 'The Stakes' : 'Share the Moment'}</h3>
       <canvas ref={canvasRef} width={WIDE_W} height={WIDE_H} className="moment-card-canvas" />
       {photosLoading && (
         <div className="moment-card-skeleton">
@@ -401,13 +461,14 @@ function MomentCard({ bet, participants, photos, codeName, photosLoading }: Prop
       {imgSrc && !photosLoading && (
         <div className="moment-card-actions">
           <button className="moment-card-share-btn" onClick={handleShare}>
-            Share
+            {isStakes ? 'Share the stakes' : 'Share'}
           </button>
           <button className="moment-card-instagram-btn" onClick={handleSaveForInstagram}>
             Save for Instagram
           </button>
         </div>
       )}
+      <WTPModal open={showWTP} onClose={() => setShowWTP(false)} />
     </div>
   );
 }

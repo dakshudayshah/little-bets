@@ -4,14 +4,15 @@ import { submitPrediction, uploadPhoto } from '../lib/supabase';
 import { track } from '../lib/analytics';
 import { resizeImage } from '../lib/image-utils';
 import { usePTP } from '../context/PTPContext';
+import MomentCard from './MomentCard';
 import '../styles/PassThePhone.css';
 
 const ANSWER_FIRST = true;
 
-type Step = 'pick' | 'name' | 'locked' | 'photo' | 'handoff';
+type Step = 'pick' | 'name' | 'locked' | 'primer' | 'photo' | 'handoff' | 'card1';
 
 function PassThePhoneMode() {
-  const { bet, setPhotos, predictionCount, setPredictionCount, codeName } = usePTP();
+  const { bet, participants, setPhotos, photos, predictionCount, setPredictionCount, codeName } = usePTP();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(ANSWER_FIRST ? 'pick' : 'name');
   const [name, setName] = useState('');
@@ -22,6 +23,7 @@ function PassThePhoneMode() {
   const [tapLocked, setTapLocked] = useState(false);
   const [localCount, setLocalCount] = useState(predictionCount);
   const [confirmLabel, setConfirmLabel] = useState('');
+  const [card1Visible, setCard1Visible] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const lockTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const photoTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -113,7 +115,7 @@ function PassThePhoneMode() {
       track('ptp_prediction_locked', { bet_id: bet!.id, bet_type: bet!.bet_type });
 
       setStep('locked');
-      photoTimerRef.current = setTimeout(() => setStep('photo'), 700);
+      photoTimerRef.current = setTimeout(() => setStep('primer'), 700);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to submit';
       if (message.includes('duplicate') || message.includes('unique')) {
@@ -171,7 +173,8 @@ function PassThePhoneMode() {
 
   function handleDone() {
     track('ptp_done', { bet_id: bet!.id, predictions_collected: localCount });
-    navigate(`/bet/${codeName}/ptp/reveal`);
+    setStep('card1');
+    setTimeout(() => setCard1Visible(true), 50);
   }
 
   const reducedMotion = useMemo(
@@ -258,15 +261,17 @@ function PassThePhoneMode() {
         {step === 'name' && (
           <div className="ptp-step ptp-name-step">
             <h1 className="ptp-question">{bet.question}</h1>
-            <p className="ptp-subtitle">What's your name?</p>
+            <label className="ptp-name-label" htmlFor="ptp-name">Who are you?</label>
             <input
+              id="ptp-name"
               className="ptp-name-input"
               type="text"
-              placeholder="Your name"
+              placeholder="First name"
               value={name}
               onChange={e => setName(e.target.value)}
               maxLength={50}
               autoFocus
+              onFocus={e => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               onKeyDown={e => {
                 if (e.key === 'Enter' && name.trim()) handleNextFromName();
               }}
@@ -291,10 +296,48 @@ function PassThePhoneMode() {
           </div>
         )}
 
-        {/* STEP: Photo */}
+        {/* STEP: Permission Primer */}
+        {step === 'primer' && (
+          <div className="ptp-step ptp-primer-step">
+            <div className="ptp-primer-card" aria-hidden="true">
+              <div className="ptp-primer-card-inner">
+                <p className="ptp-primer-brand">Little Bets</p>
+                <p className="ptp-primer-question">{bet.question}</p>
+                <div className="ptp-primer-faces">
+                  {Array.from(photos.entries()).slice(0, 3).map(([pName, src]) => (
+                    <img key={pName} src={src} alt="" className="ptp-primer-face" />
+                  ))}
+                  <div className="ptp-primer-face ptp-primer-you">
+                    {name.charAt(0).toUpperCase() || '?'}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p className="ptp-primer-copy">Your photo goes on the group's moment card. We don't store it anywhere else.</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="user"
+              className="ptp-file-input"
+              onChange={handlePhotoCapture}
+            />
+            <button
+              className="ptp-cta ptp-camera-btn"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Add your photo to the moment card
+            </button>
+            <button className="ptp-skip-btn" onClick={goToHandoff}>
+              Skip
+            </button>
+          </div>
+        )}
+
+        {/* STEP: Photo (direct, bypassed by primer) */}
         {step === 'photo' && (
           <div className="ptp-step ptp-photo-step">
-            <p className="ptp-subtitle">Snap a selfie?</p>
+            <p className="ptp-subtitle">Add your photo to the moment card</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -326,6 +369,37 @@ function PassThePhoneMode() {
             >
               {tapLocked ? '...' : "I'M READY"}
             </button>
+          </div>
+        )}
+
+        {/* STEP: Card 1 — The Stakes */}
+        {step === 'card1' && bet && (
+          <div className="ptp-step ptp-card1-step">
+            <div
+              className={`ptp-card1-reveal ${card1Visible ? 'visible' : ''} ${reducedMotion ? 'no-motion' : ''}`}
+            >
+              <MomentCard
+                bet={bet}
+                participants={participants}
+                photos={photos}
+                codeName={codeName}
+                variant="stakes"
+              />
+            </div>
+            <div className="ptp-card1-actions">
+              <button
+                className="ptp-card1-resolve"
+                onClick={() => navigate(`/bet/${codeName}/ptp/reveal`)}
+              >
+                Resolve now
+              </button>
+              <button
+                className="ptp-skip-btn"
+                onClick={() => navigate(`/bet/${codeName}`)}
+              >
+                Resolve later
+              </button>
+            </div>
           </div>
         )}
       </div>

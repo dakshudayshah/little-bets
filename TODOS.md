@@ -59,3 +59,56 @@ Deferred work from reviews. Each item has context so someone picking it up in 3 
 **Effort:** S (CC: ~5 min) — add a "Moment Card" section to DESIGN.md.
 **Depends on:** Photo-hero moment card implementation shipped.
 **Notes:** Also document the OG image redesign (dark bg, matching moment card layout).
+
+---
+
+## From CEO Review (2026-04-18) — Trust, Two Cards, and Delayed Resolution
+
+### P3: Group Identity (Auto-Groups)
+**What:** When the same group of participants appears in 3+ bets, auto-generate a "group" (e.g., "Game Night Crew") from recurring names. Group page shows all their moment cards as a timeline.
+**Why:** Turns one-off moments into a relationship artifact. The moment card becomes a recurring group memory, not a one-shot.
+**Effort:** M (CC: ~1 hour) — participant matching heuristic + new group table + timeline page.
+**Depends on:** Share tracking + enough usage data to validate recurring groups exist.
+**Notes:** Name matching is fuzzy (people type "Jake" vs "Jacob"). Could use creator_token to link bets by device as a simpler heuristic.
+
+### P3: Animated Moment Card (GIF/Video)
+**What:** Instead of static PNG, generate an animated moment card where faces slide in one by one with predictions, then the result reveals. 5-10 second shareable clip.
+**Why:** Way more shareable in group chats and stories. Video/GIF gets more engagement than static images.
+**Effort:** L (CC: ~2-3 hours) — canvas animation + video encoding (ffmpeg or similar) + file size optimization.
+**Depends on:** Card 1 + Card 2 visual design stabilized.
+**Notes:** Could use HTML5 canvas animation recorded via MediaRecorder API, or server-side rendering. File size is the main constraint for mobile sharing.
+
+### P2: Resolution Notification for Participants
+**What:** When the creator resolves a bet, email all participants who provided an email: "The bet is resolved! See who called it." Include Card 2 (result card) in the email.
+**Why:** Resolution should be a group moment, not a solo action. Participants who aren't in the room deserve to know the outcome.
+**Effort:** S (CC: ~20 min) — piggybacks on Workstream H email infrastructure.
+**Depends on:** Workstream H (delayed resolution + email infra) shipped.
+**Notes:** Need participant email collection during PTP (currently only creator email is collected). Could add optional email field to PTP participation flow.
+
+### P3: Photo Sticker/Cutout Effect
+**What:** Apply background removal or vignette effect to participant photos so faces "pop" off the moment card like stickers. Makes the card feel crafted, not like a grid of passport photos.
+**Why:** Card quality is the product. A more polished card gets shared more.
+**Effort:** S-M (CC: ~30 min) — client-side background removal (e.g., @mediapipe/selfie_segmentation) or server-side API.
+**Depends on:** Moment card design stabilized after two-card implementation.
+**Notes:** Background removal quality varies by lighting/device. Need fallback to raw circular crop when removal fails. Test on diverse photos.
+
+### P3: Viewer "Remind Me" for Unresolved Bets
+**What:** Anyone viewing an unresolved bet page can tap "Remind me when this resolves" and enter their email. When the bet resolves, they get an email with Card 2.
+**Why:** Turns spectators into stakeholders. Extends the bet's social reach beyond the original participants.
+**Effort:** S (CC: ~15 min) — new `bet_subscribers` table or JSONB column + extend cron function.
+**Depends on:** Workstream H email infra shipped.
+**Notes:** Needs email validation + unsubscribe link in the email (CAN-SPAM compliance).
+
+### P3: Card 1 Reduced-Motion A11y
+**What:** Card 1 fade-in animation (0.3s ease-out on dark-bg → card reveal) should respect `prefers-reduced-motion: reduce`. Replace fade-in with instant appearance when reduced motion is active.
+**Why:** DESIGN.md policy: "Replace all scale/flash animations with instant state changes." Card 1's reveal animation is new and easy to forget during implementation.
+**Effort:** XS (CC: ~2 min) — 2 lines of CSS in a `@media (prefers-reduced-motion: reduce)` block.
+**Depends on:** Workstream G (Two Moment Cards) shipped.
+**Notes:** Opacity transitions are allowed per DESIGN.md reduced-motion policy, but Card 1's fade-in is a reveal moment that should be instant for users who prefer reduced motion.
+
+### P2: Cron Double-Send Fix
+**What:** The reminder cron can re-send emails if the DB update to mark `reminder_sent_at` fails after the Resend API call succeeds. Fix with optimistic update: set `reminder_sent_at` before calling Resend, clear it on API failure.
+**Why:** At current scale (single-digit bets) this is near-impossible. But it's an architectural gap that becomes embarrassing at any real volume.
+**Effort:** S (CC: ~5 min) — reorder the cron logic to update DB first, then call Resend.
+**Depends on:** Workstream H shipped.
+**Notes:** Same pattern applies to `followup_sent`. Consider changing `followup_sent` from boolean to `followup_sent_at` (timestamptz) for consistency with `reminder_sent_at`.

@@ -23,6 +23,10 @@ function makeBet(overrides: Partial<Bet> = {}): Bet {
     resolved_at: '2024-01-02',
     winning_option_index: 0,
     visibility: 'open',
+    resolve_by: null,
+    reminder_email: null,
+    reminder_sent_at: null,
+    followup_sent: false,
     ...overrides,
   };
 }

@@ -53,6 +53,8 @@ export async function createBet(bet: {
   creator_name: string | null;
   creator_token?: string;
   visibility?: string;
+  resolve_by?: string | null;
+  reminder_email?: string | null;
 }): Promise<Bet> {
   const { data, error } = await supabase
     .from('bets')
@@ -251,6 +253,14 @@ export async function fetchBetPhotos(betId: string): Promise<Map<string, string>
  */
 export async function uploadOgImage(codeName: string, blob: Blob): Promise<boolean> {
   const path = `${codeName}.png`;
+  const { error } = await supabase.storage
+    .from('og-images')
+    .upload(path, blob, { upsert: true, contentType: 'image/png' });
+  return !error;
+}
+
+export async function uploadStakesOgImage(codeName: string, blob: Blob): Promise<boolean> {
+  const path = `${codeName}-stakes.png`;
   const { error } = await supabase.storage
     .from('og-images')
     .upload(path, blob, { upsert: true, contentType: 'image/png' });

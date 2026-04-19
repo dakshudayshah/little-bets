@@ -24,6 +24,10 @@ export interface Bet {
   resolved_at: string | null;
   winning_option_index: number | null;
   visibility: BetVisibility;
+  resolve_by: string | null;
+  reminder_email: string | null;
+  reminder_sent_at: string | null;
+  followup_sent: boolean;
 }
 
 export interface BetParticipant {

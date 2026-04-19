@@ -18,6 +18,10 @@ vi.mock('../../lib/analytics', () => ({
   track: vi.fn(),
 }));
 
+vi.mock('../../context/ToastContext', () => ({
+  useToast: () => ({ toast: vi.fn() }),
+}));
+
 vi.mock('../../lib/image-utils', () => ({
   resizeImage: vi.fn().mockResolvedValue('data:image/jpeg;base64,fake'),
 }));
@@ -43,6 +47,10 @@ function makeBet(overrides: Partial<Bet> = {}): Bet {
     resolved_at: null,
     winning_option_index: null,
     visibility: 'open',
+    resolve_by: null,
+    reminder_email: null,
+    reminder_sent_at: null,
+    followup_sent: false,
     ...overrides,
   };
 }
@@ -83,6 +91,7 @@ describe('PassThePhoneMode', () => {
     vi.clearAllMocks();
     currentBet = makeBet();
     document.documentElement.requestFullscreen = vi.fn().mockResolvedValue(undefined);
+    Element.prototype.scrollIntoView = vi.fn();
   });
 
   it('renders pick step first (answer-before-name)', () => {
@@ -108,7 +117,7 @@ describe('PassThePhoneMode', () => {
     renderPTP();
     fireEvent.click(screen.getByText('Yes'));
     fireEvent.click(screen.getByText('Next'));
-    expect(screen.getByPlaceholderText('Your name')).toBeTruthy();
+    expect(screen.getByPlaceholderText('First name')).toBeTruthy();
     expect(screen.getByText('LOCK IT IN')).toBeTruthy();
   });
 
@@ -144,7 +153,7 @@ describe('PassThePhoneMode', () => {
     fireEvent.click(screen.getByText('Next'));
 
     // Enter name and lock
-    await user.type(screen.getByPlaceholderText('Your name'), 'Alice');
+    await user.type(screen.getByPlaceholderText('First name'), 'Alice');
     fireEvent.click(screen.getByText('LOCK IT IN'));
 
     await waitFor(() => {
@@ -167,21 +176,21 @@ describe('PassThePhoneMode', () => {
     // Navigation happens via react-router, verified by no crash
   });
 
-  it('shows photo step after lock-in', async () => {
+  it('shows permission primer after lock-in', async () => {
     const user = userEvent.setup();
     renderPTP();
 
     fireEvent.click(screen.getByText('Yes'));
     fireEvent.click(screen.getByText('Next'));
-    await user.type(screen.getByPlaceholderText('Your name'), 'Alice');
+    await user.type(screen.getByPlaceholderText('First name'), 'Alice');
     fireEvent.click(screen.getByText('LOCK IT IN'));
 
     await waitFor(() => {
-      expect(screen.getByText('Snap a selfie?')).toBeTruthy();
+      expect(screen.getByText(/Your photo goes on the group's moment card/)).toBeTruthy();
     }, { timeout: 2000 });
 
     expect(screen.getByText('Skip')).toBeTruthy();
-    expect(screen.getByText('Take Photo')).toBeTruthy();
+    expect(screen.getByText('Add your photo to the moment card')).toBeTruthy();
   });
 
   it('uses role="radiogroup" for accessibility', () => {
