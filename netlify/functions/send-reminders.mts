@@ -9,12 +9,19 @@ const supabase = createClient(
 const RESEND_API_KEY = process.env.RESEND_API_KEY!;
 const SITE_URL = process.env.URL || "https://littlebets.netlify.app";
 
-interface DueBet {
+interface ReminderBet {
   id: string;
   code_name: string;
   question: string;
   reminder_email: string;
   total_predictions: number;
+}
+
+interface FollowupBet {
+  id: string;
+  code_name: string;
+  question: string;
+  reminder_email: string;
 }
 
 async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
@@ -26,7 +33,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Little Bets <noreply@littlebets.netlify.app>",
+        from: "Little Bets <onboarding@resend.dev>",
         to,
         subject,
         html,
@@ -53,7 +60,7 @@ async function sendReminders(): Promise<void> {
 
   if (error || !dueBets) return;
 
-  for (const bet of dueBets as DueBet[]) {
+  for (const bet of dueBets as ReminderBet[]) {
     const resolveUrl = `${SITE_URL}/bet/${bet.code_name}`;
     const cardImgUrl = getOgImageUrl(bet.code_name);
 
@@ -92,7 +99,7 @@ async function sendFollowups(): Promise<void> {
 
   if (error || !followupBets) return;
 
-  for (const bet of followupBets as DueBet[]) {
+  for (const bet of followupBets as FollowupBet[]) {
     const resolveUrl = `${SITE_URL}/bet/${bet.code_name}`;
 
     const sent = await sendEmail(
