@@ -359,15 +359,6 @@ function BetDetail() {
                       <span className={`participant-prediction ${p.prediction ? 'yes' : 'no'}`}>
                         {getParticipantLabel(bet, p)}
                       </span>
-                      {isCreator && (
-                        <button
-                          className="remove-prediction-btn"
-                          onClick={() => handleRemovePrediction(p.id, p.participant_name)}
-                          title="Remove prediction"
-                        >
-                          X
-                        </button>
-                      )}
                     </span>
                   </li>
                 ))}
