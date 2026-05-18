@@ -110,11 +110,8 @@ Deferred work from reviews. Each item has context so someone picking it up in 3 
 
 ## From /qa Run (2026-05-17) — Deferred Issues
 
-### P1: Unify desktop and mobile navigation (ISSUE-003)
-**What:** Top nav (desktop) shows Home / Create / Profile. Bottom nav (mobile, hidden on desktop) shows Home / My Bets / Settings. Desktop users cannot reach Settings or My Bets through the UI — only by typing the URL.
-**Why:** Lost feature discoverability on desktop. A user on desktop has no path to theme settings or their own bets list.
-**Effort:** S–M (CC: ~30 min) — needs a design decision first: collapse to a single nav (top tabs + Settings under Profile), or keep both with parity.
-**Notes:** Found during /qa 2026-05-17. Either expose Settings/My Bets on desktop top nav OR fold Settings into a Profile dropdown.
+### ~~P1: Unify desktop and mobile navigation (ISSUE-003)~~ ✓ FIXED 2026-05-17
+**What:** Desktop top nav now matches the mobile bottom nav: Home / Create / My Bets / Settings. The /profile route remains as an alias and highlights the My Bets tab.
 
 ### P1: Reconcile the two create flows (ISSUE-004)
 **What:** The homepage embedded form asks Question + Yes/No vs MC + "When will you know?" (date). The `/create` page asks Bet Type + Question + Your Name + Description + Visibility (no date). These build different bet shapes from the same product.
