@@ -12,6 +12,7 @@ import BetStats from '../components/BetStats';
 import PredictionForm from '../components/PredictionForm';
 import MomentCard from '../components/MomentCard';
 import Confetti from '../components/Confetti';
+import NotFound from './NotFound';
 import { timeAgo } from '../lib/time';
 import '../styles/BetDetail.css';
 
@@ -211,7 +212,7 @@ function BetDetail() {
   }
 
   if (loading) return <div className="page"><p>Loading...</p></div>;
-  if (error || !bet) return <div className="page"><p className="error-text">{error || 'Bet not found'}</p></div>;
+  if (error || !bet) return <NotFound variant="bet" message={error && error !== 'Bet not found' ? error : undefined} />;
 
   const isCreator = (user?.id && user.id === bet.creator_id) || isAnonCreator;
   const winners = bet.resolved ? participants.filter(p => didParticipantWin(bet, p)) : [];
