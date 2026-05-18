@@ -268,7 +268,10 @@ function PassThePhoneMode() {
               type="text"
               placeholder="First name"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={e => {
+                setName(e.target.value);
+                if (error) setError(null);
+              }}
               maxLength={50}
               autoFocus
               onFocus={e => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })}
