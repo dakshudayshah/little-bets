@@ -9,6 +9,9 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
+  isSignInOpen: boolean;
+  openSignIn: () => void;
+  closeSignIn: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,6 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSignInOpen, setIsSignInOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -27,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       if (event === 'SIGNED_IN') {
         track('auth_completed', { method: session?.user?.app_metadata?.provider ?? 'unknown' });
+        setIsSignInOpen(false);
       }
     });
 
@@ -59,7 +64,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithEmail, signOut }}>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      signInWithGoogle,
+      signInWithEmail,
+      signOut,
+      isSignInOpen,
+      openSignIn: () => setIsSignInOpen(true),
+      closeSignIn: () => setIsSignInOpen(false),
+    }}>
       {children}
     </AuthContext.Provider>
   );

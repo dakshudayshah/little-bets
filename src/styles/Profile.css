@@ -1,3 +1,28 @@
+.profile-signin-btn {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 12px 24px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.15s ease-out;
+}
+
+[data-theme="retro"] .profile-signin-btn {
+  background: var(--color-primary);
+  color: #ffffff;
+  border: none;
+}
+
+.profile-signin-btn:hover {
+  transform: translate(-1px, -1px);
+}
+
 .profile-info {
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-border);

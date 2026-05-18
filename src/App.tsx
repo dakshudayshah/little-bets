@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import BottomNav from './components/BottomNav';
 import ScrollToTop from './components/ScrollToTop';
 import AuthModal from './components/AuthModal';
+import { useAuth } from './context/AuthContext';
 import Home from './pages/Home';
 import BetDetail from './pages/BetDetail';
 import CreateBet from './pages/CreateBet';
@@ -28,12 +28,12 @@ function PTPLayout() {
 }
 
 function App() {
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { isSignInOpen, openSignIn, closeSignIn } = useAuth();
 
   return (
     <>
       <ScrollToTop />
-      <Header onSignInClick={() => setShowAuthModal(true)} />
+      <Header onSignInClick={openSignIn} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/bet/:id" element={<BetDetail />} />
@@ -46,7 +46,7 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BottomNav />
-      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+      {isSignInOpen && <AuthModal onClose={closeSignIn} />}
     </>
   );
 }

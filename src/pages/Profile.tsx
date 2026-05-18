@@ -11,7 +11,7 @@ import '../styles/Profile.css';
 type PredictionWithBet = BetParticipant & { bets: Bet };
 
 function Profile() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, openSignIn } = useAuth();
   const location = useLocation();
   const isMyBets = location.pathname === '/my-bets';
   const pageTitle = isMyBets ? 'My Bets' : 'Profile';
@@ -50,6 +50,9 @@ function Profile() {
       <div className="page">
         <h1>{pageTitle}</h1>
         <p>Sign in to see your bets and predictions.</p>
+        <button type="button" className="profile-signin-btn" onClick={openSignIn}>
+          Sign In
+        </button>
       </div>
     );
   }
