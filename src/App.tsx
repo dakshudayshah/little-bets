@@ -9,6 +9,7 @@ import BetDetail from './pages/BetDetail';
 import CreateBet from './pages/CreateBet';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
 import PTPStart from './pages/PTPStart';
 import PTPReveal from './pages/PTPReveal';
 import PassThePhoneMode from './components/PassThePhoneMode';
@@ -42,6 +43,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/my-bets" element={<Profile />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <BottomNav />
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
