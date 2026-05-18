@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { track } from '../lib/analytics';
 import { fetchBetsByCreator, fetchUserPredictions } from '../lib/supabase';
@@ -12,15 +12,18 @@ type PredictionWithBet = BetParticipant & { bets: Bet };
 
 function Profile() {
   const { user, loading: authLoading } = useAuth();
+  const location = useLocation();
+  const isMyBets = location.pathname === '/my-bets';
+  const pageTitle = isMyBets ? 'My Bets' : 'Profile';
   const [bets, setBets] = useState<Bet[]>([]);
   const [predictions, setPredictions] = useState<PredictionWithBet[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = 'Profile - Little Bets';
-    track('page_viewed', { page: 'profile' });
-  }, []);
+    document.title = `${pageTitle} - Little Bets`;
+    track('page_viewed', { page: isMyBets ? 'my_bets' : 'profile' });
+  }, [pageTitle, isMyBets]);
 
   useEffect(() => {
     if (!user) return;
@@ -45,7 +48,7 @@ function Profile() {
   if (!user) {
     return (
       <div className="page">
-        <h1>Profile</h1>
+        <h1>{pageTitle}</h1>
         <p>Sign in to see your bets and predictions.</p>
       </div>
     );
@@ -57,7 +60,7 @@ function Profile() {
 
   return (
     <div className="page">
-      <h1>Profile</h1>
+      <h1>{pageTitle}</h1>
       <div className="profile-info">
         <p className="profile-name">{user.user_metadata?.full_name ?? user.email}</p>
         <p className="profile-email">{user.email}</p>
