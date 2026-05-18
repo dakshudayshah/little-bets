@@ -106,6 +106,36 @@ Deferred work from reviews. Each item has context so someone picking it up in 3 
 **Depends on:** Workstream G (Two Moment Cards) shipped.
 **Notes:** Opacity transitions are allowed per DESIGN.md reduced-motion policy, but Card 1's fade-in is a reveal moment that should be instant for users who prefer reduced motion.
 
+---
+
+## From /qa Run (2026-05-17) — Deferred Issues
+
+### P1: Unify desktop and mobile navigation (ISSUE-003)
+**What:** Top nav (desktop) shows Home / Create / Profile. Bottom nav (mobile, hidden on desktop) shows Home / My Bets / Settings. Desktop users cannot reach Settings or My Bets through the UI — only by typing the URL.
+**Why:** Lost feature discoverability on desktop. A user on desktop has no path to theme settings or their own bets list.
+**Effort:** S–M (CC: ~30 min) — needs a design decision first: collapse to a single nav (top tabs + Settings under Profile), or keep both with parity.
+**Notes:** Found during /qa 2026-05-17. Either expose Settings/My Bets on desktop top nav OR fold Settings into a Profile dropdown.
+
+### P1: Reconcile the two create flows (ISSUE-004)
+**What:** The homepage embedded form asks Question + Yes/No vs MC + "When will you know?" (date). The `/create` page asks Bet Type + Question + Your Name + Description + Visibility (no date). These build different bet shapes from the same product.
+**Why:** Date is critical for the delayed-resolution feature but only collectable from the home form. Name + visibility only collectable from /create. The fork is invisible to the user.
+**Effort:** M (CC: ~45 min) — pick one canonical form, redirect or merge the other.
+**Notes:** Found during /qa 2026-05-17. Recommend keeping the homepage form as the canonical "Straight to the Moment" path; redirect `/create` → `/` or align field set.
+
+### P3: Resolved-bet toast should not overlap moment card (ISSUE-008)
+**What:** After resolving a bet, the dark toast "Bet resolved! Scroll down to share the moment." renders bottom-center, which lands on top of the moment card preview as the user scrolls.
+**Why:** Obscures the artifact that the user is trying to share.
+**Effort:** XS (CC: ~5 min) — anchor toast bottom-right on desktop, or auto-dismiss faster, or drop the toast entirely since the moment card section already says "Share the Moment".
+**Notes:** Found during /qa 2026-05-17. Reproduction is scroll-dependent (visible in screenshot `qa-reports/screenshots/20-after-resolve.png`).
+
+### P3: Pass the Phone CTA visual hierarchy on bet detail Neo (ISSUE-013)
+**What:** The "Pass the Phone" hero CTA on the bet detail page uses `--color-bg` yellow — same as the page background. The black border and hard shadow carry the affordance, but the color hierarchy is gone.
+**Why:** Per DESIGN.md the Primary CTA is yellow on yellow, designed for white surfaces. On a yellow page bg the CTA reads as "outlined region", not "primary action".
+**Effort:** XS (CC: ~5 min) — either give the bet-detail CTA a surface bg (white card) or update the Primary CTA spec in DESIGN.md to clarify on-yellow-bg behavior.
+**Notes:** Found during /qa 2026-05-17. Worth a brief design review before patching — touches DESIGN.md.
+
+---
+
 ### P2: Cron Double-Send Fix
 **What:** The reminder cron can re-send emails if the DB update to mark `reminder_sent_at` fails after the Resend API call succeeds. Fix with optimistic update: set `reminder_sent_at` before calling Resend, clear it on API failure.
 **Why:** At current scale (single-digit bets) this is near-impossible. But it's an architectural gap that becomes embarrassing at any real volume.
