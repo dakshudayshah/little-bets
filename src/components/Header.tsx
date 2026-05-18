@@ -18,7 +18,13 @@ function Header({ onSignInClick }: HeaderProps) {
         <nav className="header-nav">
           <Link to="/" className={`header-nav-link ${location.pathname === '/' ? 'active' : ''}`}>Home</Link>
           <Link to="/create" className={`header-nav-link ${location.pathname === '/create' ? 'active' : ''}`}>Create</Link>
-          <Link to="/profile" className={`header-nav-link ${location.pathname === '/profile' ? 'active' : ''}`}>Profile</Link>
+          <Link
+            to="/my-bets"
+            className={`header-nav-link ${location.pathname === '/my-bets' || location.pathname === '/profile' ? 'active' : ''}`}
+          >
+            My Bets
+          </Link>
+          <Link to="/settings" className={`header-nav-link ${location.pathname === '/settings' ? 'active' : ''}`}>Settings</Link>
         </nav>
         <div className="header-right">
           <ThemeToggle />
