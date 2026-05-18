@@ -28,3 +28,9 @@ yarn-error.log*
 
 # Local Netlify folder
 .netlify
+
+# OS junk
+.DS_Store
+
+# Deno (not used by this project)
+deno.lock
