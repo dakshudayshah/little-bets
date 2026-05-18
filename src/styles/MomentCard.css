@@ -49,19 +49,19 @@
 .moment-card-instagram-btn {
   width: 100%;
   max-width: 320px;
-  padding: 10px 24px;
-  background: transparent;
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
+  padding: 12px 24px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius);
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: transform 0.15s ease-out;
 }
 
 .moment-card-instagram-btn:hover {
-  color: var(--color-text);
-  border-color: var(--color-text-secondary);
+  transform: translate(-1px, -1px);
 }
 
 .moment-card-hint {
