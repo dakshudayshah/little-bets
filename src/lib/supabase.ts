@@ -24,13 +24,10 @@ export async function fetchBetByCodeName(codeName: string): Promise<Bet | null> 
     .from('bets')
     .select('*')
     .eq('code_name', codeName)
-    .single();
+    .maybeSingle();
 
-  if (error) {
-    if (error.code === 'PGRST116') return null; // not found
-    throw error;
-  }
-  return data as Bet;
+  if (error) throw error;
+  return data as Bet | null;
 }
 
 export async function fetchBetsByCreator(creatorId: string): Promise<Bet[]> {
