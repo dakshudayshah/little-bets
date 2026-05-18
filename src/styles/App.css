@@ -140,7 +140,9 @@ a {
 }
 
 .btn-primary-cta:disabled {
-  opacity: 0.5;
+  background: #e5e5e5;
+  color: #6b6b6b;
+  box-shadow: 4px 4px 0px #6b6b6b;
   cursor: not-allowed;
 }
 
@@ -148,6 +150,12 @@ a {
   background: #b45309;
   color: #ffffff;
   border: none;
+  box-shadow: 0 2px 4px rgba(120, 113, 108, 0.12);
+}
+
+[data-theme="retro"] .btn-primary-cta:disabled {
+  background: #d6d3d1;
+  color: #78716c;
   box-shadow: 0 2px 4px rgba(120, 113, 108, 0.12);
 }
 
