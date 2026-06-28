@@ -131,7 +131,9 @@ function PassThePhoneMode() {
   function goToHandoff() {
     setStep('handoff');
     setTapLocked(true);
-    lockTimerRef.current = setTimeout(() => setTapLocked(false), 1500);
+    // 800ms is long enough to prevent the previous participant's accidental
+    // double-tap from skipping the handoff, short enough to not feel frozen.
+    lockTimerRef.current = setTimeout(() => setTapLocked(false), 800);
   }
 
   async function handlePhotoCapture(e: React.ChangeEvent<HTMLInputElement>) {
@@ -378,7 +380,7 @@ function PassThePhoneMode() {
               onClick={handleReady}
               disabled={tapLocked}
             >
-              {tapLocked ? '...' : "I'M READY"}
+              {tapLocked ? 'Hand off…' : "I'M READY"}
             </button>
           </div>
         )}
