@@ -139,3 +139,40 @@ Deferred work from reviews. Each item has context so someone picking it up in 3 
 **Effort:** S (CC: ~5 min) — reorder the cron logic to update DB first, then call Resend.
 **Depends on:** Workstream H shipped.
 **Notes:** Same pattern applies to `followup_sent`. Consider changing `followup_sent` from boolean to `followup_sent_at` (timestamptz) for consistency with `reminder_sent_at`.
+
+---
+
+## From QA (2026-06-27) — PTP UI focus, World Cup launch prep
+
+### ~~CRITICAL: Stakes card (Card 1) empty render after PTP Done (ISSUE-014)~~ ✓ FIXED 2026-06-27 (commit 395faee)
+**What was wrong:** `PTPContext.participants` loaded once on mount, never refreshed after LOCK IT IN. Tapping "Done? Show Results" rendered the Stakes card with `participants=[]` — "0 locked in", no avatars, no vote counts.
+**Why it mattered:** Card 1 is the artifact users share to group chats while bets are pending. Empty card = dead share loop. Would have killed every Cup watch-party share in the launch plan.
+**Fix:** `handleDone` now awaits `fetchParticipants(bet.id)` and writes to context before transitioning to step `card1`. Regression test at `src/components/__tests__/PassThePhoneMode.regression-1.test.tsx`.
+
+### P2: Photo primer card shows only current user (ISSUE-015)
+**What:** During PTP, after each LOCK IT IN, the photo permission primer shows a mini moment card. The card iterates only UPLOADED photos plus a "you" placeholder. When no one uploads, every subsequent participant sees only their own initial, not the group.
+**Why:** Copy says "Your photo goes on the group's moment card" but the visual contradicts it — looks like you're alone on the card. Undermines the social-proof framing.
+**Effort:** S (CC: ~10 min) — with ISSUE-014 fixed, `participants` is available in context on the primer step too. Render initials for participants without photos, matching the actual Stakes card layout.
+**Depends on:** None. ISSUE-014 fix makes the data available.
+**Notes:** Design call: should the primer match Card 1 exactly, or stay deliberately minimal to emphasize "your photo can go HERE"? Found during /qa 2026-06-27. Evidence: `.gstack/qa-reports/screenshots/qa-10-ptp-p2-locked.png` and `qa-12-ptp-p3-locked.png`.
+
+### P3: Home inspiration cards not in a11y tree (ISSUE-016)
+**What:** The 8 inspiration cards on home (Gender Reveal, Watch Party, Team Dinner, Birthday, Trip, Karaoke, Baby Shower, Game Night) are `<div onClick>` with `cursor: pointer`. They have no role, no aria-label, no tabindex. Screen readers can't find them; keyboard users can't activate them.
+**Why:** Accessibility + makes them un-clickable via `$B` testing tools (have to use `-C` clickable mode instead of standard refs).
+**Effort:** XS (CC: ~5 min) — change the wrapper to `<button type="button" aria-label="Use {title} inspiration">` in `src/pages/HomePage.tsx`.
+**Notes:** Found during /qa 2026-06-27. Worth doing alongside other a11y polish; not blocking.
+
+### P3: requestFullscreen warning on PTP entry (ISSUE-017)
+**What:** Every PTP route load triggers `Failed to execute 'requestFullscreen' on 'Element': API can only be initiated by a user gesture.` in console. The useEffect at `src/components/PassThePhoneMode.tsx:34–40` calls `el.requestFullscreen()` on mount, but browsers reject auto-fullscreen without a preceding user gesture.
+**Why:** Cosmetic, but pollutes the console and makes real errors harder to spot. Also means fullscreen never actually activates — the feature is broken silently.
+**Effort:** XS (CC: ~5 min) — either tie `requestFullscreen` to first user click (e.g., on radio pick) or remove the call entirely.
+**Notes:** Found during /qa 2026-06-27. If the fullscreen behavior was important, the gesture-tied version is the real fix; if it wasn't, removing the call is cleaner.
+
+### Deferred PTP coverage (not exercised during this QA)
+The 2026-06-27 PTP run focused on the multi-participant happy path and Card 1 reveal. The following should be covered before the next major PTP-touching change:
+- Photo upload path (only photo skip was tested)
+- Browser refresh mid-PTP (does state persist? does PTPContext re-fetch correctly?)
+- Same name twice (duplicate handling — submitPrediction returns "duplicate" error per source)
+- Very long names (UI overflow on the primer and Stakes card)
+- Resolve Now → Card 2 (Result) reveal end-to-end
+- Mobile viewport (375x812)
