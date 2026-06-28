@@ -74,6 +74,22 @@
   padding-top: 0;
 }
 
+/* Pick + name steps: thumb-zone layout.
+ * Anchor the question at top, push the action cluster (options/input + CTA)
+ * to the bottom so one-thumb taps land near the natural reach zone on mobile.
+ * The margin-top: auto trick puts the first action element at the bottom of
+ * the flex column; later siblings (error, CTA) follow naturally below it. */
+.ptp-pick-step,
+.ptp-name-step {
+  padding-top: 8vh;
+  padding-bottom: 4vh;
+}
+
+.ptp-pick-step .ptp-options,
+.ptp-name-step .ptp-name-label {
+  margin-top: auto;
+}
+
 /* Typography */
 
 .ptp-question {
