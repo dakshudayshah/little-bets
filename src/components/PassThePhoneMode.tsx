@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { submitPrediction, uploadPhoto } from '../lib/supabase';
+import { submitPrediction, uploadPhoto, fetchParticipants } from '../lib/supabase';
 import { track } from '../lib/analytics';
 import { resizeImage } from '../lib/image-utils';
 import { usePTP } from '../context/PTPContext';
@@ -12,7 +12,7 @@ const ANSWER_FIRST = true;
 type Step = 'pick' | 'name' | 'locked' | 'primer' | 'photo' | 'handoff' | 'card1';
 
 function PassThePhoneMode() {
-  const { bet, participants, setPhotos, photos, predictionCount, setPredictionCount, codeName } = usePTP();
+  const { bet, participants, setParticipants, setPhotos, photos, predictionCount, setPredictionCount, codeName } = usePTP();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(ANSWER_FIRST ? 'pick' : 'name');
   const [name, setName] = useState('');
@@ -171,8 +171,12 @@ function PassThePhoneMode() {
     setStep(ANSWER_FIRST ? 'pick' : 'name');
   }
 
-  function handleDone() {
+  async function handleDone() {
     track('ptp_done', { bet_id: bet!.id, predictions_collected: localCount });
+    try {
+      const parts = await fetchParticipants(bet!.id);
+      setParticipants(parts);
+    } catch { /* fall back to whatever's in context */ }
     setStep('card1');
     setTimeout(() => setCard1Visible(true), 50);
   }
