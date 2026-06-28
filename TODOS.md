@@ -184,31 +184,31 @@ The 2026-06-27 PTP run focused on the multi-participant happy path and Card 1 re
 Full review: `~/.gstack/projects/dakshudayshah-little-bets/admin-main-design-review-20260627T2242.md`
 Mockup HTMLs: `~/.gstack/projects/dakshudayshah-little-bets/designs/ptp-mobile-audit-20260627/`
 
-### P1: Inspiration dialog Start/Cancel unreachable on mobile (ISSUE-018)
+### ~~P1: Inspiration dialog Start/Cancel unreachable on mobile (ISSUE-018)~~ ✓ FIXED 2026-06-27 (commit 987b1c0)
 **What:** The bottom-sheet modal that opens when tapping any home inspiration card (Watch Party, Gender Reveal, etc) renders its primary actions (Start, Cancel) below the fixed bottom nav on iPhone 13 (375×812). Both buttons are visually obscured AND functionally non-tappable. User is trapped in the modal until they refresh.
 **Why:** This breaks the fastest path to creating a Cup bet from a phone. Per the design doc, Watch Party is THE inspiration the founder would use to dogfood at the next colleague watch. Per DESIGN.md z-index hierarchy: bottom nav = 100, auth modal = 200, PTP = 250. The inspiration dialog has no documented z-index and appears to default to ≤100, so the nav wins. CRITICAL severity, mobile-only.
 **Effort:** XS (CC: ~5 min) — give the dialog `z-index: 200` (treat as modal, like auth) in `HomePage.tsx` or wherever the dialog is rendered. Alternative: hide bottom nav when any modal is open. Also: add a "Modal / dialog" row to the Z-Index Hierarchy table in DESIGN.md so this doesn't happen again.
 **Evidence:** `.gstack/qa-reports/screenshots/ptp-mobile/ISSUE-018-inspiration-dialog-blocked.png`
 
-### P1: Thumb zone violations on PTP pick + name steps (ISSUE-019)
+### ~~P1: Thumb zone violations on PTP pick + name steps (ISSUE-019)~~ ✓ FIXED 2026-06-27 (commit b577615)
 **What:** On iPhone 13, the Yes/No buttons sit at y=290-440 and the Next/LOCK IT IN CTAs at y=440-510. From y=510-812 (~300px) is empty. Primary tap targets are dead-center on the screen, requiring a grip shift for one-handed use.
 **Why:** PTP is a one-thumb mobile game played at a watch party. Every tap should feel reachable. The "Start passing" intro screen already does this correctly (CTA at bottom). The pick + name + handoff screens don't follow the same composition principle.
 **Effort:** S-M (CC: ~30-60 min) — CSS layout change to `PassThePhoneMode.tsx`. Anchor the action cluster (options + CTA) to the bottom of the viewport. Question stays top. See mockup: `mockup-A-pick-step-redesigned.html`.
 **Depends on:** None.
 **Notes:** The pick step is the highest-volume screen (every participant taps it at least once). Single largest UX improvement available right now.
 
-### P1: "Done? Show Results" visible at 0 predictions (ISSUE-020)
+### ~~P1: "Done? Show Results" visible at 0 predictions (ISSUE-020)~~ ✓ FIXED 2026-06-27 (commit 3eef286)
 **What:** The top-left "Done? Show Results" button is rendered on the PTP overlay even when zero predictions exist. Tapping it leads to an empty/broken Stakes card state.
 **Why:** Per DESIGN.md "Subtraction default" — if an action does nothing useful, remove it from the surface. Currently this CTA shouts "you can stop now!" before anyone's even locked in.
 **Effort:** XS (CC: ~5 min) — conditional render in `PassThePhoneMode.tsx`: only show `.ptp-done-btn` when `localCount >= 1`. Alternative: render as disabled with helper text "Lock in your first prediction first".
 
-### P2: Card 1 action stack has wrong primary (ISSUE-021)
+### ~~P2: Card 1 action stack has wrong primary (ISSUE-021)~~ ✓ FIXED 2026-06-27 (commit e525117)
 **What:** On the Stakes card screen, "Resolve now" is the yellow primary CTA and "Save for Instagram" is a stark white button. For an unresolved Cup match (the delayed-resolution use case Card 1 was designed for), the primary should be **"Share the stakes"** — that's the act that ships the bet to the group chat. "Save for Instagram" being white inside a dark surface shouts louder than its actual priority warrants.
 **Why:** Per the design doc, Card 1 exists to be shared to a group chat while the bet is still open. Resolve flows happen AFTER the match. The primary CTA should match the primary intent, not the developer's natural focus.
 **Effort:** S (CC: ~15 min) — reorder + restyle the 4 action buttons in `PassThePhoneMode.tsx` (the `step === 'card1'` block). See mockup: `mockup-B-card1-action-hierarchy.html`.
 **Notes:** Worth confirming with the design intent before swapping — there's a chance the current order is deliberate. Quick chat-level check.
 
-### P2: Handoff disabled state is opaque (ISSUE-022)
+### ~~P2: Handoff disabled state is opaque (ISSUE-022)~~ ✓ FIXED 2026-06-27 (commit 067fe28)
 **What:** During the 1.5s tap-lock after LOCK IT IN, the handoff button shows `...` in dim yellow with no countdown, progress, or copy explaining the wait. Impatient mobile tappers will think the app froze.
 **Why:** The lock exists to prevent the previous participant's accidental double-tap from skipping the handoff. It's a safety mechanism that's currently being communicated as a frozen UI.
 **Effort:** XS-S (CC: ~5-15 min). Three options in order of polish: (a) shorten to 0.5s (probably enough to prevent the double-tap), (b) add a 1.5s countdown ring around the button, (c) fade-in the "I'M READY" copy after a 1.5s delay so the user sees movement.
