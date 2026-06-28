@@ -191,9 +191,13 @@ function PassThePhoneMode() {
       <div className="ptp-container">
         {step !== 'locked' && (
           <div className="ptp-top-bar">
-            <button className="ptp-done-btn" onClick={handleDone}>
-              Done? Show Results
-            </button>
+            {localCount > 0 ? (
+              <button className="ptp-done-btn" onClick={handleDone}>
+                Done? Show Results
+              </button>
+            ) : (
+              <span />
+            )}
             <span className="ptp-counter">{localCount} prediction{localCount !== 1 ? 's' : ''}</span>
           </div>
         )}
