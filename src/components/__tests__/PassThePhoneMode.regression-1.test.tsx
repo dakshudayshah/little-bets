@@ -23,7 +23,6 @@ const freshParticipants: BetParticipant[] = [
     participant_name: 'Alex',
     prediction: true,
     option_index: 0,
-    photo_url: null,
     created_at: '2026-06-27T05:10:00Z',
   },
   {
@@ -32,7 +31,6 @@ const freshParticipants: BetParticipant[] = [
     participant_name: 'Sam',
     prediction: false,
     option_index: 1,
-    photo_url: null,
     created_at: '2026-06-27T05:11:00Z',
   },
 ];
